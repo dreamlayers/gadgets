@@ -26,13 +26,14 @@
 #include "aosd_trigger.h"
 #include <audacious/i18n.h>
 
-#include "vfd.h"
 #define VFDPORT "/dev/ttyS0"
-
 #define VISPLUGIN
+
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+
+#include "vfdm.h"
 
 gboolean plugin_is_active = FALSE;
 
@@ -42,10 +43,7 @@ gboolean plugin_is_active = FALSE;
 static bool_t
 aosd_init ( void )
 {
-  if (vfd_connect(VFDPORT) != 0) return false;
-  if (vfd_clear() != 0) { vfd_disconnect(); return false; }
-  vfd_enterbm();
-  vfd_bmsetscw(1,12);
+  if (vfdm_init(VFDPORT) != 0) return false;
 
   plugin_is_active = TRUE;
 #if 0
@@ -68,18 +66,9 @@ aosd_cleanup ( void )
 {
   if ( plugin_is_active == TRUE )
   {
-    unsigned char ind[5];
-
     aosd_trigger_stop();
 
-    vfd_bmclear();
-    memset(ind, 0, sizeof(ind));
-    ind[VFDI_SEC_A] |= VFDI_SEC_B | VFDI_MIN_B | VFDI_HR_B;
-    vfd_bmind(ind);
-    vfd_exitbm();
-
-    vfd_setclock(NULL);
-    vfd_disconnect();
+    vfdm_close();
 
     plugin_is_active = FALSE;
   }
@@ -141,7 +130,7 @@ aosd_render_pcm(const float * pcm, int channels)
         vu[chan] = lrint(d);
     }
 
-    vfd_bmsetvu(vu[0], vu[1]);
+    vfdm_vu(vu[0], vu[1]);
 
 //    g_static_mutex_unlock(&rgb_buf_mutex);
 

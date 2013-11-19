@@ -33,7 +33,7 @@
 //#include "aosd_osd.h"
 
 #include <string.h>
-#include "vfd.h"
+#include "vfdm.h"
 
 //#define DEBUG
 
@@ -41,57 +41,17 @@
 
 //extern aosd_cfg_t * global_config;
 
-/* Play state */
-enum playstate {
-    playback_unknown = -1,
-    playback_stopped = 0,
-    playback_playing = 1,
-    playback_paused = 3
-};
+enum vfdm_playstate playstate = VFDM_UNKNOWNSTATE;
 
-/* Get new state from Winamp and update indicators if the state changed */
-static void updatestate(enum playstate t) {
-    static enum playstate curstate = playback_stopped;
-    static unsigned char ind[5] = { 0, 0, 0, 0, 0 };
-
-    if (t != curstate) {
-        curstate = t;
-        switch (curstate) {
-        case playback_paused:
-            ind[VFDI_PAUSE_A] |= VFDI_PAUSE_B;
-            ind[VFDI_PLAY_A] |= VFDI_PLAY_B;
-            ind[VFDI_RIGHT_A] &= ~VFDI_RIGHT_B;
-            ind[VFDI_RIGHTVU_A] &= ~VFDI_RIGHTVU_B;
-            ind[VFDI_LEFTVU_A] &= ~VFDI_LEFTVU_B;
-            vfd_bmsetvu(0, 0);
-            break;
-
-        case playback_playing: /* Playing */
-            ind[VFDI_PAUSE_A] &= ~VFDI_PAUSE_B;
-            ind[VFDI_PLAY_A] |= VFDI_PLAY_B;
-            ind[VFDI_RIGHT_A] |= VFDI_RIGHT_B;
-            ind[VFDI_RIGHTVU_A] |= VFDI_RIGHTVU_B;
-            ind[VFDI_LEFTVU_A] |= VFDI_LEFTVU_B;
-            break;
-
-        default:
-        /* case playback_stopped: */
-            ind[VFDI_PAUSE_A] &= ~VFDI_PAUSE_B;
-            ind[VFDI_PLAY_A] &= ~VFDI_PLAY_B;
-            ind[VFDI_RIGHT_A] &= ~VFDI_RIGHT_B;
-            ind[VFDI_RIGHTVU_A] &= ~VFDI_RIGHTVU_B;
-            ind[VFDI_LEFTVU_A] &= ~VFDI_LEFTVU_B;
-            vfd_bmsetvu(0, 0);
-            vfd_bmntxt(0, " ", 1);
-            break;
-        }
-
-        //if (!suspended)
-        vfd_bmind(ind);
-    }
+enum vfdm_playstate vfdm_cb_getplaystate(void) {
+    return playstate;
 }
 
-#define VFD_SCROLLMAX 45
+void updatestate(enum vfdm_playstate newstate) {
+    playstate = newstate;
+    vfdm_playstatechanged();
+}
+
 void audvfd_settitle(const gchar *title) {
     gchar buf[VFD_SCROLLMAX];
     int len;
@@ -118,7 +78,7 @@ void audvfd_settitle(const gchar *title) {
     buf[len] = '.';
     buf[len+1] = ' ';
 
-    vfd_bmntxt(VFDTXT_LOOP, buf, len+2);
+    vfdm_trackchange(0 /* FIXME track # */, buf, len+2);
 }
 
 
@@ -287,7 +247,7 @@ aosd_trigger_func_pb_start_cb(gpointer hook_data, gpointer user_data)
 {
     gchar *title = aud_drct_get_title ();
 
-    updatestate(playback_playing);
+    updatestate(VFDM_PLAYING);
 
     if (title != NULL)
     {
@@ -481,7 +441,7 @@ aosd_trigger_func_pb_pauseon_cb ( gpointer unused1 , gpointer unused2 )
 #ifdef DEBUG
   printf("Paused\n");
 #endif
-  updatestate(playback_paused);
+  updatestate(VFDM_PAUSED);
 #if 0
   gchar *utf8_title_markup = g_markup_printf_escaped(
     "<span font_desc='%s'>Paused</span>" , global_config->osd->text.fonts_name[0] );
@@ -508,7 +468,7 @@ aosd_trigger_func_pb_pauseoff_cb ( gpointer unused1 , gpointer unused2 )
 #ifdef DEBUG
   printf("Unpaused\n");
 #endif
-  updatestate(playback_playing);
+  updatestate(VFDM_PLAYING);
 #if 0
   gint active = aud_playlist_get_active();
   gint pos = aud_playlist_get_position(active);
@@ -552,7 +512,7 @@ aosd_trigger_func_pb_stop_cb ( gpointer unused1 , gpointer unused2 )
 #ifdef DEBUG
   printf("Stopped\n");
 #endif
-  updatestate(playback_stopped);
+  updatestate(VFDM_STOPPED);
   return;
 }
 

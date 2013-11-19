@@ -6,10 +6,14 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
+//#include <stdbool.h>
 //#include "pm.h"
 //#include "constants.h"
+
+#ifndef PM_NOTIFY_TEST
+#include "vfdm.h"
+#include "sysmon.h"
+#endif
 
 
 /**********************************
@@ -21,26 +25,13 @@
 
 #define RULE  "type='signal',interface='"POWER_INTERFACE"'"
 
-
- /**********************************
- * Local Variables
- **********************************/
-
-char *notify_msg;
-
-pthread_t thread;
-pthread_mutex_t notify_mutex;
-pthread_cond_t notify_cv;
-bool isActive;
-
-DBusConnection *conn;
-
+/**********************************
+* Local Variables
+**********************************/
 
 /**********************************
  * Local Helper Functions protoypes
  **********************************/
-static void InitDbus();
-static DBusHandlerResult signal_filter(DBusConnection *connection, DBusMessage *msg, void *user_data);
 
 /**********************************
 * Local Functions
@@ -49,16 +40,25 @@ static DBusHandlerResult signal_filter(DBusConnection *connection, DBusMessage *
 {
     if (dbus_message_is_signal(msg, POWER_INTERFACE, RESUME_SIGNAL))
     {
+#ifdef PM_NOTIFY_TEST
         fprintf(stderr, "RESUME");
+#else
+        vfdm_pmwake();
+#endif
     }
     else if (dbus_message_is_signal(msg, POWER_INTERFACE, SLEEP_SIGNAL))
     {
+#ifdef PM_NOTIFY_TEST
         fprintf(stderr, "STANDBY");
+#else
+        vfdm_pmsuspend();
+#endif
     }
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
 
-static void InitDbus()
+void pm_upower_init()
 {
     DBusError error;
 
@@ -87,6 +87,7 @@ static void InitDbus()
 
 }
 
+#ifdef PM_NOTIFY_TEST
 int main(void)
 {
     InitDbus();
@@ -98,5 +99,6 @@ int main(void)
     while (1) sleep(1);
 //    return 0;
 }
+#endif
 
 
