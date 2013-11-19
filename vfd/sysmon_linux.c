@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <time.h>
 #include "sysmon.h"
 
 /*** CPU ***/
@@ -66,17 +70,41 @@ int sysmon_memorypercent(void) {
 
 /*** Wake time ***/
 
+static time_t lastwaketime = 0;
+
+static time_t getmtime(const char *fn) {
+    struct stat st;
+    if (stat(fn, &st) == 0) {
+        return st.st_mtime;
+    } else {
+        return 0;
+    }
+}
+
+static time_t getlastwaketime(void) {
+    time_t pmlogt, bootlogt;
+    pmlogt = getmtime("/var/log/pm-suspend.log");
+    bootlogt = getmtime("/var/log/boot.log");
+    return (pmlogt > bootlogt) ? pmlogt : bootlogt;
+}
+
 void sysmon_pmwake(void) {
+    lastwaketime = time(NULL);
 }
 
 unsigned long sysmon_getawaketime(void) {
-    return 0;
+    if (lastwaketime != 0) {
+        return time(NULL) - lastwaketime;
+    } else {
+        return 0;
+    }
 }
 
 /*** Misc ***/
 
 int sysmon_init(void) {
     used = 0; free = 0;
+    lastwaketime = getlastwaketime();
     pm_upower_init();
     return 0;
 }
