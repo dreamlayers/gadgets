@@ -1,18 +1,46 @@
-CC = gcc
-CFLAGS = $(shell pkg-config --cflags audacious glib-2.0 dbus-glib-1 dbus-1) -O -Wall -g -fPIC -shared
+SRCS := serio.c vfd.c vfdm.c
+
+PLATFORM := $(shell uname -o)
+ifeq ($(PLATFORM),Cygwin)
+
+CC := i686-pc-mingw32-gcc
+CFLAGS := -O -Wall -g -shared
+SRCS := $(SRCS) vfdm_windows.c sysmon_windows.c
+LIBS := -lpowrprof
+TARGETS := vis_vfd.dll dsp_vfd.dll
+
+all: $(TARGETS)
+
+vfd_winamp_vis.o : vfd_winamp.c vis.h lrint.h vfdm.h
+	$(CC) -c $(CFLAGS) -DVISPLUG -o $@ $<
+
+vfd_winamp_dsp.o : vfd_winamp.c dsp.h lrint.h vfdm.h
+	$(CC) -c $(CFLAGS) -DDSPPLUG -o $@ $<
+
+OBJS := $(SRCS:%.c=%.o)
+
+vis_vfd.dll: $(OBJS) vfd_winamp_vis.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+
+dsp_vfd.dll: $(OBJS) vfd_winamp_dsp.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+
+CLEAN_EXTRA := vfd_winamp_vis.o vfd_winamp_dsp.o
+
+else
+
+CC := gcc
+CFLAGS := $(shell pkg-config --cflags audacious glib-2.0 dbus-glib-1 dbus-1) -O -Wall -g -fPIC -shared
 #LIBS = -lm
-SRCS = aosd.c aosd_trigger.c serio.c vfd.c vfdm.c sysmon_linux.c vfdm_unix.c \
-       pm_upower.c
+SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_upower.c aosd.c aosd_trigger.c
 
 TARGET := aud_vfd.so
+TARGETS := $(TARGET)
 
 OBJS := $(SRCS:%.c=%.o)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
-
-clean:
-	rm -f $(OBJS) $(TARGET) *~ *.bak
 
 install: $(TARGET)
 	cp $(TARGET) ~/.local/share/audacious/Plugins/
@@ -20,335 +48,15 @@ install: $(TARGET)
 uninstall:
 	rm ~/.local/share/audacious/Plugins/$(TARGET)
 
-depend:
-	gccmakedep -- $(CFLAGS) -- $(SRCS)
+endif
 
-# DO NOT DELETE
-aosd.o: aosd.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h \
- /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
- /usr/include/glib-2.0/glib/gtypes.h \
- /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
- /usr/include/glib-2.0/glib/gmacros.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed/syslimits.h \
- /usr/include/limits.h /usr/include/features.h \
- /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
- /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/float.h \
- /usr/include/glib-2.0/glib/gversionmacros.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/xlocale.h \
- /usr/include/glib-2.0/glib/garray.h \
- /usr/include/glib-2.0/glib/gasyncqueue.h \
- /usr/include/glib-2.0/glib/gthread.h \
- /usr/include/glib-2.0/glib/gatomic.h /usr/include/glib-2.0/glib/gerror.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdarg.h \
- /usr/include/glib-2.0/glib/gquark.h \
- /usr/include/glib-2.0/glib/gbacktrace.h /usr/include/signal.h \
- /usr/include/x86_64-linux-gnu/bits/sigset.h \
- /usr/include/x86_64-linux-gnu/bits/signum.h \
- /usr/include/x86_64-linux-gnu/bits/siginfo.h \
- /usr/include/x86_64-linux-gnu/bits/sigaction.h \
- /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
- /usr/include/x86_64-linux-gnu/bits/sigstack.h \
- /usr/include/x86_64-linux-gnu/sys/ucontext.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
- /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /usr/include/glib-2.0/glib/gbase64.h \
- /usr/include/glib-2.0/glib/gbitlock.h \
- /usr/include/glib-2.0/glib/gbookmarkfile.h \
- /usr/include/glib-2.0/glib/gbytes.h \
- /usr/include/glib-2.0/glib/gcharset.h \
- /usr/include/glib-2.0/glib/gchecksum.h \
- /usr/include/glib-2.0/glib/gconvert.h \
- /usr/include/glib-2.0/glib/gdataset.h /usr/include/glib-2.0/glib/gdate.h \
- /usr/include/glib-2.0/glib/gdatetime.h \
- /usr/include/glib-2.0/glib/gtimezone.h /usr/include/glib-2.0/glib/gdir.h \
- /usr/include/dirent.h /usr/include/x86_64-linux-gnu/bits/dirent.h \
- /usr/include/glib-2.0/glib/genviron.h \
- /usr/include/glib-2.0/glib/gfileutils.h \
- /usr/include/glib-2.0/glib/ggettext.h /usr/include/glib-2.0/glib/ghash.h \
- /usr/include/glib-2.0/glib/glist.h /usr/include/glib-2.0/glib/gmem.h \
- /usr/include/glib-2.0/glib/gnode.h /usr/include/glib-2.0/glib/ghmac.h \
- /usr/include/glib-2.0/glib/gchecksum.h \
- /usr/include/glib-2.0/glib/ghook.h \
- /usr/include/glib-2.0/glib/ghostutils.h \
- /usr/include/glib-2.0/glib/giochannel.h \
- /usr/include/glib-2.0/glib/gmain.h /usr/include/glib-2.0/glib/gpoll.h \
- /usr/include/glib-2.0/glib/gslist.h /usr/include/glib-2.0/glib/gstring.h \
- /usr/include/glib-2.0/glib/gunicode.h \
- /usr/include/glib-2.0/glib/gutils.h \
- /usr/include/glib-2.0/glib/gkeyfile.h \
- /usr/include/glib-2.0/glib/gmappedfile.h \
- /usr/include/glib-2.0/glib/gmarkup.h \
- /usr/include/glib-2.0/glib/gmessages.h \
- /usr/include/glib-2.0/glib/goption.h \
- /usr/include/glib-2.0/glib/gpattern.h \
- /usr/include/glib-2.0/glib/gprimes.h /usr/include/glib-2.0/glib/gqsort.h \
- /usr/include/glib-2.0/glib/gqueue.h /usr/include/glib-2.0/glib/grand.h \
- /usr/include/glib-2.0/glib/gregex.h \
- /usr/include/glib-2.0/glib/gscanner.h \
- /usr/include/glib-2.0/glib/gsequence.h \
- /usr/include/glib-2.0/glib/gshell.h /usr/include/glib-2.0/glib/gslice.h \
- /usr/include/glib-2.0/glib/gspawn.h \
- /usr/include/glib-2.0/glib/gstrfuncs.h \
- /usr/include/glib-2.0/glib/gstringchunk.h \
- /usr/include/glib-2.0/glib/gtestutils.h \
- /usr/include/glib-2.0/glib/gthreadpool.h \
- /usr/include/glib-2.0/glib/gtimer.h \
- /usr/include/glib-2.0/glib/gtrashstack.h \
- /usr/include/glib-2.0/glib/gtree.h \
- /usr/include/glib-2.0/glib/gurifuncs.h \
- /usr/include/glib-2.0/glib/gvarianttype.h \
- /usr/include/glib-2.0/glib/gvariant.h \
- /usr/include/glib-2.0/glib/gversion.h \
- /usr/include/glib-2.0/glib/deprecated/gallocator.h \
- /usr/include/glib-2.0/glib/deprecated/gcache.h \
- /usr/include/glib-2.0/glib/deprecated/gcompletion.h \
- /usr/include/glib-2.0/glib/deprecated/gmain.h \
- /usr/include/glib-2.0/glib/deprecated/grel.h \
- /usr/include/glib-2.0/glib/deprecated/gthread.h /usr/include/pthread.h \
- /usr/include/endian.h /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap-16.h /usr/include/sched.h \
- /usr/include/x86_64-linux-gnu/bits/sched.h \
- /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/include/audacious/plugin.h /usr/include/audacious/api.h \
- /usr/include/audacious/types.h \
- /usr/include/x86_64-linux-gnu/libaudcore/audio.h \
- /usr/include/libaudcore/index.h /usr/include/libaudcore/tuple.h \
- /usr/include/libaudcore/core.h /usr/include/libaudcore/vfs.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h aosd_trigger.h \
- /usr/include/audacious/i18n.h /usr/include/libintl.h /usr/include/math.h \
- /usr/include/x86_64-linux-gnu/bits/huge_val.h \
- /usr/include/x86_64-linux-gnu/bits/huge_valf.h \
- /usr/include/x86_64-linux-gnu/bits/huge_vall.h \
- /usr/include/x86_64-linux-gnu/bits/inf.h \
- /usr/include/x86_64-linux-gnu/bits/nan.h \
- /usr/include/x86_64-linux-gnu/bits/mathdef.h \
- /usr/include/x86_64-linux-gnu/bits/mathcalls.h /usr/include/string.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdbool.h vfdm.h
-aosd_trigger.o: aosd_trigger.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h \
- /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
- /usr/include/glib-2.0/glib/gtypes.h \
- /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
- /usr/include/glib-2.0/glib/gmacros.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed/syslimits.h \
- /usr/include/limits.h /usr/include/features.h \
- /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
- /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/float.h \
- /usr/include/glib-2.0/glib/gversionmacros.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/xlocale.h \
- /usr/include/glib-2.0/glib/garray.h \
- /usr/include/glib-2.0/glib/gasyncqueue.h \
- /usr/include/glib-2.0/glib/gthread.h \
- /usr/include/glib-2.0/glib/gatomic.h /usr/include/glib-2.0/glib/gerror.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdarg.h \
- /usr/include/glib-2.0/glib/gquark.h \
- /usr/include/glib-2.0/glib/gbacktrace.h /usr/include/signal.h \
- /usr/include/x86_64-linux-gnu/bits/sigset.h \
- /usr/include/x86_64-linux-gnu/bits/signum.h \
- /usr/include/x86_64-linux-gnu/bits/siginfo.h \
- /usr/include/x86_64-linux-gnu/bits/sigaction.h \
- /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
- /usr/include/x86_64-linux-gnu/bits/sigstack.h \
- /usr/include/x86_64-linux-gnu/sys/ucontext.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
- /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /usr/include/glib-2.0/glib/gbase64.h \
- /usr/include/glib-2.0/glib/gbitlock.h \
- /usr/include/glib-2.0/glib/gbookmarkfile.h \
- /usr/include/glib-2.0/glib/gbytes.h \
- /usr/include/glib-2.0/glib/gcharset.h \
- /usr/include/glib-2.0/glib/gchecksum.h \
- /usr/include/glib-2.0/glib/gconvert.h \
- /usr/include/glib-2.0/glib/gdataset.h /usr/include/glib-2.0/glib/gdate.h \
- /usr/include/glib-2.0/glib/gdatetime.h \
- /usr/include/glib-2.0/glib/gtimezone.h /usr/include/glib-2.0/glib/gdir.h \
- /usr/include/dirent.h /usr/include/x86_64-linux-gnu/bits/dirent.h \
- /usr/include/glib-2.0/glib/genviron.h \
- /usr/include/glib-2.0/glib/gfileutils.h \
- /usr/include/glib-2.0/glib/ggettext.h /usr/include/glib-2.0/glib/ghash.h \
- /usr/include/glib-2.0/glib/glist.h /usr/include/glib-2.0/glib/gmem.h \
- /usr/include/glib-2.0/glib/gnode.h /usr/include/glib-2.0/glib/ghmac.h \
- /usr/include/glib-2.0/glib/gchecksum.h \
- /usr/include/glib-2.0/glib/ghook.h \
- /usr/include/glib-2.0/glib/ghostutils.h \
- /usr/include/glib-2.0/glib/giochannel.h \
- /usr/include/glib-2.0/glib/gmain.h /usr/include/glib-2.0/glib/gpoll.h \
- /usr/include/glib-2.0/glib/gslist.h /usr/include/glib-2.0/glib/gstring.h \
- /usr/include/glib-2.0/glib/gunicode.h \
- /usr/include/glib-2.0/glib/gutils.h \
- /usr/include/glib-2.0/glib/gkeyfile.h \
- /usr/include/glib-2.0/glib/gmappedfile.h \
- /usr/include/glib-2.0/glib/gmarkup.h \
- /usr/include/glib-2.0/glib/gmessages.h \
- /usr/include/glib-2.0/glib/goption.h \
- /usr/include/glib-2.0/glib/gpattern.h \
- /usr/include/glib-2.0/glib/gprimes.h /usr/include/glib-2.0/glib/gqsort.h \
- /usr/include/glib-2.0/glib/gqueue.h /usr/include/glib-2.0/glib/grand.h \
- /usr/include/glib-2.0/glib/gregex.h \
- /usr/include/glib-2.0/glib/gscanner.h \
- /usr/include/glib-2.0/glib/gsequence.h \
- /usr/include/glib-2.0/glib/gshell.h /usr/include/glib-2.0/glib/gslice.h \
- /usr/include/glib-2.0/glib/gspawn.h \
- /usr/include/glib-2.0/glib/gstrfuncs.h \
- /usr/include/glib-2.0/glib/gstringchunk.h \
- /usr/include/glib-2.0/glib/gtestutils.h \
- /usr/include/glib-2.0/glib/gthreadpool.h \
- /usr/include/glib-2.0/glib/gtimer.h \
- /usr/include/glib-2.0/glib/gtrashstack.h \
- /usr/include/glib-2.0/glib/gtree.h \
- /usr/include/glib-2.0/glib/gurifuncs.h \
- /usr/include/glib-2.0/glib/gvarianttype.h \
- /usr/include/glib-2.0/glib/gvariant.h \
- /usr/include/glib-2.0/glib/gversion.h \
- /usr/include/glib-2.0/glib/deprecated/gallocator.h \
- /usr/include/glib-2.0/glib/deprecated/gcache.h \
- /usr/include/glib-2.0/glib/deprecated/gcompletion.h \
- /usr/include/glib-2.0/glib/deprecated/gmain.h \
- /usr/include/glib-2.0/glib/deprecated/grel.h \
- /usr/include/glib-2.0/glib/deprecated/gthread.h /usr/include/pthread.h \
- /usr/include/endian.h /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap-16.h /usr/include/sched.h \
- /usr/include/x86_64-linux-gnu/bits/sched.h \
- /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/include/audacious/drct.h /usr/include/audacious/api.h \
- /usr/include/libaudcore/core.h /usr/include/libaudcore/index.h \
- /usr/include/audacious/api-define-begin.h \
- /usr/include/audacious/drct-api.h \
- /usr/include/audacious/api-define-end.h \
- /usr/include/audacious/api-alias-begin.h \
- /usr/include/audacious/api-alias-end.h /usr/include/audacious/i18n.h \
- /usr/include/libintl.h /usr/include/audacious/playlist.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
- /usr/include/audacious/types.h /usr/include/libaudcore/tuple.h \
- /usr/include/audacious/playlist-api.h /usr/include/audacious/plugin.h \
- /usr/include/x86_64-linux-gnu/libaudcore/audio.h \
- /usr/include/libaudcore/vfs.h /usr/include/libaudcore/audstrings.h \
- /usr/include/libaudcore/hook.h aosd_trigger.h aosd_trigger_private.h \
- /usr/include/string.h vfdm.h
-serio.o: serio.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h \
- /usr/include/x86_64-linux-gnu/bits/waitflags.h \
- /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap-16.h \
- /usr/include/x86_64-linux-gnu/sys/types.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/sys/select.h \
- /usr/include/x86_64-linux-gnu/bits/select.h \
- /usr/include/x86_64-linux-gnu/bits/sigset.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/sys/sysmacros.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/stdio.h \
- /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdarg.h \
- /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/x86_64-linux-gnu/bits/sys_errlist.h /usr/include/string.h \
- /usr/include/xlocale.h /usr/include/fcntl.h \
- /usr/include/x86_64-linux-gnu/bits/fcntl.h \
- /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
- /usr/include/x86_64-linux-gnu/bits/stat.h /usr/include/termios.h \
- /usr/include/x86_64-linux-gnu/bits/termios.h \
- /usr/include/x86_64-linux-gnu/sys/ttydefaults.h /usr/include/unistd.h \
- /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
- /usr/include/x86_64-linux-gnu/bits/environments.h \
- /usr/include/x86_64-linux-gnu/bits/confname.h /usr/include/getopt.h \
- /usr/include/x86_64-linux-gnu/sys/time.h /usr/include/errno.h \
- /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
- /usr/include/x86_64-linux-gnu/asm/errno.h \
- /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
- /usr/include/ctype.h serio.h
-vfd.o: vfd.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h \
- /usr/include/x86_64-linux-gnu/bits/waitflags.h \
- /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap-16.h \
- /usr/include/x86_64-linux-gnu/sys/types.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/sys/select.h \
- /usr/include/x86_64-linux-gnu/bits/select.h \
- /usr/include/x86_64-linux-gnu/bits/sigset.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/sys/sysmacros.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/stdio.h \
- /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdarg.h \
- /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/x86_64-linux-gnu/bits/sys_errlist.h /usr/include/string.h \
- /usr/include/xlocale.h /usr/include/unistd.h \
- /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
- /usr/include/x86_64-linux-gnu/bits/environments.h \
- /usr/include/x86_64-linux-gnu/bits/confname.h /usr/include/getopt.h \
- serio.h vfd.h 14.h
-vfdm.o: vfdm.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h /usr/include/time.h \
- /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/xlocale.h \
- /usr/include/string.h vfd.h sysmon.h vfdm.h
-sysmon_linux.o: sysmon_linux.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h sysmon.h
-vfdm_unix.o: vfdm_unix.c /usr/include/stdc-predef.h \
- /usr/include/x86_64-linux-gnu/bits/predefs.h /usr/include/pthread.h \
- /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h /usr/include/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap-16.h /usr/include/sched.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/bits/sched.h \
- /usr/include/x86_64-linux-gnu/bits/time.h /usr/include/xlocale.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
- /usr/include/x86_64-linux-gnu/bits/setjmp.h vfdm.h
+.PHONY : clean
+clean:
+	rm -f $(OBJS) $(TARGETS) $(CLEAN_EXTRA) *~ *.bak
+
+.PHONY : depend
+depend:
+	echo '# Automatically generated dependencies' > Makefile.dep
+	gccmakedep -s '# Automatically generated dependencies' -fMakefile.dep -- $(CFLAGS) -- $(SRCS)
+
+include Makefile.dep

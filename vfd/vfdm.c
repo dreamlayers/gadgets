@@ -11,10 +11,13 @@
 #include "analoglog.h"
 #endif
 
-#define VFDM_FLAG_QUIT 2
-#define VFDM_FLAG_VU 4
-#define VFDM_FLAG_TRACK 8
-#define VFDM_FLAG_STATE 16
+/* (1 << 0) is timeout flag in vfdm.h */
+#define VFDM_FLAG_QUIT (1 << 1)
+#define VFDM_FLAG_VU (1 << 2)
+#define VFDM_FLAG_TRACK (1 << 3)
+#define VFDM_FLAG_STATE (1 << 4)
+#define VFDM_FLAG_SUSPEND (1 << 5)
+#define VFDM_FLAG_RESUME (1 << 6)
 
 /***** Global Variables *****/
 
@@ -33,7 +36,7 @@ static unsigned char ind[5];
 /* Communicates VU data to VFD thread.
  * When there is no data, vu[0] == -1
  */
-static int vu[2];
+static unsigned int vu[2], vu2thread[2];
 
 /* Counter for CPU poll cycles without a Winamp update */
 #define NOSCT_FINAL 5
@@ -42,9 +45,11 @@ static int nosct;
 /* Blocks updates after the display is cleared in preparation for suspend */
 static int suspended = 0;
 
-static char trkname[VFD_SCROLLMAX]; /* Pointer to track name (past track #) */
-static int trklen; /* Number of track name characters to display on VFD */
-static int trknum; /* Track number */
+static struct trackdata {
+    char name[VFD_SCROLLMAX]; /* Pointer to track name (past track #) */
+    int length; /* Number of track name characters to display on VFD */
+    int number; /* Track number */
+} track2thread, track;
 
 #if 0
 /* Parallel queue */
@@ -111,23 +116,64 @@ static void vfdm_thread(void) {
 
         signalflags = vfdm_cb_wait();
 
+        if (signalflags == 0) continue;
+
+        /* Mutex is locked. Copy data to avoid race conditions */
+        if (signalflags & VFDM_FLAG_VU) {
+            vu[0] = vu2thread[0];
+            vu[1] = vu2thread[1];
+            vu2thread[0] = 0;
+            vu2thread[1] = 0;
+        }
+
+        if (signalflags & VFDM_FLAG_TRACK) {
+            memcpy(&track, &track2thread, sizeof(track));
+        }
+
+        vfdm_cb_unlock();
+
         if (signalflags & VFDM_FLAG_QUIT) break;
+
+        if (signalflags & VFDM_FLAG_SUSPEND) {
+            if (!suspended) {
+                suspended = 1;
+                vfd_bmntxt(0, " ", 1);
+                vfd_bmclear();
+            }
+        }
+
+        if (signalflags & VFDM_FLAG_RESUME) {
+            sysmon_pmwake();
+            if (suspended) {
+                vfd_enterbm();
+
+                vfd_bmind(ind);
+                if (nosct < NOSCT_FINAL) {
+                    if (track.length > 0) vfd_bmntxt(VFDTXT_LOOP, track.name, track.length);
+                }
+                vfdm_cb_settimer(10);
+                memset(statusshown, ' ', 12);
+                memset(statustext, ' ', 12);
+                suspended = 0;
+            }
+        }
 
         if (!suspended) {
             /* If there is VU meter data send that now */
             if (signalflags & VFDM_FLAG_VU) {
-                vfd_bmsetvu(vu[0], vu[1]);
-                vu[0] = -1;
-
                 if (curplaystate != VFDM_PLAYING) {
                     /* Not playing but got VU data -> playing */
                     vfdm_setplaystate(vfdm_cb_getplaystate());
                 }
 
-                if (nosct >= NOSCT_FINAL) {
-                    signalflags |= VFDM_FLAG_TRACK;
-                } else {
-                    nosct = 0;
+                if (curplaystate == VFDM_PLAYING) {
+                    vfd_bmsetvu(vu[0], vu[1]);
+
+                    if (nosct >= NOSCT_FINAL) {
+                        signalflags |= VFDM_FLAG_TRACK;
+                    } else {
+                        nosct = 0;
+                    }
                 }
             }
 
@@ -157,8 +203,8 @@ static void vfdm_thread(void) {
                  */
                 nosct = NOSCT_FINAL-1;
 
-                vfd_bmntxt(VFDTXT_LOOP, trkname, trklen);
-                vfd_bms7dec(trknum);
+                vfd_bmntxt(VFDTXT_LOOP, track.name, track.length);
+                vfd_bms7dec(track.number);
             }
         } /* !suspended */
 
@@ -207,7 +253,13 @@ static void vfdm_thread(void) {
                     status_puthhmm(7, sysmon_getawaketime());
 
                     if (tt > tm_next) {
+#if defined(_MSC_VER)
+                        localtime_s(&lt, &tt);
+#elif defined(__MINGW32__)
+                        memcpy(&lt, localtime(&tt), sizeof(lt));
+#else
                         localtime_r(&tt, &lt);
+#endif
                         *(p++) = lt.tm_hour / 10 + '0';
                         *(p++) = lt.tm_hour % 10 + '0';
                         *(p++) = ' ';
@@ -243,10 +295,7 @@ static void vfdm_thread(void) {
 #endif
 
     /* Leave VFD displaying clock */
-    vfd_exitbm();
-    vfd_clear();
-
-    vfd_enterbm();
+    vfd_bmclear();
     memset(ind, 0, sizeof(ind));
     ind[VFDI_SEC_A] |= VFDI_SEC_B | VFDI_MIN_B | VFDI_HR_B;
     vfd_bmind(ind);
@@ -263,7 +312,8 @@ static void vfdm_thread(void) {
 int vfdm_init(const char *port) {
     /* Initialize variables used for communication with thread */
     memset(ind, 0, sizeof(ind));
-    vu[0] = -1;
+    vu2thread[0] = 0;
+    vu2thread[1] = 0;
 
     curplaystate = VFDM_UNKNOWNSTATE;
 
@@ -285,18 +335,15 @@ int vfdm_init(const char *port) {
 }
 
 void vfdm_close(void) {
+    vfdm_cb_lock();
     vfdm_cb_signal(VFDM_FLAG_QUIT);
     vfdm_cb_close();
 }
 
 void vfdm_vu(unsigned int l, unsigned int r) {
-    if (vu[0] == -1) {
-        vu[0] = l;
-        vu[1] = r;
-    } else {
-        if ((unsigned int)vu[0] < l) vu[0] = l;
-        if ((unsigned int)vu[1] < r) vu[1] = r;
-    }
+    vfdm_cb_lock();
+    if (vu2thread[0] < l) vu2thread[0] = l;
+    if (vu2thread[1] < r) vu2thread[1] = r;
     vfdm_cb_signal(VFDM_FLAG_VU);
 }
 
@@ -305,15 +352,19 @@ void vfdm_trackchange(int n, const char *name, unsigned int l) {
 
     usablel = (l < VFD_SCROLLMAX) ? l : VFD_SCROLLMAX;
 
-    if (trknum != n || usablel != trklen || memcmp(name, trkname, usablel)) {
-        trknum = n;
-        memcpy(trkname, name, usablel);
-        trklen = usablel;
+    if (track2thread.number != n ||
+        track2thread.length != usablel ||
+        memcmp(track2thread.name, name, usablel)) {
+        vfdm_cb_lock();
+        track2thread.number = n;
+        memcpy(track2thread.name, name, usablel);
+        track2thread.length = usablel;
         vfdm_cb_signal(VFDM_FLAG_TRACK);
     }
 }
 
 void vfdm_playstatechanged(void) {
+    vfdm_cb_lock();
     vfdm_cb_signal(VFDM_FLAG_STATE);
 }
 
@@ -353,33 +404,11 @@ static void vfdm_setplaystate(enum vfdm_playstate newstate) {
 }
 
 void vfdm_pmsuspend(void) {
-    if (!suspended) {
-        suspended = 1;
-        vfd_bmntxt(0, " ", 1);
-        vfd_bmclear();
-    }
+    vfdm_cb_lock();
+    vfdm_cb_signal(VFDM_FLAG_SUSPEND);
 }
 
 void vfdm_pmwake(void) {
-    sysmon_pmwake();
-    if (suspended) {
-        // LARGE_INTEGER liDueTime;
-
-#ifdef WAKETIME
-        waketime = sysmon_getlastwaketime();
-#endif
-
-        //vfd_init();
-        /* vfd_clear(); */
-        vfd_enterbm();
-        /* vfd_bmsetscw(1,12); */
-
-        vfd_bmind(ind);
-        if (nosct < NOSCT_FINAL) {
-            if (trklen > 0) vfd_bmntxt(VFDTXT_LOOP, trkname, trklen);
-        }
-        memset(statusshown, ' ', 12);
-        memset(statustext, ' ', 12);
-        suspended = 0;
-    }
+    vfdm_cb_lock();
+    vfdm_cb_signal(VFDM_FLAG_RESUME);
 }

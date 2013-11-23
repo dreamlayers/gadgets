@@ -15,6 +15,10 @@
 #endif
 #include "sysmon.h"
 
+#ifdef __MINGW32__
+ULONGLONG WINAPI GetTickCount64(void);
+#endif
+
 /* CPU */
 
 /* This stuff is defined elsewhere in Microsoft header files.

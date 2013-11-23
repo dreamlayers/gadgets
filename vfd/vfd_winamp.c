@@ -3,8 +3,10 @@
 // Feel free to base any plugins on this "framework"...
 
 #define VFDPORT "COM1"
+#if !defined(DSPPLUG) && !defined(VISPLUG)
 //#define DSPPLUG
 #define VISPLUG
+#endif
 
 #define __W32API_USE_DLLIMPORT__
 #define WIN32_LEAN_AND_MEAN
@@ -37,15 +39,15 @@
 #define IPC_ISPLAYING 104
 #define WM_WA_IPC WM_USER
 
-MODULETYPE *getModule(int which);
+static MODULETYPE *getModule(int which);
 
-void config(struct MODULETYPE *this_mod);
-int init(struct MODULETYPE *this_mod);
-void quit(struct MODULETYPE *this_mod);
+static void config(struct MODULETYPE *this_mod);
+static int init(struct MODULETYPE *this_mod);
+static void quit(struct MODULETYPE *this_mod);
 #if defined(DSPPLUG)
-int modify_samples1(struct MODULETYPE *this_mod, short int *samples, int numsamples, int bps, int nch, int srate);
+static int modify_samples1(struct MODULETYPE *this_mod, short int *samples, int numsamples, int bps, int nch, int srate);
 #elif defined(VISPLUG)
-int render(struct winampVisModule *this_mod);
+static int render(struct winampVisModule *this_mod);
 #endif
 
 #if defined(DSPPLUG)
@@ -78,8 +80,8 @@ static winampVisModule mod =
     25,     // delayMS
     0,      // spectrumNch
     2,      // waveformNch
-    { 0, }, // spectrumData
-    { 0, }, // waveformData
+    { { 0, 0 } }, // spectrumData
+    { { 0, 0 } }, // waveformData
     config,
     init,
     render,
@@ -116,9 +118,6 @@ static MODULETYPE *getModule(int which) {
 /***** Global Variables *****/
 
 static HHOOK WAHook = NULL;
-
-/* Data on the currently playing track */
-static bool trkchanged; /* Notify VFD thread to update track data */
 
 /***** Functions for the Winamp event loop ******/
 
@@ -233,7 +232,7 @@ static LRESULT WINAPI HookWinampWnd(int nCode, WPARAM wParam, LPARAM lParam) {
 
 /* Get new state from Winamp and update indicators if the state changed */
 enum vfdm_playstate vfdm_cb_getplaystate(void) {
-    return (enum playstate)SendMessage(mod.hwndParent,WM_WA_IPC,0,IPC_ISPLAYING);
+    return (enum vfdm_playstate)SendMessage(mod.hwndParent,WM_WA_IPC,0,IPC_ISPLAYING);
 }
 
 /***** Winamp module functions *****/

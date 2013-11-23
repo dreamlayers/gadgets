@@ -407,7 +407,11 @@ SERIO_RETURN serio_connect(const char *fname, unsigned int baud) {
     }
 
     /* Setup comm DCB */
+#ifdef _MSC_VER
     sprintf_s(modestr, sizeof(modestr), "%u,n,8,1", baud);
+#else
+    sprintf(modestr, "%u,n,8,1", baud);
+#endif
     FillMemory(&dcb, sizeof(dcb), 0);
     dcb.DCBlength = sizeof(dcb);
     if (!BuildCommDCB(modestr, &dcb)) {

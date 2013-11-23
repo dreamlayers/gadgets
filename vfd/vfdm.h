@@ -28,6 +28,9 @@ void vfdm_cb_close(void);
 void vfdm_cb_settimer(unsigned int milliseconds);
 void vfdm_cb_incrementtimer(unsigned int milliseconds);
 unsigned int vfdm_cb_wait(void);
+/* vfdm_cb_lock() must be called before signal */
+void vfdm_cb_lock(void);
 void vfdm_cb_signal(unsigned int flagstoset);
+void vfdm_cb_unlock(void);
 
 #endif /* ifndef _VFDM_H_ */
