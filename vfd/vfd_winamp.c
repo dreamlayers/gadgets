@@ -3,6 +3,7 @@
 // Feel free to base any plugins on this "framework"...
 
 #define VFDPORT "COM1"
+#define SPECTRUMVU
 #if !defined(DSPPLUG) && !defined(VISPLUG)
 //#define DSPPLUG
 #define VISPLUG
@@ -78,8 +79,13 @@ static winampVisModule mod =
     0,      // nCh
     25,     // latencyMS
     25,     // delayMS
+#ifdef SPECTRUMVU
+    2,      // spectrumNch
+    0,      // waveformNch
+#else
     0,      // spectrumNch
     2,      // waveformNch
+#endif
     { { 0, 0 } }, // spectrumData
     { { 0, 0 } }, // waveformData
     config,
@@ -299,6 +305,16 @@ static int render(struct winampVisModule *this_mod)
         }
       }
       total /= (double)numsamples;
+#elif defined(VISPLUG) && defined(SPECTRUMVU)
+      /* New code using spectrum */
+      for (x = 0; x < 576; x++) {
+        d = (double)this_mod->spectrumData[y][x] / 255.0;
+        // d = d * d;
+        // total += spect;
+        if (d > total) total = d;
+      }
+      //total = sqrt(total);
+      vu[y] = (unsigned int)(total * 14.0 + 0.5);
 #elif defined(VISPLUG)
       for (x = 1; x < 576; x ++) {
         d = (signed char)(this_mod->waveformData[y][x]);
@@ -308,6 +324,7 @@ static int render(struct winampVisModule *this_mod)
       total /= 576.0;
 #endif
 
+#if !defined(VISPLUG) || !defined(SPECTRUMVU)
       if (total == 0) total = 1.0 / 1000000 / 1000000;
       total = sqrt(total);
       total = log(total) * 20.0 / log(10.0);
@@ -316,6 +333,7 @@ static int render(struct winampVisModule *this_mod)
       d = d * 14.0 / 50.0;
 
       vu[y] = lrint(d);
+#endif
       if (vu[y] < 0) vu[y] = 0;
       if (vu[y] > 14) vu[y] = 14;
     }
