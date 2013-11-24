@@ -134,7 +134,7 @@ static char *findwa(char *s) {
     const char *waname = "- winamp";
     register const char *p2;
 
-    cand = s;
+    cand = NULL;
     p = s;
     p2 = waname;
 
@@ -153,12 +153,16 @@ static char *findwa(char *s) {
         p++;
     }
 
-    /* Skip over spaces before "- Winamp" */
-    p = cand;
-    if (p == s) return p;
-    while (p > s && *(--p) == ' ') { }
+    if (cand == NULL) {
+        /* Not found. Return end of string */
+        return p;
+    } else  {
+        /* Skip over spaces before "- Winamp" */
+        p = cand;
+        while (p > s && *(--p) == ' ') { }
 
-    return p + 1;
+        return p + 1;
+    }
 }
 
 /* If track name changed, store it and tell VFD thread to update */
@@ -249,12 +253,12 @@ static void config(struct MODULETYPE *this_mod) {
 }
 
 static int init(struct MODULETYPE *this_mod) {
-    char buf[VFD_SCROLLMAX+1];
+    char buf[256];
 
     vfdm_init(VFDPORT);
 
     /* Initialize variables used for communication with thread */
-    GetWindowText(mod.hwndParent, buf, VFD_SCROLLMAX);
+    GetWindowText(mod.hwndParent, buf, sizeof(buf));
     updtrkname(buf);
 
     WAHook = SetWindowsHookEx(WH_CALLWNDPROCRET, HookWinampWnd, NULL,
