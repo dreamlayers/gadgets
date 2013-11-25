@@ -137,6 +137,16 @@ aosd_render_pcm(const float * pcm, int channels)
     return;
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define HAVE_VISIBILITY 1
+#else
+#define HAVE_VISIBILITY 0
+#endif
+
+#if HAVE_VISIBILITY
+#pragma GCC visibility push(default)
+#endif
+
 #ifdef VISPLUGIN
 AUD_VIS_PLUGIN(
 #else
@@ -152,13 +162,6 @@ AUD_GENERAL_PLUGIN(
 #endif
 )
 
-#if 0
-#ifdef VISPLUGIN
-VisPlugin *rgblamp_vplist[] = { &aosd_gp, NULL };
-
-DECLARE_PLUGIN(aosd, NULL, NULL, NULL, NULL, NULL, NULL, rgblamp_vplist,NULL);
-#else
-GeneralPlugin *aosd_gplist[] = { &aosd_gp, NULL };
-SIMPLE_GENERAL_PLUGIN(aosd, aosd_gplist);
-#endif
+#if HAVE_VISIBILITY
+#pragma GCC visibility pop
 #endif

@@ -31,7 +31,7 @@ else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
 CC := gcc
-CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) -O -Wall -g -fPIC -shared
+CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) -fvisibility=hidden -O -Wall -g -fPIC -shared
 LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_upower.c aosd.c aosd_trigger.c
 
