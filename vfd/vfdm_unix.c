@@ -89,9 +89,6 @@ unsigned int vfdm_cb_wait(void) {
             flagscopy = flags;
             flags = 0;
 
-            // We unlock mutex while we are processing received events.
-            pthread_mutex_unlock(&mtx);
-
             return flagscopy;
         }
         else
@@ -112,8 +109,15 @@ unsigned int vfdm_cb_wait(void) {
 }
 
 void vfdm_cb_signal(unsigned int flagstoset) {
-    pthread_mutex_lock(&mtx);
     flags |= flagstoset;
     pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&mtx);
+}
+
+void vfdm_cb_lock(void) {
+    pthread_mutex_lock(&mtx);
+}
+
+void vfdm_cb_unlock(void) {
     pthread_mutex_unlock(&mtx);
 }
