@@ -29,9 +29,10 @@ CLEAN_EXTRA := vfd_winamp_vis.o vfd_winamp_dsp.o
 
 else
 
+PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
 CC := gcc
-CFLAGS := $(shell pkg-config --cflags audacious glib-2.0 dbus-glib-1 dbus-1) -O -Wall -g -fPIC -shared
-#LIBS = -lm
+CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) -O -Wall -g -fPIC -shared
+LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_upower.c aosd.c aosd_trigger.c
 
 TARGET := aud_vfd.so
@@ -40,7 +41,7 @@ TARGETS := $(TARGET)
 OBJS := $(SRCS:%.c=%.o)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
+	$(CC) $(CFLAGS) -Wl,--no-undefined $(OBJS) $(LIBS) -o $@
 
 install: $(TARGET)
 	cp $(TARGET) ~/.local/share/audacious/Plugins/
