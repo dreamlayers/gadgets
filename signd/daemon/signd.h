@@ -27,6 +27,9 @@ typedef enum {
 #define SFLAG_GNTEE  (1 << 5) /* Message has guaranteed time */
 #define SFLAG_ONCE   (1 << 6) /* Message is guaranteed to be shown once */
 
+/* size of allocation block for scmd->data */
+#define CHAINBLK 10000
+
 /* Protocol responses */
 int sock_sendraw(SOCKET sock, char *data, unsigned int l);
 int sock_sendeol(SOCKET sock);
@@ -172,10 +175,30 @@ int cmd_cb_pollquit(void);
 void cmd_cb_notify(scmdblk *scb);
 
 /*
+ * Utility functions available in gencmds.c
+ */
+
+/* Free chain such as scb->data */
+void cmd_freedata(void *p);
+
+/* Read unsigned long from socket, typically for parameters */
+int sc_read_ulong(SOCKET sock, unsigned long *out);
+
+/*
  * Generic commands available in gencmds.c
  */
 
-int sc_help(scmdblk *scb, SOCKET sock);
+/* Transient time parameter */
+int sc_p_trans(scmdblk *scmd, SOCKET sock);
+
+/* Guaranteed time parameter */
+int sc_p_gntee(scmdblk *scmd, SOCKET sock);
+
+/* Data of arbitrary length for a message command */
+int sc_d_msg(scmdblk *cmd, SOCKET sock);
+
+/* Respond with help information */
+int sc_r_help(scmdblk *scb, SOCKET sock);
 
 #ifdef __cplusplus
 }

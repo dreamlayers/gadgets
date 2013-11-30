@@ -23,7 +23,92 @@
 
 #include "signd.h"
 
-int sc_help(scmdblk *scb, SOCKET sock) {
+/* Free chain such as scb->data */
+void cmd_freedata(void *p) {
+  chainhdr *cp1, *cp2;
+
+  cp1 = (chainhdr *)p;
+  while (cp1) {
+    cp2 = cp1->next;
+    free(cp1);
+    cp1 = cp2;
+  }
+}
+
+int sc_read_ulong(SOCKET sock, unsigned long *out) {
+  unsigned char c;
+
+  *out = 0;
+
+  while (1) {
+    if (recv(sock, (char *)&c, 1, 0) != 1) break;
+
+    if (c == ';') return 0;
+    if (c < '0' || c > '9') break;
+
+    if (*out > (ULONG_MAX / (unsigned long)10)) break;
+    *out *= 10;
+
+    c -= '0';
+    if (*out > (ULONG_MAX - (unsigned long)c)) break;
+    *out += c;
+  }
+
+  return -1;
+}
+
+int sc_p_trans(scmdblk *scmd, SOCKET sock) {
+  return sc_read_ulong(sock, &(scmd->transtime));
+}
+
+int sc_p_gntee(scmdblk *scmd, SOCKET sock) {
+  return sc_read_ulong(sock, &(scmd->gnteetime));
+}
+
+int sc_d_msg(scmdblk *cmd, SOCKET sock) {
+  char c;
+  /* Pointer to pointer to current block */
+  chainhdr **ptc = (chainhdr **)&(cmd->data);
+  int remain = 0;                 /* Remaining bytes in current block */
+  chainhdr *curb = NULL;          /* Pointer to current block */
+  char *p = NULL;                 /* Pointer to where the next byte goes */
+
+  *ptc = NULL;
+
+  while ((recv(sock, &c, 1, 0) == 1) &&
+         ((cmd->flags & SFLAG_ASCIIZ) ?
+          (c != 0) :
+          (c != '\r' && c != '\n'))) {
+    if (remain == 0) {
+      if (curb != NULL) {
+        ptc = &(curb->next);
+        curb->size = CHAINBLK - sizeof(chainhdr);
+      } /* Else already set to cmd->data */
+      curb = (chainhdr *)malloc(CHAINBLK);
+      if (curb == NULL) return -1;
+      *ptc = curb;
+      curb->next = NULL;
+
+      remain = CHAINBLK - sizeof(chainhdr);
+      p = ((char *)curb) + sizeof(chainhdr);
+    }
+    *p = c;
+    p++;
+    remain--;
+  }
+
+  if (curb != NULL) {
+    if (remain != 0) {
+      *ptc = (chainhdr *)realloc(curb, CHAINBLK - remain);
+      if (*ptc == NULL) return -1;
+    }
+    (*ptc)->size = CHAINBLK - sizeof(chainhdr) - remain;
+  }
+
+  return 0;
+}
+
+int sc_r_help(scmdblk *scb, SOCKET sock) {
     int i, nRet;
     char buf[128];
     const char *cp;
