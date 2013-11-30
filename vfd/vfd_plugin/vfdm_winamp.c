@@ -1,7 +1,3 @@
-// Winamp test dsp library 0.9 for Winamp 2
-// Copyright (C) 1997, Justin Frankel/Nullsoft
-// Feel free to base any plugins on this "framework"...
-
 #define VFDPORT "COM1"
 #define SPECTRUMVU
 #if !defined(DSPPLUG) && !defined(VISPLUG)
