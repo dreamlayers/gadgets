@@ -47,12 +47,12 @@ enum vfdm_playstate vfdm_cb_getplaystate(void) {
     return playstate;
 }
 
-void updatestate(enum vfdm_playstate newstate) {
+static void updatestate(enum vfdm_playstate newstate) {
     playstate = newstate;
     vfdm_playstatechanged();
 }
 
-void audvfd_settitle(const gchar *title) {
+static void audvfd_settitle(const gchar *title) {
     gchar buf[VFD_SCROLLMAX];
     int len;
 

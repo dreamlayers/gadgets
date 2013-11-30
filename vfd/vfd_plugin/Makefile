@@ -1,6 +1,6 @@
 LIBVFD_DIR := ../libvfd
 SRCS := vfdm.c
-CFLAGS := -I$(LIBVFD_DIR) -fvisibility=hidden -O -Wall -g
+CFLAGS := -I$(LIBVFD_DIR) -fvisibility=hidden -O -Wall -Wmissing-prototypes -g
 
 PLATFORM := $(shell uname -o)
 ifeq ($(PLATFORM),Cygwin)

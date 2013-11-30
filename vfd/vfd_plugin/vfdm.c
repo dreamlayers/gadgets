@@ -64,7 +64,7 @@ int parq_head = 0, parq_tail = 0;
 
 static void vfdm_setplaystate(enum vfdm_playstate newstate);
 
-void status_upload(int full) {
+static void status_upload(int full) {
     if (full) {
         vfd_bmntxt(0, statustext, 12);
         memcpy(statusshown, statustext, 12);
@@ -79,7 +79,7 @@ void status_upload(int full) {
     }
 }
 
-void status_puthhmm(unsigned int pos, unsigned long secs) {
+static void status_puthhmm(unsigned int pos, unsigned long secs) {
     unsigned int hours, mins;
 
     secs %= 100*60*60; /* 100 hours rolls over */
