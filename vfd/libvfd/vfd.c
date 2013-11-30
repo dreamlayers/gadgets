@@ -223,6 +223,8 @@ static VFD_RETURN xvfd_getcmdecho(char cmd) {
     expects[1] = 13;
     expects[2] = 10;
 
+    serio_flush();
+    serio_setreadtmout(500); // Why is this long delay needed for enterbm?
     if (serio_read(inbuf, 3) != 3) {
         VFD_ERROR("vfd_getcmdecho: read error");
     }
@@ -445,7 +447,8 @@ VFD_RETURN vfd_bms7hex(int i) {
 /* Read one specific ADC channel */
 int vfd_bmreadadc(int i) {
     PROPAGATE_ERROR(xvfd_bmcmd(VFDBM_ADC0 + (i & 3)));
-
+    serio_flush();
+    serio_setreadtmout(200);
     return serio_getc();
 }
 
@@ -609,7 +612,8 @@ static int xvfd_bmparval(int op, int n) {
 /* Read parallel outputs */
 int vfd_bmreadpar() {
     PROPAGATE_ERROR(xvfd_bmcmd(VFDBM_RDPAR));
-
+    serio_flush();
+    serio_setreadtmout(200);
     return serio_getc();
 }
 
@@ -705,83 +709,42 @@ VFD_RETURN vfd_setclock(const unsigned char *al) {
 }
 
 #ifdef TESTING
-char buf[100];
-char b2[100];
-
 int main(int argc, char **argv) {
-  unsigned long i, j;
-
-  char ttt[12];
+  unsigned long i;
 
   /* Initialize LED sign */
 #ifdef WIN32
   vfd_connect("COM1");
-#elif defined(__CYGWIN__)
+#elif defined(__CYGWIN__) || defined(__linux)
   vfd_connect("/dev/ttyS0");
 #else
   vfd_connect("/dev/cu.serial1");
 #endif
 
-    if (argc == 2) {
-    // 0 for low, 1 for high
-    // 8 = white
-    // 32 = black
-        vfd_enterbm();
-#if 0
-        j = atoi(argv[1]);
-        for (i=0; i<10; i++) {
-            vfd_bmparset(j);
-            j = ~j;
+        printf("enterbm=>\n");
+        printf("enterbm: %i\n", vfd_enterbm());
+        vfd_bmtxt(1, "Testing...");
+        for (i = 0; i < 99; i++) {
+            vfd_bms7dec(i);
         }
-#endif
-        vfd_bmtxt(VFDTXT_PRT, "OK");
-        sleep(1);
-        vfd_exitbm();
-        vfd_clear();
-        printf("DONE\n");
-    }
-#if 0
-  vfd_clearalarms(buf);
-//  vfd_addalarm(buf, VFDPAR_ON, 1, 0, 2, 0, 0);
-//  vfd_addalarm(buf, VFDPAR_OFF, 0xFE, 0, 2, 1, 0);
-
-  vfd_addalarm(buf, VFDPAR_ON, 1, 10, 0, 0, 0);
-  vfd_addalarm(buf, VFDPAR_OFF, 0xFE, 10, 0, 1, 0);
+        printf("bmreadadc(0): %i\n", vfd_bmreadadc(0));
 
 
-  vfd_setclock(buf);
-  return 1234;
-#endif
-// if (argc != 2) fatalerr("???");
-#if 0
-  vfd_enterbm();
-
-/* #define VFDTXT_PRT     0
-#define VFDTXT_PRTLP   1
-#define VFDTXT_APPEND  2
-#define VFDTXT_APPENDL 4 */
-
-foo:
   vfd_bmsetc(2,'5');
 
   vfd_bmsetscw(4,12);
-  vfd_bmtxt(VFDTXT_PRTLP, "FAKE");
+  vfd_bmtxt(VFDTXT_LOOP, "TEST");
 
-  getchar();
+  vfd_bmparon(3);
 
   vfd_bmparoff(0xFE);
 
+  printf("vfd_bmreadpar() = %i\n", vfd_bmreadpar());
 
-  printf("?%i\n", vfd_bmreadpar());
-
-    printf(">%i<\n",vfd_bmreadadc(0));
-
+  sleep(1);
 
   vfd_exitbm();
 
-  getchar();
-#endif
-  /* Deinitialize LED sign */
   vfd_disconnect();
 
   return 0;

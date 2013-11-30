@@ -32,6 +32,9 @@ libvfd.a: $(OBJS) $(SERIO_DIR)/libserio.a Makefile
 	cp $(SERIO_DIR)/libserio.a $@
 	ar rs $@ $(OBJS)
 
+vfd_test: $(SRCS) $(SERIO_DIR)/libserio.a Makefile
+	$(CC) -DTESTING -I$(SERIO_DIR) -g -Wall $(SRCS) $(SERIO_DIR)/libserio.a -o $@
+
 .PHONY : clean
 clean:
 	rm -f $(OBJS) libvfd.a libvfd.so libvfd.dll *~ *.bak
