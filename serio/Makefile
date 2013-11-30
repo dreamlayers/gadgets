@@ -1,5 +1,5 @@
 SRCS := serio.c
-CFLAGS := -O -Wall -g -Wmissing-prototypes
+CFLAGS := -fvisibility=hidden -O -Wall -g -Wmissing-prototypes
 TARGET := libserio.a
 
 PLATFORM := $(shell uname -o)
@@ -10,6 +10,7 @@ SRCS := $(SRCS) serio_windows.c
 
 else
 
+CFLAGS := $(CFLAGS) -fPIC
 SRCS := $(SRCS) serio_unix.c
 
 endif
@@ -23,9 +24,6 @@ $(TARGET): $(OBJS)
 clean:
 	rm -f $(OBJS) $(TARGET) *~ *.bak
 
-.PHONY : depend
-depend:
-	echo '# Automatically generated dependencies' > Makefile.dep
-	gccmakedep -s '# Automatically generated dependencies' -fMakefile.dep -- $(CFLAGS) -- $(SRCS)
-
--include Makefile.dep
+serio.o: serio.c serio.h Makefile
+serio_unix.o: serio_unix.c serio.h Makefile
+serio_windows.o: serio_windows.c serio.h Makefile
