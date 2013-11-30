@@ -63,6 +63,21 @@ typedef struct scmdblk_s {
   unsigned long transtime, gnteetime;
 } scmdblk;
 
+/* Data about commands, supplied by device specific code */
+typedef struct signcmd_s {
+    /* Reads data from socket and stores it in memory */
+    int (*inputf)(scmdblk *, SOCKET);
+    /* Reads command from memory and executes it on the sign */
+    int (*execf)(scmdblk *);
+    /* Reads response from memory and returns it to the client */
+    int (*respf)(scmdblk *, SOCKET);
+
+    /* Which flags are allowed for this command? */
+    unsigned int flags;
+
+    const char *helptext;
+} signcmd;
+
 /* Sign thread */
 #ifdef WIN32
 DWORD WINAPI signproc(LPVOID lpParameter);
@@ -100,23 +115,17 @@ void cleanup_socket(void);
 /* Protocol version: sent to client to identify server protocol */
 extern const char cmd_protocolid[];
 
-/* Descriptions of commands  */
-extern const char *cmd_helptext[];
-
 /* Letters for commands */
 extern const char *cmd_commands;
+
+/* Data about commands */
+extern signcmd cmd_cdata[];
 
 /* Letters for command modifier flags */
 extern const char *cmd_flags;
 
-/* Array for all commands showing which flags are ok for that command */
-extern const unsigned int cmd_flagmatrix[];
-
-/* Arrays of functions for parameters, input, execution and responses */
+/* Arrays of functions for parameters */
 extern int (*cmd_paramf[])(scmdblk *, SOCKET);
-extern int (*cmd_inputf[])(scmdblk *, SOCKET);
-extern int (*cmd_execf[])(scmdblk *);
-extern int (*cmd_respf[])(scmdblk *, SOCKET);
 
 /* Called to free scmdblk->data */
 void cmd_freedata(void *p);

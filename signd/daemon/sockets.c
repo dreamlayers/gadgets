@@ -260,14 +260,14 @@ static void *client(void *lpParameter) {
         }
 
         /* Test mask */
-        if (scb->flags & ~cmd_flagmatrix[scb->cmd]) goto clifault;
+        if (scb->flags & ~cmd_cdata[scb->cmd].flags) goto clifault;
       }
     }
 
     if (c == ':') {
-      if (cmd_inputf[scb->cmd] == NULL) goto clifault;
+      if (cmd_cdata[scb->cmd].inputf == NULL) goto clifault;
       /* Get data from client */
-      if (cmd_inputf[scb->cmd](scb, sock) != 0) goto clifault;
+      if (cmd_cdata[scb->cmd].inputf(scb, sock) != 0) goto clifault;
     } else {
       if (c != '\r' && c != '\n') goto clifault;
     }
@@ -316,8 +316,8 @@ static void *client(void *lpParameter) {
         send(sock, mTIMEOUT, sizeof(mTIMEOUT), 0);
       } else {
         /* Respond to client */
-        if (cmd_respf[scb->cmd] != NULL) {
-            res = cmd_respf[scb->cmd](scb, sock);
+        if (cmd_cdata[scb->cmd].respf != NULL) {
+            res = cmd_cdata[scb->cmd].respf(scb, sock);
         } else {
             res = scb->result;
         }
@@ -683,7 +683,7 @@ void *signproc(void *lpParameter) {
     }
 
     if (scb->cmd <= scmd_max) {
-        scb->result = cmd_execf[scb->cmd](scb);
+        scb->result = cmd_cdata[scb->cmd].execf(scb);
     } else {
         scb->result = -1;
     }
