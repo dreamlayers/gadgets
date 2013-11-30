@@ -38,9 +38,6 @@ static struct timeval gnteetmr;
 #endif
 static int wastrans = 0;
 
-/* Number of commands */
-unsigned int scmd_max;
-
 /* This permits abort polling from deep within the code driving the display,
  * without any need to know about and pass the scmdblk. It works because the
  * display can only work with one scmdblk at a time, but is a bit messy
@@ -255,8 +252,8 @@ static void *client(void *lpParameter) {
         if (cp == NULL) goto clifault;
         t = (int)(cp - cmd_flags);
         scb->flags |= 1 << t;
-        if (cmd_paramf[t] != NULL) {
-          if (cmd_paramf[t](scb, sock) != 0) goto clifault;
+        if (cmd_fdata[t].paramf != NULL) {
+          if (cmd_fdata[t].paramf(scb, sock) != 0) goto clifault;
         }
 
         /* Test mask */
@@ -388,8 +385,6 @@ int init_socket() {
   pthread_t signthread;
 #endif
   int nRet;
-
-  scmd_max = strlen(cmd_commands);
 
   getconsole();
 
@@ -524,7 +519,7 @@ int sock_sendeol(SOCKET sock) {
 /*
  * Main thread
  */
-int cmd_pollquit(void) {
+int cmd_cb_pollquit(void) {
   if (curscb == NULL) return 0;
 
   if ((curscb->flags & SFLAG_GNTEE) && (curscb->gnteetime > 0)) {
@@ -682,10 +677,11 @@ void *signproc(void *lpParameter) {
       }
     }
 
-    if (scb->cmd <= scmd_max) {
+    /* Execute command */
+    if (cmd_cdata[scb->cmd].execf != NULL) {
         scb->result = cmd_cdata[scb->cmd].execf(scb);
     } else {
-        scb->result = -1;
+        scb->result = 0;
     }
 
     /* Notify of completion (maybe already notified) */
@@ -728,7 +724,7 @@ void *signproc(void *lpParameter) {
   return 0;
 }
 
-void cmd_notify(scmdblk *scb) {
+void cmd_cb_notify(scmdblk *scb) {
       /* Notify of completion */
 #ifdef WIN32
       if (scb->event != NULL) {

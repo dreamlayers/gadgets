@@ -1,4 +1,4 @@
-SRCS := sockets.c
+SRCS := sockets.c gencmds.c
 CFLAGS := -O -Wall -Wmissing-prototypes -g
 
 TARGET := signd.a

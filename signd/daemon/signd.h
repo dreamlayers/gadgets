@@ -63,6 +63,14 @@ typedef struct scmdblk_s {
   unsigned long transtime, gnteetime;
 } scmdblk;
 
+/* Data about flags, supplied by device specific code */
+typedef struct signflag_s {
+    /* Obtains parameter, or NULL if no parameter */
+    int (*paramf)(scmdblk *, SOCKET);
+
+    const char *helptext;
+} signflag;
+
 /* Data about commands, supplied by device specific code */
 typedef struct signcmd_s {
     /* Reads data from socket and stores it in memory */
@@ -112,6 +120,10 @@ int init_socket(void);
 int accept_client(void);
 void cleanup_socket(void);
 
+/*
+ * Data provided by application-specific code, for customizing the daemon.
+ */
+
 /* Protocol version: sent to client to identify server protocol */
 extern const char cmd_protocolid[];
 
@@ -124,20 +136,46 @@ extern signcmd cmd_cdata[];
 /* Letters for command modifier flags */
 extern const char *cmd_flags;
 
-/* Arrays of functions for parameters */
-extern int (*cmd_paramf[])(scmdblk *, SOCKET);
+/* Data about flags */
+extern signflag cmd_fdata[];
 
-/* Called to free scmdblk->data */
-void cmd_freedata(void *p);
+/*
+ * API between daemon core and application-specific code
+ */
 
+/* Called by daemon at startup to initialize application-specific things */
 int cmd_init(void);
+
+/* Called by daemon at exit to clean up application-specific things */
 void cmd_cleanup(void);
 
-int cmd_pollquit(void);
-
-void cmd_notify(scmdblk *scb);
-
+/* Called by daemon when a transient message expires
+ * and there is nothing else to display.
+ */
 int cmd_clear(void);
+
+/* Called by daemon to free scmdblk->data */
+void cmd_freedata(void *p);
+
+/* The following callbacks are optional. They are meant for
+ * where execf() does not return promptly.
+ */
+
+/* Called by application-specific code to poll daemon
+ * whether current command should end.
+ */
+int cmd_cb_pollquit(void);
+
+/* Called by application-specific code to tell client that
+ * command has finished and return result code.
+ */
+void cmd_cb_notify(scmdblk *scb);
+
+/*
+ * Generic commands available in gencmds.c
+ */
+
+int sc_help(scmdblk *scb, SOCKET sock);
 
 #ifdef __cplusplus
 }
