@@ -98,7 +98,7 @@ extern HWND hWnd;
 //#include "tray42.h"
 #endif
 
-int init_socket(void);
+int init_socket(const char *device);
 int accept_client(void);
 void cleanup_socket(void);
 
@@ -126,7 +126,7 @@ extern signflag cmd_fdata[];
  */
 
 /* Called by daemon at startup to initialize application-specific things */
-int cmd_init(void);
+int cmd_init(const char *device);
 
 /* Called by daemon at exit to clean up application-specific things */
 void cmd_cleanup(void);

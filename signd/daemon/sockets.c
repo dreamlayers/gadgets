@@ -374,7 +374,7 @@ void getconsole() {
 #define getconsole()
 #endif
 
-int init_socket() {
+int init_socket(const char *device) {
 #ifdef WIN32
   WORD version = MAKEWORD(1,1);
   SOCKADDR_IN saServer;
@@ -388,7 +388,7 @@ int init_socket() {
 
   getconsole();
 
-  if (cmd_init() != 0) {
+  if (cmd_init(device) != 0) {
       fatalerr("Error initializing hardware");
   }
 
@@ -744,8 +744,11 @@ void cmd_cb_notify(scmdblk *scb) {
 }
 
 #ifndef WIN32
-int main() {
-    init_socket();
+int main(int argc, char **argv) {
+    if (argc != 1 && argc != 2) {
+        fprintf(stderr, "USAGE: %s [DEVICE]\n", argv[0]);
+    }
+    init_socket((argc == 2) ? argv[1] : NULL);
     while (1) {       accept_client(); }
     // FIXME? cleanup_socket();
 }
