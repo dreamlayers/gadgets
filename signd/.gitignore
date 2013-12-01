@@ -1,3 +1,0 @@
-*.o
-client/libsdclient.a
-daemon/signd.a

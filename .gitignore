@@ -1,0 +1,8 @@
+*.a
+*.dll
+*.exe
+*.o
+*.so
+vfd/libvfd/vfd_test
+vfd/vfdd/vfdd
+ledsign/lsd/lsd
