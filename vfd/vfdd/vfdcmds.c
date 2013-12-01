@@ -55,20 +55,6 @@ static int sc_clear(scmdblk *scb) {
  * Data about commands for use by generic daemon code.
  */
 
-/* Letters for command modifier flags */
-const char *cmd_flags = "ALZQTGO";
-
-/* Data about flags */
-signflag cmd_fdata[] = {
-    { NULL, "Append" },
-    { NULL, "Loop" },
-    { NULL, "Null terminated string" },
-    { NULL, "Queue only" },
-    { sc_p_trans, "Transient time" },
-    { sc_p_gntee, "Guaranteed time" },
-    { NULL, "Once only" }
-};
-
 /* Letters for sign commands */
 const char *cmd_commands = "HNCP";
 
