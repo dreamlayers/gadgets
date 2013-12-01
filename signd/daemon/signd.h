@@ -18,14 +18,7 @@ typedef enum {
 #endif
 #endif
 
-/* Command modifier flags */
-#define SFLAG_APPEND (1 << 0) /* Append rather than scrolling */
-#define SFLAG_LOOP   (1 << 1) /* Keep looping message */
-#define SFLAG_ASCIIZ (1 << 2) /* Null-terminated string */
-#define SFLAG_QUEUE  (1 << 3) /* Queue only, don't wait for completion */
-#define SFLAG_TRANS  (1 << 4) /* Message has transient time */
-#define SFLAG_GNTEE  (1 << 5) /* Message has guaranteed time */
-#define SFLAG_ONCE   (1 << 6) /* Message is guaranteed to be shown once */
+#include "../sdprotocol.h"
 
 /* size of allocation block for scmd->data */
 #define CHAINBLK 10000

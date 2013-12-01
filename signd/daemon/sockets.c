@@ -45,12 +45,12 @@ static int wastrans = 0;
 static scmdblk *curscb = NULL;
 
 /* Protocol responses */
-static const char mOk[] = "OK\r\n";
-static const char mQueued[] = "QUEUED\r\n";
-static const char mFailed[] = "FAILED\r\n";
-const char mData[] = ":";
-const char mEol[] = "\r\n";
-static const char mTIMEOUT[] = "TIMEOUT\r\n";
+static const char mOk[] = SPROTO_OK;
+static const char mQueued[] = SPROTO_QUEUED;
+static const char mFailed[] = SPROTO_FAILED;
+const char mData[] = SPROTO_DATA;
+const char mEol[] = SPROTO_EOL;
+static const char mTIMEOUT[] = SPROTO_TIMEOUT;
 
 /* Command queue */
 scmdblk *qhead = NULL, *qtail = NULL;
