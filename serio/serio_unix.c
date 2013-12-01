@@ -71,7 +71,7 @@ static long timespec_ms_remains(struct timespec *ts) {
 
 /* Based on serio_read, but simplifed due to lack of write timeout. */
 SERIO_RETURN serio_write(const unsigned char *s, size_t l) {
-    int res;
+    int res = -1;
     fd_set fds;
     const unsigned char *p = s;
     size_t remains = l;
@@ -85,16 +85,14 @@ SERIO_RETURN serio_write(const unsigned char *s, size_t l) {
         FD_SET(fd, &fds);
 
 #ifdef SERIO_ABORT_POLL
-        tv.tv_sec = 0;
-        tv.tv_usec = SERIO_ABORT_POLL_MS * 1000;
+        if (abortpollf != NULL) {
+            tv.tv_sec = 0;
+            tv.tv_usec = SERIO_ABORT_POLL_MS * 1000;
 
-        FD_ZERO(&fds);
-        FD_SET(fd, &fds);
-
-        res = select(fd+1, NULL, &fds, NULL, &tv);
-#else /* !SERIO_ABORT_POLL */
+            res = select(fd+1, NULL, &fds, NULL, &tv);
+        } else
+#endif /* SERIO_ABORT_POLL */
         res = select(fd+1, NULL, &fds, NULL, NULL);
-#endif
         if (res == 1) {
             /* select() indicates data is available */
             res = write(fd, p, remains);
@@ -146,8 +144,8 @@ SERIO_LENGTH_RETURN serio_read(unsigned char *s, size_t l) {
     while (1) {
 #ifdef SERIO_ABORT_POLL
         /* Limit select() timeout to abort poll interval. */
-        if (abortpollf && ns_wait > (SERIO_ABORT_POLL_MS * 1000000)) {
-            ns_wait = SERIO_ABORT_POLL_MS * 1000000;
+        if (abortpollf && ms_wait > SERIO_ABORT_POLL_MS) {
+            ms_wait = SERIO_ABORT_POLL_MS;
         }
 #endif
         tv.tv_sec = ms_wait / 1000;

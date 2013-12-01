@@ -16,7 +16,7 @@
 /* #define SERIO_STRICT_READS */
 
 /* Regular abort polling during reads and writes. */
-/* #define SERIO_ABORT_POLL */
+#define SERIO_ABORT_POLL
 
 
 #define SERIO_OK 0
