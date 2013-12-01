@@ -439,18 +439,21 @@ static int pscmdr_view(scmdblk *cmd, SOCKET sock) {
   }
 }
 
-int cmd_init(void) {
-  /* Initialize LED sign */
+int cmd_init(const char *device) {
+  const char *defdev =
 #if defined(WIN32)
-  if (sign_open("COM8") != 0) {
+    "COM8";
 #elif defined(__CYGWIN__)
-  if (sign_open("/dev/ttyS5") != 0) {
+    "/dev/ttyS5";
 #elif defined(__linux)
-  if (sign_open("/dev/ttyUSB1") != 0) {
+    "/dev/ttyUSB1";
 #else
-  /* Prolific drivers won't work with cheap piece of shit */
-  if (sign_open("/dev/cu.serial1") != 0) {
+    "/dev/cu.serial1";
 #endif
+
+  /* Prolific drivers won't work with cheap piece of shit */
+  /* Initialize LED sign */
+  if (sign_open((device != NULL) ? device : defdev) != 0) {
     return -1;
   }
 
