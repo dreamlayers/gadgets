@@ -57,11 +57,11 @@ int sc_read_ulong(SOCKET sock, unsigned long *out) {
   return -1;
 }
 
-int sc_p_trans(scmdblk *scmd, SOCKET sock) {
+static int sc_p_trans(scmdblk *scmd, SOCKET sock) {
   return sc_read_ulong(sock, &(scmd->transtime));
 }
 
-int sc_p_gntee(scmdblk *scmd, SOCKET sock) {
+static int sc_p_gntee(scmdblk *scmd, SOCKET sock) {
   return sc_read_ulong(sock, &(scmd->gnteetime));
 }
 
@@ -172,3 +172,21 @@ int sc_r_help(scmdblk *scb, SOCKET sock) {
     if (nRet == SOCKET_ERROR) return -1;
     return 0;
 }
+
+/*
+ * Standard flags that can be used for any command
+ */
+
+/* Letters for command modifier flags */
+const char *cmd_flags = "ALZQTGO";
+
+/* Data about flags */
+signflag cmd_fdata[] = {
+    { NULL, "Append" },
+    { NULL, "Loop" },
+    { NULL, "Null terminated string" },
+    { NULL, "Queue only" },
+    { sc_p_trans, "Transient time" },
+    { sc_p_gntee, "Guaranteed time" },
+    { NULL, "Once only" }
+};

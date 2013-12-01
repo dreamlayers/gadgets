@@ -96,20 +96,6 @@ DWORD WINAPI signproc(LPVOID lpParameter);
 void *signproc(void *lpParameter);
 #endif
 
-#if 0
-    FIXME delete
-/* Queue functions */
-void enqcmd(scmdblk *cmd);
-scmdblk *deqcmd();
-int qempty();
-#ifdef WIN32
-extern HANDLE qevent;
-#else
-extern pthread_mutex_t qevent_mtx;
-extern pthread_cond_t qevent;
-#endif
-#endif
-
 #ifdef WIN32
 /* Message */
 #define ACCEPT_EVENT (WM_USER+2)
@@ -187,12 +173,6 @@ int sc_read_ulong(SOCKET sock, unsigned long *out);
 /*
  * Generic commands available in gencmds.c
  */
-
-/* Transient time parameter */
-int sc_p_trans(scmdblk *scmd, SOCKET sock);
-
-/* Guaranteed time parameter */
-int sc_p_gntee(scmdblk *scmd, SOCKET sock);
 
 /* Data of arbitrary length for a message command */
 int sc_d_msg(scmdblk *cmd, SOCKET sock);
