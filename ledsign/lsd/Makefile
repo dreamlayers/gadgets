@@ -1,16 +1,23 @@
-SIGND_DIR := ../../signd/daemon
+SIGND_DIR := ../../signd
 LIBLEDSIGN_DIR := ../libledsign
-SRCS := signcmds.c
-CFLAGS := -I$(SIGND_DIR) -I$(LIBLEDSIGN_DIR) -O -Wall -Wmissing-prototypes -g
+CFLAGS := -I$(SIGND_DIR)/daemon -I$(SIGND_DIR)/client \
+          -I$(LIBLEDSIGN_DIR) -O -Wall -Wmissing-prototypes -g
 
-TARGET := lsd
+all: lsd libsigntcp.a
 
-OBJS := $(SRCS:%.c=%.o)
-
-$(TARGET): $(OBJS) $(SIGND_DIR)/signd.a $(LIBLEDSIGN_DIR)/libledsign.a
+lsd: signcmds.o $(SIGND_DIR)/daemon/signd.a $(LIBLEDSIGN_DIR)/libledsign.a
 	$(CC) $(CFLAGS) -o $@ $^ -lpthread
+
+libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
+	cp $(SIGND_DIR)/client/libsdclient.a $@
+	ar rs $@ $(OBJS)
 
 .PHONY : clean
 clean:
-	rm -f $(OBJS) $(TARGET) *~ *.bak
+	rm -f $(OBJS) libsigntcp.o signcmds.o $(TARGET) *~ *.bak
 
+libsigntcp.o: libsigntcp.c libsigntcp.h $(SIGND_DIR)/client/sdclient.h \
+			  $(SIGND_DIR)/sdprotocol.h
+
+signcmds.o: signcmds.c $(LIBLEDSIGN_DIR)/ledsign.h $(SIGND_DIR)/daemon/signd.h \
+            $(SIGND_DIR)/sdprotocol.h
