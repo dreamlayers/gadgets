@@ -1,0 +1,16 @@
+// Tray42 resources.
+// See tray42.c for copyright.
+
+#include <windows.h>
+#include "tray42.h"
+
+//IDI_42 ICON LEDSign.ico
+
+IDM_CONTEXTMAIN MENUEX DISCARDABLE
+BEGIN
+    POPUP "You'll never see this", IDM_CONTEXTPOPUP
+    BEGIN
+        MENUITEM "&About", IDM_MESSAGEBOX, MFT_STRING, MFS_DEFAULT | MFS_ENABLED
+        MENUITEM "E&xit", IDM_EXIT, MFT_STRING, MFS_ENABLED
+    END
+END
