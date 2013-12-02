@@ -5,7 +5,9 @@
 #ifdef BUILDING_LIBRGBLAMP
 #define RGBAPI __declspec(dllexport)
 #else
-#define RGBAPI __declspec(dllimport)
+// This breaks static linking against librgblamp.
+//#define RGBAPI __declspec(dllimport)
+#define RGBAPI
 #endif
 #else
 #define RGBAPI

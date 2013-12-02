@@ -7,6 +7,7 @@ SUBDIRS := serio \
            rgblamp/librgblamp
 
 ifeq ($(PLATFORM),Cygwin)
+SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb
 else
 SUBDIRS := $(SUBDIRS) rgblamp/aud_rgb
 endif
