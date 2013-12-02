@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<HTML>
+<HEAD>
+<TITLE>
+LED Sign
+</TITLE>
+
+<SCRIPT LANGUAGE="JavaScript">
+Led0 = "0.gif";
+Led1 = "1.gif";
+
+var pix = new Array(504);
+
+for (i = 0; i < 504; i++) {
+  pix[i] = 0;
+}
+
+function clearimg() {
+  for (i = 0; i < 504; i++) {
+    if (pix[i] != 0) {
+      pix[i] = 0;
+      eval("document.images.I"+i+".src = Led0");
+    }
+  }
+}
+
+function c(i) {
+  n = i.name.substring(1);
+
+  if (pix[n] == 0) {
+    pix[n] = 1;
+    i.src = Led1;
+  } else {
+    pix[n] = 0;
+    i.src = Led0;
+  }
+
+  return 0;
+}
+
+function mkt() {
+  document.mainform.T.value = "";
+
+  for(i = 0; i < 7; i++) {
+    for(j = 0; j < 72; j++) {
+      if (pix[i*72+j] == 0) {
+        document.mainform.T.value = document.mainform.T.value + ".";
+      } else {
+        document.mainform.T.value = document.mainform.T.value + "*";
+      }
+    }
+    document.mainform.T.value = document.mainform.T.value + "\n";
+  }
+
+  return true;
+}
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY>
+
+<H1 ALIGN="CENTER">LED Sign</H1>
+Use this page to draw something on my LED sign.  This page uses JavaScript.
+You can toggle a LED by clicking on it.  To upload the image to the LED sign click submit.
+You can see a <A HREF="../lsignpic.txt" target="_blank">log file of previous pictures</A> (make sure you refresh to get the latest copy).
+You may be able to connect to a <A HREF="http://tff.ath.cx:1111/" target="_blank">webcam</A>.
+If that doesn't work you can get a single <A HREF="http://tff.ath.cx:1111/cam_1.jpg" target="_blank">image</A> (again, make sure you refresh).
+If neither of these work the webcam software is probably not running.
+You can also <A HREF="/cgi-bin/lsp.exe">print text</A> instead.
+<P>If this doesn't work for you try the <A HREF="/cgi-bin/lsd.exe">text only drawing program</A>.
+
+<P ALIGN="CENTER">
+
+<FORM NAME="mainform" ACTION="/cgi-bin/lsd.exe" METHOD="POST" onsubmit="mkt()" onReset="clearimg()">
+<PRE>
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+for(i = 0; i < 7; i++) {
+  for(j = 0; j < 72; j++) {
+    document.write("<IMG SRC=\"0.gif\" NAME=\"I"+(i*72+j)+"\" ONCLICK=\"c(this)\">");
+  }
+  document.write("\n");
+}
+//-->
+</SCRIPT>
+</PRE>
+<input type="hidden" name="T" value="foo">
+<INPUT TYPE="SUBMIT" VALUE="Submit">
+<INPUT TYPE="RESET" VALUE="Clear" NAME="reset">
+</FORM>
+</BODY>
+</HTML>
