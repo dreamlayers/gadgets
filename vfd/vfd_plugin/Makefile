@@ -20,11 +20,11 @@ vfd_winamp_dsp.o : vfdm_winamp.c dsp.h lrint.h vfdm.h
 
 OBJS := $(SRCS:%.c=%.o)
 
-vis_vfd.dll: $(OBJS) vfd_winamp_vis.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+vis_vfd.dll: $(OBJS) vfd_winamp_vis.o $(LIBVFD_DIR)/libvfd.a
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
 
-dsp_vfd.dll: $(OBJS) vfd_winamp_dsp.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+dsp_vfd.dll: $(OBJS) vfd_winamp_dsp.o $(LIBVFD_DIR)/libvfd.a
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LIBS)
 
 CLEAN_EXTRA := vfd_winamp_vis.o vfd_winamp_dsp.o
 

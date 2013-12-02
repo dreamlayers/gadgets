@@ -362,7 +362,7 @@ static int xsign_sendrow(const char *s, size_t n, sign_font_t *font, font_style 
     unsigned int ledgroup;
     unsigned int fontbitsleft = 0;
     unsigned char buf[9];
-    unsigned char fontbyte;
+    unsigned char fontbyte = 0;
 
     /* Loop through all 9 LED groups */
     for (ledgroup = 0; ledgroup < 9; ledgroup++) {

@@ -98,10 +98,13 @@ static winampVisModule mod =
 extern "C" {
 #endif
 // this is the only exported symbol. returns our main header.
+// No prototype, so add one here to silence GCC warning.
 #if defined(DSPPLUG)
-__declspec( dllexport ) winampDSPHeader *winampDSPGetHeader2()
+__declspec( dllexport ) winampDSPHeader *winampDSPGetHeader2(void);
+__declspec( dllexport ) winampDSPHeader *winampDSPGetHeader2(void)
 #elif defined(VISPLUG)
-__declspec( dllexport ) winampVisHeader *winampVisGetHeader()
+__declspec( dllexport ) winampVisHeader *winampVisGetHeader(void);
+__declspec( dllexport ) winampVisHeader *winampVisGetHeader(void)
 #endif
 {
     return &hdr;

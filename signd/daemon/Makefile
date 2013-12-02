@@ -2,6 +2,11 @@ include ../../build/Makefile.config
 
 SRCS := sockets.c gencmds.c
 
+ifeq ($(PLATFORM),Cygwin)
+CFLAGS := $(CFLAGS) -mwindows
+SRCS := $(SRCS) tray42.c
+endif
+
 TARGET := signd.a
 
 OBJS := $(SRCS:%.c=%.o)

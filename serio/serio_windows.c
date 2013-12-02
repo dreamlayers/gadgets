@@ -1,6 +1,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <strsafe.h> /* For error display */
+#ifdef _MSC_VER
+#include <strsafe.h>
+#else
+#include <stdio.h>
+#define StringCchPrintf snprintf
+#endif
 
 #define IN_SERIO
 #include "serio.h"
@@ -36,7 +41,7 @@ static void ErrorExit(LPTSTR lpszFunction)
     StringCchPrintf((LPTSTR)lpDisplayBuf,
         LocalSize(lpDisplayBuf) / sizeof(TCHAR),
         TEXT("%s failed with error %d: %s"),
-        lpszFunction, dw, lpMsgBuf);
+        (char *)lpszFunction, (int)dw, (char *)lpMsgBuf);
     MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
 
     LocalFree(lpMsgBuf);
@@ -50,13 +55,8 @@ static void fatalerr(char *s) __attribute__ ((noreturn));
 __declspec(noreturn)
 #endif
 static void fatalerr(char *s) {
-#ifdef WIN32
   //MessageBox(NULL, s, "VFD client", MB_OK | MB_ICONERROR);
   ErrorExit(s);
-#else
-  fputs(s, stderr);
-#endif
-  exit(-1);
 }
 
 /*** OVERLAPPED (for simultaneous input and output) ***/
@@ -217,11 +217,7 @@ SERIO_RETURN serio_connect(const char *fname, unsigned int baud) {
     }
 
     /* Setup comm DCB */
-#ifdef _MSC_VER
-    sprintf_s(modestr, sizeof(modestr), "%u,n,8,1", baud);
-#else
-    sprintf(modestr, "%u,n,8,1", baud);
-#endif
+    StringCchPrintf(modestr, sizeof(modestr), "%u,n,8,1", baud);
     FillMemory(&dcb, sizeof(dcb), 0);
     dcb.DCBlength = sizeof(dcb);
     if (!BuildCommDCB(modestr, &dcb)) {

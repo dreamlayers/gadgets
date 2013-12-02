@@ -22,9 +22,9 @@ Modified by Boris Gjenero.
 #include <windows.h>
 #include <string.h>
 #include "serio.h"
-#define IN_LIBSIGN
-#include "libsign.h"
-#include "lsd.h"
+#define IN_LIBLEDSIGN
+#include "ledsign.h"
+#include "signd.h"
 
 
 static void set_logfont(char *face, int size, LOGFONT *lf) {
@@ -35,7 +35,11 @@ static void set_logfont(char *face, int size, LOGFONT *lf) {
   lf->lfOutPrecision = OUT_TT_PRECIS;
   lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
   lf->lfQuality = PROOF_QUALITY;
+#ifdef _MSC_VER
   strcpy_s(lf->lfFaceName, sizeof(lf->lfFaceName), face);
+#else
+  strncpy(lf->lfFaceName, face, sizeof(lf->lfFaceName)-1);
+#endif
   /* NUL terminated by the memset at the top */
 }
 
@@ -126,7 +130,7 @@ static LPVOID render_text(char *face, int size, char *text, int length, int aa,
   return bits;
 }
 
-int getcol(unsigned char *bmp, int line_width, int x, int y) {
+static int getcol(unsigned char *bmp, int line_width, int x, int y) {
   int i, v;
   unsigned char *p, m;
 
@@ -189,7 +193,7 @@ i_wf_text(char *face, int size,
   }
 
   if (scb->flags & SFLAG_APPEND) {
-    scrl_start();
+    sign_scrl_start();
     ledx = 72;
   } else {
     xsign_command(SIGNCMD_BYTEMODE);  /* Byte mode */
@@ -219,7 +223,7 @@ i_wf_text(char *face, int size,
         } else if (ledx == 71) {
           serio_putc(cc);
           serio_putc('X');     /* Exit byte mode */
-          scrl_start();
+          sign_scrl_start();
           ledx++;
         } else {
           serio_putc(cc | dontquit);

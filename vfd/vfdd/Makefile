@@ -1,20 +1,38 @@
 include ../../build/Makefile.config
 
-SIGND_DIR := ../../signd/daemon
+SIGND_DIR := ../../signd
 LIBVFD_DIR := ../libvfd
-SRCS := vfdcmds.c
-CFLAGS := $(CFLAGS) -I$(SIGND_DIR) -I$(LIBVFD_DIR)
+CFLAGS := $(CFLAGS) -I$(SIGND_DIR)/daemon -I$(LIBVFD_DIR)
 
 TARGET := vfdd
 
-OBJS := $(SRCS:%.c=%.o)
+all: vfdd
+# libsigntcp.a
 
-$(TARGET): $(OBJS) $(SIGND_DIR)/signd.a $(LIBVFD_DIR)/libvfd.a
-	$(CC) $(CFLAGS) -o $@ $^ -lpthread
+ifeq ($(PLATFORM),Cygwin)
+
+LIBS := -lwsock32 -lgdi32
+CFLAGS := $(CFLAGS) -mwindows
+
+vfdd-res.o: vfdd.rc
+# LEDsign.ico
+	windres -I$(SIGND_DIR)/daemon $< $@
+vfdd: vfdd-res.o
+
+else
+LIBS := -lpthread
+endif
+
+vfdd: vfdcmds.o $(SIGND_DIR)/daemon/signd.a $(LIBVFD_DIR)/libvfd.a
+	$(CC) $(CFLAGS) -Wl,-u,_WinMain@16 -o $@ $^ $(LIBS)
+
+#libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
+#	cp $(SIGND_DIR)/client/libsdclient.a $@
+#	ar rs $@ $(OBJS)
 
 .PHONY : clean
 clean:
 	rm -f $(OBJS) $(TARGET) *~ *.bak
 
-sockets.o: sockets.c signd.h Makefile
-tray42.o: tray42.c signd.h tray42.h Makefile
+vfdcmds.o: vfdcmds.c ../libvfd/vfd.h ../../signd/daemon/signd.h \
+           ../../signd/daemon/../sdprotocol.h Makefile

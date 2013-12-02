@@ -132,10 +132,10 @@ static int sc_xcmdulpar(unsigned long transtm) {
   char bfr[12];
   int l;
 
-#ifdef WIN32
+#ifdef _MSC_VER
   l = sprintf_s(&(bfr[0]), sizeof(bfr), "%lu;", transtm);
 #else
-  l = sprintf(&(bfr[0]), "%lu;", transtm);
+  l = snprintf(&(bfr[0]), sizeof(bfr), "%lu;", transtm);
 #endif
 
   return  (send(sc_xsock, bfr, l, 0) == l) ? 0 : -1;

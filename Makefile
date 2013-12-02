@@ -1,8 +1,15 @@
-SUBDIRS  = serio \
+include build/Makefile.config
+
+SUBDIRS := serio \
            signd/client signd/daemon \
            ledsign/lsd ledsign/libledsign \
            vfd/libvfd vfd/vfd_plugin vfd/vfdd \
-           rgblamp/librgblamp rgblamp/aud_rgb
+           rgblamp/librgblamp
+
+ifeq ($(PLATFORM),Cygwin)
+else
+SUBDIRS := $(SUBDIRS) rgblamp/aud_rgb
+endif
 
 CLEANDIRS := $(SUBDIRS:%=clean-%)
 INSTALLDIRS := $(SUBDIRS:%=install-%)

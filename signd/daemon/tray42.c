@@ -22,6 +22,12 @@
 #include <windows.h>  // main Windows header
 #include <windowsx.h> // message cracker macros, etc.
 #include <shellapi.h> // Shell32 api
+#ifdef _MSC_VER
+#include <strsafe.h>
+#else
+#include <stdio.h>
+#define StringCchCopy(d,l,s) snprintf(d,l,"%s",s)
+#endif
 #include "signd.h"
 #include "tray42.h"
 
@@ -48,6 +54,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   MSG msg;
   NOTIFYICONDATA nid;
   char *classname = "Noise42.NOTIFYICONDATA.hWnd";
+  char *devport = NULL;
 
 #ifdef MESSED
   HMODULE hshell32;
@@ -96,12 +103,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                         GetSystemMetrics(SM_CXSMICON),
                         GetSystemMetrics(SM_CYSMICON), 0); // 16x16 icon
   // szTip is the ToolTip text (64 byte array including NULL)
-  strcpy_s(nid.szTip, sizeof(nid.szTip), TOOLTIP);
+  StringCchCopy(nid.szTip, sizeof(nid.szTip), TOOLTIP);
 
   // NIM_ADD: Add icon; NIM_DELETE: Remove icon; NIM_MODIFY: modify icon
   Shell_NotifyIcon(NIM_ADD, &nid); // This adds the icon
 
-  init_socket();
+  if (lpszCmdLine != NULL && lpszCmdLine[0] != 0) devport = lpszCmdLine;
+  init_socket(devport);
 
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
