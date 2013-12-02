@@ -9,13 +9,15 @@ ifeq ($(PLATFORM),Cygwin)
 SRCS := $(SRCS) vfdm_windows.c sysmon_windows.c
 LIBS := -lpowrprof
 TARGETS := vis_vfd.dll dsp_vfd.dll
+WINAMPAPI := ../../pluginapi/winamp
+CFLAGS := $(CFLAGS) -I$(WINAMPAPI)
 
 all: $(TARGETS)
 
-vfd_winamp_vis.o : vfdm_winamp.c vis.h lrint.h vfdm.h
+vfd_winamp_vis.o : vfdm_winamp.c $(WINAMPAPI)/vis.h lrint.h vfdm.h
 	$(CC) -c $(CFLAGS) -DVISPLUG -o $@ $<
 
-vfd_winamp_dsp.o : vfdm_winamp.c dsp.h lrint.h vfdm.h
+vfd_winamp_dsp.o : vfdm_winamp.c $(WINAMPAPI)/dsp.h lrint.h vfdm.h
 	$(CC) -c $(CFLAGS) -DDSPPLUG -o $@ $<
 
 OBJS := $(SRCS:%.c=%.o)
@@ -67,5 +69,4 @@ sysmon_linux.o: sysmon_linux.c sysmon.h Makefile
 sysmon_windows.o: sysmon_windows.c sysmon.h Makefile
 vfdm.o: vfdm.c $(LIBVFD_DIR)/vfd.h sysmon.h vfdm.h Makefile
 vfdm_unix.o: vfdm_unix.c vfdm.h Makefile
-vfdm_winamp.o: vfdm_winamp.c vis.h vfdm.h Makefile
 vfdm_windows.o: vfdm_windows.c vfdm.h Makefile
