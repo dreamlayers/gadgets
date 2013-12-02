@@ -1,13 +1,12 @@
 # Makefile for library for directly accessing device
 
+include ../../build/Makefile.config
+
 SERIO_DIR := ../../serio
 
-CFLAGS := -I$(SERIO_DIR) -O -Wall -g -Wmissing-prototypes
+CFLAGS := $(CFLAGS) -I$(SERIO_DIR)
 
-PLATFORM := $(shell uname -o)
 ifeq ($(PLATFORM),Cygwin)
-
-CC := i686-w64-mingw32-gcc
 
 else
 

@@ -1,11 +1,11 @@
+include ../../build/Makefile.config
+
 LIBVFD_DIR := ../libvfd
 SRCS := vfdm.c
-CFLAGS := -I$(LIBVFD_DIR) -fvisibility=hidden -O -Wall -Wmissing-prototypes -g
+CFLAGS := $(CFLAGS) -I$(LIBVFD_DIR)
 
-PLATFORM := $(shell uname -o)
 ifeq ($(PLATFORM),Cygwin)
 
-CC := i686-pc-mingw32-gcc
 SRCS := $(SRCS) vfdm_windows.c sysmon_windows.c
 LIBS := -lpowrprof
 TARGETS := vis_vfd.dll dsp_vfd.dll
@@ -31,9 +31,8 @@ CLEAN_EXTRA := vfd_winamp_vis.o vfd_winamp_dsp.o
 else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
-CC := gcc
 CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) -fPIC
-LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
+LIBS := $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_upower.c aosd.c aosd_trigger.c
 
 TARGET := aud_vfd.so
@@ -44,6 +43,8 @@ OBJS := $(SRCS:%.c=%.o)
 $(TARGET): $(OBJS) $(LIBVFD_DIR)/libvfd.a
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
+
+.PHONY : install uninstall
 
 install: $(TARGET)
 	cp $(TARGET) ~/.local/share/audacious/Plugins/

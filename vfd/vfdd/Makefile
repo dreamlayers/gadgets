@@ -1,7 +1,9 @@
+include ../../build/Makefile.config
+
 SIGND_DIR := ../../signd/daemon
 LIBVFD_DIR := ../libvfd
 SRCS := vfdcmds.c
-CFLAGS := -I$(SIGND_DIR) -I$(LIBVFD_DIR) -O -Wall -Wmissing-prototypes -g
+CFLAGS := $(CFLAGS) -I$(SIGND_DIR) -I$(LIBVFD_DIR)
 
 TARGET := vfdd
 

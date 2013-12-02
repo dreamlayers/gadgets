@@ -1,5 +1,6 @@
+include ../../build/Makefile.config
+
 SRCS := sdclient.c
-CFLAGS := -O -Wall -Wmissing-prototypes -g
 
 TARGET := libsdclient.a
 

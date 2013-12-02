@@ -1,8 +1,10 @@
+include ../../build/Makefile.config
+
 LIBRGBLAMP_DIR := ../librgblamp
 SRCS := aud_rgb.c
-CFLAGS := -I$(LIBRGBLAMP_DIR) -fvisibility=hidden -O -Wall -Wmissing-prototypes -g
+CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
-CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) -fPIC
+CFLAGS := $(CFLAGS) $(shell pkg-config --cflags $(PKG_PREREQ)) -fPIC
 LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 
 TARGET := aud_rgb.so

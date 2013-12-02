@@ -1,11 +1,10 @@
+include ../build/Makefile.config
+
 SRCS := serio.c
-CFLAGS := -fvisibility=hidden -O -Wall -g -Wmissing-prototypes
 TARGET := libserio.a
 
-PLATFORM := $(shell uname -o)
 ifeq ($(PLATFORM),Cygwin)
 
-CC := i686-w64-mingw32-gcc
 SRCS := $(SRCS) serio_windows.c
 
 else

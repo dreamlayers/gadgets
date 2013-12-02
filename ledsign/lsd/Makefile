@@ -1,7 +1,9 @@
+include ../../build/Makefile.config
+
 SIGND_DIR := ../../signd
 LIBLEDSIGN_DIR := ../libledsign
 CFLAGS := -I$(SIGND_DIR)/daemon -I$(SIGND_DIR)/client \
-          -I$(LIBLEDSIGN_DIR) -O -Wall -Wmissing-prototypes -g
+          -I$(LIBLEDSIGN_DIR) $(CFLAGS)
 
 all: lsd libsigntcp.a
 
@@ -17,7 +19,7 @@ clean:
 	rm -f $(OBJS) libsigntcp.o signcmds.o $(TARGET) *~ *.bak
 
 libsigntcp.o: libsigntcp.c libsigntcp.h $(SIGND_DIR)/client/sdclient.h \
-			  $(SIGND_DIR)/sdprotocol.h
+			  $(SIGND_DIR)/sdprotocol.h Makefile
 
 signcmds.o: signcmds.c $(LIBLEDSIGN_DIR)/ledsign.h $(SIGND_DIR)/daemon/signd.h \
-            $(SIGND_DIR)/sdprotocol.h
+            $(SIGND_DIR)/sdprotocol.h Makefile
