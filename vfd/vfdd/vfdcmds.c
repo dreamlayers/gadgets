@@ -88,17 +88,19 @@ int cmd_clear(void) {
     vfd_bmclear(); return 0;
 }
 
-int cmd_init(void) {
-  /* Initialize LED sign */
+int cmd_init(const char *device) {
+  static const char *defdev =
 #if defined(WIN32)
-  if (vfd_connect("COM1") != 0) {
+    "COM1";
 #elif defined(__CYGWIN__)
-  if (vfd_connect("/dev/ttyS0") != 0) {
+    "/dev/ttyS0";
 #elif defined(__linux)
-  if (vfd_connect("/dev/ttyS0") != 0) {
+    "/dev/ttyS0";
 #else
-  if (vfd_connect("/dev/cu.serial1") != 0) {
+    "/dev/cu.serial1";
 #endif
+
+  if (vfd_connect((device != NULL) ? device : defdev) != 0) {
     return -1;
   }
 
