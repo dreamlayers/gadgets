@@ -2,7 +2,7 @@ LIBNAME := libledsign
 LIBINCLUDE := ledsign.h
 SRCS := ledsign.c
 LIBS :=
-LIBRUBY := FIXME
+LIBRUBY := ledsign.rb
 MAKEINCLUDE := ../../build/Makefile.devlib
 
 include $(MAKEINCLUDE)
