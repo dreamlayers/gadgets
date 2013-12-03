@@ -2,7 +2,7 @@ include build/Makefile.config
 
 SUBDIRS := serio \
            signd/client signd/daemon \
-           ledsign/lsd ledsign/libledsign \
+           ledsign/lsd ledsign/libledsign ledsign/lsp \
            vfd/libvfd vfd/vfd_plugin vfd/vfdd \
            rgblamp/librgblamp
 
@@ -25,6 +25,7 @@ ledsign/libledsign: serio
 ledsign/lsd: ledsign/libledsign \
              signd/daemon signd/client
 ledsign/gen_led: ledsign/lsd
+ledsign/lsp: ledsign/lsd
 
 vfd/libvfd: serio
 vfd/vfdd: vfd/libvfd signd/daemon signd/client
