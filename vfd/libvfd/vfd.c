@@ -10,6 +10,7 @@
 #endif
 
 #include "serio.h"
+#define BUILDING_LIBVFD
 #include "vfd.h"
 
 /* Mapping of 14 segment text display segments to bits */

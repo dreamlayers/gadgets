@@ -10,6 +10,19 @@
 extern "C" {
 #endif
 
+#if defined(WIN32) || defined(__CYGWIN__)
+#ifdef IN_LIBLEDSIGN
+#define LEDAPI __declspec(dllexport)
+#else
+/* This breaks static linking.
+ * #define LEDAPI __declspec(dllimport)
+ */
+#define LEDAPI
+#endif
+#else /* !defined(WIN32) && !defined(__CYGWIN__) */
+#define LEDAPI
+#endif
+
 /* enum sign_drawop_e { COPY, XOR, AND, OR };*/
 
 typedef struct {
@@ -18,20 +31,20 @@ typedef struct {
   unsigned int width;
 } sign_font_t;
 
-int sign_open(const char *fname);
-void sign_close(void);
-int sign_clear(void) ;
-int sign_full(void);
+LEDAPI int sign_open(const char *fname);
+LEDAPI void sign_close(void);
+LEDAPI int sign_clear(void) ;
+LEDAPI int sign_full(void);
 
 #define SIGN_HWP_APPEND 1
 #define SIGN_HWP_LOOP 2
 
-int sign_nhwprint(const char *s, size_t n, unsigned int hwpflags);
-/* int sign_hwprint(const char *s, int hwpflags); */
+LEDAPI int sign_nhwprint(const char *s, size_t n, unsigned int hwpflags);
+LEDAPI /* int sign_hwprint(const char *s, int hwpflags); */
 
-int sign_loadfont(const char *fname, sign_font_t *font);
+LEDAPI int sign_loadfont(const char *fname, sign_font_t *font);
 #ifdef WIN32
-int sign_fontfromresource(WORD resid, sign_font_t *font);
+LEDAPI int sign_fontfromresource(WORD resid, sign_font_t *font);
 #endif
 
 typedef int font_style;
@@ -40,21 +53,25 @@ typedef int font_style;
 #define SIGN_FONT_BOLD 2
 #define SIGN_FONT_ITALIC 4
 
-int sign_scrl_start(void);
-int sign_scrl_char(const char c, sign_font_t *font, font_style fs, int chain);
-int sign_scrl_str(const char *s, sign_font_t *font, font_style fs);
-int sign_scrl_nstr(const char *s, size_t n, sign_font_t *font, font_style fs);
+LEDAPI int sign_scrl_start(void);
+LEDAPI int sign_scrl_char(const char c, sign_font_t *font, font_style fs,
+                          int chain);
+LEDAPI int sign_scrl_str(const char *s, sign_font_t *font, font_style fs);
+LEDAPI int sign_scrl_nstr(const char *s, size_t n,
+                          sign_font_t *font, font_style fs);
 
-int sign_scru_str(const char *s, sign_font_t *font, font_style fs);
-int sign_scru_nstr(const char *s, size_t n, sign_font_t *font, font_style fs);
+LEDAPI int sign_scru_str(const char *s, sign_font_t *font, font_style fs);
+LEDAPI int sign_scru_nstr(const char *s, size_t n,
+                          sign_font_t *font, font_style fs);
 
-int sign_ul_str(const char *s, sign_font_t *font, font_style fs);
-int sign_ul_nstr(const char *s, size_t n, sign_font_t *font, font_style fs);
+LEDAPI int sign_ul_str(const char *s, sign_font_t *font, font_style fs);
+LEDAPI int sign_ul_nstr(const char *s, size_t n,
+                        sign_font_t *font, font_style fs);
 
-int sign_ul_bmap(const unsigned char *s);
+LEDAPI int sign_ul_bmap(const unsigned char *s);
 
-int sign_dl_bmap(unsigned char *s);
-int sign_dl_represent(FILE *f);
+LEDAPI int sign_dl_bmap(unsigned char *s);
+LEDAPI int sign_dl_represent(FILE *f);
 
 #ifdef IN_LIBLEDSIGN
 typedef enum {
@@ -71,7 +88,7 @@ int xsign_pollquit(void);
 int xsign_command(signcmd_t cmd);
 #endif /* IN_LIBSIGN */
 
-void sign_setabortpoll(int (*func)(void));
+LEDAPI void sign_setabortpoll(int (*func)(void));
 
 #ifdef __cplusplus
 } // extern "C"

@@ -2,7 +2,20 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if defined(WIN32) || defined(__CYGWIN__)
+#ifdef BUILDING_LIBVFD
+#define VFDAPI __declspec(dllexport)
 #else
+/* This breaks static linking against libvfd.
+ * #define VFDAPI __declspec(dllimport)
+ */
+#define VFDAPI
+#endif
+#else /* !defined(WIN32) && !defined(__CYGWIN__) */
+#define VFDAPI
+#endif
 
 /* VBMI_LEFTARROW_B
 
@@ -46,49 +59,51 @@ ID(box), SKIP, unused, unused, INPUT(box), ANALOG, unused, unused */
 #define VFDPAR_ON      0x40
 #define VFDPAR_SET     0xC0
 
-VFD_RETURN vfd_connect(const char *fname);
-void vfd_disconnect(void);
-VFD_RETURN vfd_clear(void);
-VFD_RETURN vfd_full(void);
+VFDAPI VFD_RETURN vfd_connect(const char *fname);
+VFDAPI void vfd_disconnect(void);
+VFDAPI VFD_RETURN vfd_clear(void);
+VFDAPI VFD_RETURN vfd_full(void);
 
-VFD_RETURN vfd_ulbmp(const unsigned short *s);
-VFD_RETURN vfd_dlbmp(unsigned short *s);
+VFDAPI VFD_RETURN vfd_ulbmp(const unsigned short *s);
+VFDAPI VFD_RETURN vfd_dlbmp(unsigned short *s);
 
-void vfd_blitnstr(unsigned short buf[], const char *s, int n);
-void vfd_blitstr(unsigned short buf[], const char *s);
-void vfd_blitvu(unsigned short b[], int l, int r);
-void vfd_blit7segdec(unsigned short b[], int i);
-void vfd_blit7seghex(unsigned short b[], int i);
+VFDAPI void vfd_blitnstr(unsigned short buf[], const char *s, int n);
+VFDAPI void vfd_blitstr(unsigned short buf[], const char *s);
+VFDAPI void vfd_blitvu(unsigned short b[], int l, int r);
+VFDAPI void vfd_blit7segdec(unsigned short b[], int i);
+VFDAPI void vfd_blit7seghex(unsigned short b[], int i);
 
-VFD_RETURN vfd_enterbm(void);
-VFD_RETURN vfd_exitbm(void);
+VFDAPI VFD_RETURN vfd_enterbm(void);
+VFDAPI VFD_RETURN vfd_exitbm(void);
 
-VFD_RETURN vfd_bms7dec(int i);
-VFD_RETURN vfd_bms7hex(int i);
+VFDAPI VFD_RETURN vfd_bms7dec(int i);
+VFDAPI VFD_RETURN vfd_bms7hex(int i);
 
-int vfd_bmreadadc(int i);
-VFD_RETURN vfd_bmsetvu(int l, int r);
-VFD_RETURN vfd_bmind(const unsigned char *ind);
+VFDAPI int vfd_bmreadadc(int i);
+VFDAPI VFD_RETURN vfd_bmsetvu(int l, int r);
+VFDAPI VFD_RETURN vfd_bmind(const unsigned char *ind);
 
-VFD_RETURN vfd_bmclear(void);
+VFDAPI VFD_RETURN vfd_bmclear(void);
 
-VFD_RETURN vfd_bmsetscw(int s, int e);
-VFD_RETURN vfd_bmntxt(unsigned int txm, const char *s, int n);
-VFD_RETURN vfd_bmtxt(unsigned int txm, const char *s);
-VFD_RETURN vfd_bmsetc(int p, char c);
-VFD_RETURN vfd_bmnsets(int p, const char *s, int n);
-VFD_RETURN vfd_bmsets(int p, const char *s);
+VFDAPI VFD_RETURN vfd_bmsetscw(int s, int e);
+VFDAPI VFD_RETURN vfd_bmntxt(unsigned int txm, const char *s, int n);
+VFDAPI VFD_RETURN vfd_bmtxt(unsigned int txm, const char *s);
+VFDAPI VFD_RETURN vfd_bmsetc(int p, char c);
+VFDAPI VFD_RETURN vfd_bmnsets(int p, const char *s, int n);
+VFDAPI VFD_RETURN vfd_bmsets(int p, const char *s);
 
-VFD_RETURN vfd_bmparset(int n);
-VFD_RETURN vfd_bmparon(int n);
-VFD_RETURN vfd_bmparoff(int n);
-VFD_RETURN vfd_bmparop(int n);
-int vfd_bmreadpar(void);
+VFDAPI VFD_RETURN vfd_bmparset(int n);
+VFDAPI VFD_RETURN vfd_bmparon(int n);
+VFDAPI VFD_RETURN vfd_bmparoff(int n);
+VFDAPI VFD_RETURN vfd_bmparop(int n);
+VFDAPI int vfd_bmreadpar(void);
 
-void vfd_clearalarms(unsigned char *c);
-void vfd_addalarm(unsigned char *c, int op, int par, int h, int m, int s, int r);
-VFD_RETURN vfd_setclockto(int h, int m, int s, const unsigned char *al);
-VFD_RETURN vfd_setclock(const unsigned char *al);
+VFDAPI void vfd_clearalarms(unsigned char *c);
+VFDAPI void vfd_addalarm(unsigned char *c, int op, int par,
+                         int h, int m, int s, int r);
+VFDAPI VFD_RETURN vfd_setclockto(int h, int m, int s,
+                                 const unsigned char *al);
+VFDAPI VFD_RETURN vfd_setclock(const unsigned char *al);
 
 #ifdef __cplusplus
 } // extern "C"

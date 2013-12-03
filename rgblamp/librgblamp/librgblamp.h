@@ -1,17 +1,18 @@
 #ifndef _RGBCLIENT_H_
 #define _RGBCLIENT_H_
 
-#ifdef WIN32
-#ifdef BUILDING_LIBRGBLAMP
+#if defined(WIN32) || defined(__CYGWIN__)
+#ifdef BUILDING_LIBVFD
 #define RGBAPI __declspec(dllexport)
 #else
-// This breaks static linking against librgblamp.
-//#define RGBAPI __declspec(dllimport)
+/* This breaks static linking.
+ * #define LEDAPI __declspec(dllimport)
+ */
 #define RGBAPI
 #endif
-#else
+#else /* !defined(WIN32) && !defined(__CYGWIN__) */
 #define RGBAPI
-#endif // !WIN32
+#endif
 
 #ifdef __cplusplus
 extern "C" {
