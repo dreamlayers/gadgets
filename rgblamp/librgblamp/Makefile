@@ -1,4 +1,4 @@
-LIBNAME := librgblamp
+LIBNAME := rgblamp
 LIBINCLUDE := librgblamp.h
 SRCS := librgblamp.c
 LIBS := -lm

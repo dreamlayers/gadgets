@@ -6,29 +6,29 @@ SERIO_DIR := ../../serio
 
 CFLAGS := $(CFLAGS) -I$(SERIO_DIR)
 
-ifeq ($(PLATFORM),Cygwin)
+LIBFULLNAME := $(DLPREFIX)$(LIBNAME)$(DLSUFFIX)
 
-else
-
+ifneq ($(PLATFORM),Cygwin)
+ifneq ($(PLATFORM),Windows)
 CFLAGS := $(CFLAGS) -fPIC
+endif
+endif
 
-$(LIBNAME).so: $(LIBNAME).a Makefile
+$(LIBFULLNAME): $(LIBNAME).a Makefile
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--whole-archive $< -Wl,--no-whole-archive -o $@ $(LIBS)
 
 .PHONY : install
 install: $(TARGET) $(LIBINCLUDE)
-	install $(LIBNAME).so /usr/local/lib
+	install $(LIBNAME).$(DLSUFFIX) /usr/local/lib
 	install $(LIBINCLUDE) /usr/local/include
 	install $(LIBRUBY) /usr/local/lib/site_ruby
 
 .PHONY : uninstall
 uninstall:
-	rm -f /usr/local/lib/$(LIBNAME).so
+	rm -f /usr/local/lib/$(LIBNAME).$(DLSUFFIX)
 	rm -f /usr/local/include/$(LIBINCLUDE)
 	rm -f /usr/local/lib/site_ruby/$(LIBRUBY)
-
-endif
 
 OBJS := $(SRCS:%.c=%.o)
 

@@ -6,7 +6,7 @@ SUBDIRS := serio \
            vfd/libvfd vfd/vfd_plugin vfd/vfdd \
            rgblamp/librgblamp
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb ledsign/gen_led rgblamp/winrgbchoose
 else
 SUBDIRS := $(SUBDIRS) rgblamp/aud_rgb

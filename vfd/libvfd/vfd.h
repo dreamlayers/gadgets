@@ -1,3 +1,9 @@
+#ifndef _VFD_H_
+
+#ifdef __cplusplus
+extern "C" {
+#else
+
 /* VBMI_LEFTARROW_B
 
 <, unused, ), =, (, MUTE, PLAY, RECORD
@@ -84,3 +90,8 @@ void vfd_addalarm(unsigned char *c, int op, int par, int h, int m, int s, int r)
 VFD_RETURN vfd_setclockto(int h, int m, int s, const unsigned char *al);
 VFD_RETURN vfd_setclock(const unsigned char *al);
 
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif /* !_VFD_H_ */

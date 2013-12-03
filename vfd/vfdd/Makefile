@@ -9,7 +9,7 @@ TARGET := vfdd
 all: vfdd
 # libsigntcp.a
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 
 LIBS := -lwsock32 -lgdi32
 CFLAGS := $(CFLAGS) -mwindows

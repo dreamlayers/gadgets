@@ -4,7 +4,7 @@ LIBSIGNTCP_DIR := ../lsd
 SRCS := lsp.c
 CFLAGS := $(CFLAGS) -I$(LIBSIGNTCP_DIR)
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 # Allow cgic in subfolder
 CFLAGS := $(CFLAGS) -Icgic205 -Lcgic205
 endif

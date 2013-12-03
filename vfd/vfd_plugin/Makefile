@@ -4,7 +4,7 @@ LIBVFD_DIR := ../libvfd
 SRCS := vfdm.c
 CFLAGS := $(CFLAGS) -I$(LIBVFD_DIR)
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 
 SRCS := $(SRCS) vfdm_windows.c sysmon_windows.c
 LIBS := -lpowrprof
@@ -33,7 +33,7 @@ CLEAN_EXTRA := vfd_winamp_vis.o vfd_winamp_dsp.o
 else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
-CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) -fPIC
+CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) $(PIC)
 LIBS := $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_upower.c aosd.c aosd_trigger.c
 

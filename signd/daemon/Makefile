@@ -2,7 +2,7 @@ include ../../build/Makefile.config
 
 SRCS := sockets.c gencmds.c
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 CFLAGS := $(CFLAGS) -mwindows
 SRCS := $(SRCS) tray42.c
 endif

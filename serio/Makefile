@@ -3,13 +3,13 @@ include ../build/Makefile.config
 SRCS := serio.c
 TARGET := libserio.a
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 
 SRCS := $(SRCS) serio_windows.c
 
 else
 
-CFLAGS := $(CFLAGS) -fPIC
+CFLAGS := $(CFLAGS) $(PIC)
 SRCS := $(SRCS) serio_unix.c
 
 endif

@@ -4,7 +4,7 @@ LIBRGBLAMP_DIR := ../librgblamp
 SRCS := aud_rgb.c
 CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
-CFLAGS := $(CFLAGS) $(shell pkg-config --cflags $(PKG_PREREQ)) -fPIC
+CFLAGS := $(CFLAGS) $(shell pkg-config --cflags $(PKG_PREREQ)) $(PIC)
 LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 
 TARGET := aud_rgb.so

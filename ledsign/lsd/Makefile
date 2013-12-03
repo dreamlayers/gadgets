@@ -7,7 +7,7 @@ CFLAGS := $(CFLAGS) -I$(SIGND_DIR)/daemon -I$(SIGND_DIR)/client \
 
 all: lsd libsigntcp.a
 
-ifeq ($(PLATFORM),Cygwin)
+ifeq ($(PLATFORM),Windows)
 
 LIBS := ../libledsign/gditext.c -lwsock32 -lgdi32
 CFLAGS := $(CFLAGS) -mwindows -I../../serio

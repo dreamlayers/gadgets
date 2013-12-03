@@ -1,4 +1,4 @@
-LIBNAME := libledsign
+LIBNAME := ledsign
 LIBINCLUDE := ledsign.h
 SRCS := ledsign.c
 LIBS :=
