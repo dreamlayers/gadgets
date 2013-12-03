@@ -44,11 +44,7 @@
 #define SERIO_LENGTH_RETURN void
 #else
 /* Returns success/failure or number of bytes transferred */
-#if defined(_MSC_VER) || defined(__MINGW32__)
 #define SERIO_LENGTH_RETURN int
-#else
-#define SERIO_LENGTH_RETURN ssize_t
-#endif
 #endif
 
 /* Writes return:
