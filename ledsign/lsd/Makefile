@@ -25,7 +25,7 @@ lsd: signcmds.o $(SIGND_DIR)/daemon/signd.a $(LIBLEDSIGN_DIR)/libledsign.a
 
 libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
 	cp $(SIGND_DIR)/client/libsdclient.a $@
-	ar rs $@ $(OBJS)
+	ar rs $@ $<
 
 .PHONY : clean
 clean:
