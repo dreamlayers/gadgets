@@ -2,11 +2,13 @@ include ../../build/Makefile.config
 
 LIBSIGNTCP_DIR := ../lsd
 SRCS := lsp.c
-CFLAGS := $(CFLAGS) -I$(LIBSIGNTCP_DIR)
+CFLAGS := $(CFLAGS) -I$(LIBSIGNTCP_DIR) -fvisibility=default
+LIBS := -lcgic
 
 ifeq ($(PLATFORM),Windows)
 # Allow cgic in subfolder
 CFLAGS := $(CFLAGS) -Icgic205 -Lcgic205
+LIBS := $(LIBS) -lwsock32
 endif
 
 TARGET := lsp
@@ -14,7 +16,7 @@ TARGET := lsp
 OBJS := $(SRCS:%.c=%.o)
 
 $(TARGET): $(OBJS) $(LIBSIGNTCP_DIR)/libsigntcp.a
-	$(CC) $(CFLAGS) -o $@ $^ -lcgic -lwsock32
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY : clean
 clean:

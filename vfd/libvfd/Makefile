@@ -1,4 +1,4 @@
-LIBNAME := libvfd
+LIBNAME := vfd
 LIBINCLUDE := vfd.h
 SRCS := vfd.c
 LIBS :=
