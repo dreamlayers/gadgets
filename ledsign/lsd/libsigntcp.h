@@ -1,7 +1,7 @@
 #ifndef _LIBSIGNTCP_H_
 #define _LIBSIGNTCP_H_
 
-#include "sdclient.h"
+#include "../../signd/client/sdclient.h"
 
 int sc_nop(void);
 int sc_clear(unsigned long flags, unsigned long transtm, unsigned long gntm);

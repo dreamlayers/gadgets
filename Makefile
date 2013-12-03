@@ -7,7 +7,7 @@ SUBDIRS := serio \
            rgblamp/librgblamp
 
 ifeq ($(PLATFORM),Cygwin)
-SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb
+SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb ledsign/gen_led
 else
 SUBDIRS := $(SUBDIRS) rgblamp/aud_rgb
 endif
@@ -24,6 +24,7 @@ all: $(SUBDIRS)
 ledsign/libledsign: serio
 ledsign/lsd: ledsign/libledsign \
              signd/daemon signd/client
+ledsign/gen_led: ledsign/lsd
 
 vfd/libvfd: serio
 vfd/vfdd: vfd/libvfd signd/daemon signd/client
