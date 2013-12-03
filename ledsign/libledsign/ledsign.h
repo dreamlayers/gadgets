@@ -12,7 +12,11 @@ extern "C" {
 
 #if defined(WIN32) || defined(__CYGWIN__)
 #ifdef IN_LIBLEDSIGN
+#ifdef BUILDING_DLL
 #define LEDAPI __declspec(dllexport)
+#else
+#define LEDAPI
+#endif
 #else
 /* This breaks static linking.
  * #define LEDAPI __declspec(dllimport)

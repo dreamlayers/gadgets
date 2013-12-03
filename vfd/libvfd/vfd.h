@@ -6,7 +6,11 @@ extern "C" {
 
 #if defined(WIN32) || defined(__CYGWIN__)
 #ifdef BUILDING_LIBVFD
+#ifdef BUILDING_DLL
 #define VFDAPI __declspec(dllexport)
+#else
+#define VFDAPI
+#endif
 #else
 /* This breaks static linking against libvfd.
  * #define VFDAPI __declspec(dllimport)

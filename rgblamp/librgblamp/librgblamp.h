@@ -3,7 +3,11 @@
 
 #if defined(WIN32) || defined(__CYGWIN__)
 #ifdef BUILDING_LIBVFD
+#ifdef BUILDING_DLL
 #define RGBAPI __declspec(dllexport)
+#else
+#define RGBAPI
+#endif
 #else
 /* This breaks static linking.
  * #define LEDAPI __declspec(dllimport)

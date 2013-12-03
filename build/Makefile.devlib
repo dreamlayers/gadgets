@@ -36,7 +36,7 @@ OBJS := $(SRCS:%.c=%.o)
 # Depends on OBJS so dependencies still apply.
 $(DLFULLNAME): $(OBJS)
 	$(CC) $(CFLAGS) -shared -fvisibility=default -Wl,--no-undefined \
-	-o $@ $(SRCS) $(SERIO_DIR)/libserio.a $(LIBS)
+	-DBUILDING_DLL -o $@ $(SRCS) $(SERIO_DIR)/libserio.a $(LIBS)
 
 $(SLFULLNAME): $(OBJS) $(SERIO_DIR)/libserio.a Makefile
 	cp $(SERIO_DIR)/libserio.a $@
