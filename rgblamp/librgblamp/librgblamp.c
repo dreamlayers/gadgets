@@ -166,12 +166,16 @@ static __inline long int lrintf (float flt) {
 
 static unsigned short rgb_srgb2pwm(double n) {
     double r;
+    int ir;
     if (n <= 0.04045) {
         r = n / 12.92;
     } else {
         r = pow((n+0.055)/1.055, 2.4);
     }
-    return (unsigned short)lrint(r * 4095.0);
+    ir = (int)lrint(r * 4095.0);
+    if (ir < 0) ir = 0;
+    if (ir > 4095) ir = 4095;
+    return (unsigned short)ir;
 }
 
 static double rgb_pwm2srgb(unsigned short n) {
@@ -181,6 +185,8 @@ static double rgb_pwm2srgb(unsigned short n) {
     } else {
         r = 1.055 * pow(r, 1/2.4) - 0.055;
     }
+    if (r > 1.0) r = 1.0;
+    if (r < 0.0) r = 0.0;
     return r;
 }
 
@@ -266,6 +272,14 @@ RGBAPI bool rgb_matchpwm_srgb(double r, double g, double b) {
     return rgb_matchpwm(rgb_srgb2pwm(r), rgb_srgb2pwm(g), rgb_srgb2pwm(b));
 }
 
+RGBAPI bool rgb_matchpwm_srgb256(unsigned char r,
+                                 unsigned char g,
+                                 unsigned char b) {
+    return rgb_matchpwm_srgb((double)r / 255.0,
+                             (double)g / 255.0,
+                             (double)b / 255.0);
+}
+
 RGBAPI bool rgb_fadeprep(void) {
     unsigned short rgbout[3];
 
@@ -310,6 +324,15 @@ RGBAPI bool rgb_getout_srgb(double *dest) {
     dest[0] = rgb_pwm2srgb(rgbout[0]);
     dest[1] = rgb_pwm2srgb(rgbout[1]);
     dest[2] = rgb_pwm2srgb(rgbout[2]);
+    return true;
+}
+
+RGBAPI bool rgb_getout_srgb256(unsigned char *dest) {
+    double srgb[3];
+    if (!rgb_getout_srgb(srgb)) return false;
+    dest[0] = (unsigned char)lrint(srgb[0] * 255.0);
+    dest[1] = (unsigned char)lrint(srgb[1] * 255.0);
+    dest[2] = (unsigned char)lrint(srgb[2] * 255.0);
     return true;
 }
 
@@ -430,7 +453,7 @@ RGBAPI void rgb_close(void) {
     serio_disconnect();
 }
 
-RGBAPI bool rgb_open(char *fn) {
+RGBAPI bool rgb_open(const char *fn) {
     int i;
 #ifdef SERIO_ASYNCPOTS
     int c;

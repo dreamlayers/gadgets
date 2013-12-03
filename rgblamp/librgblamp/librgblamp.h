@@ -79,6 +79,11 @@ RGBAPI bool rgb_matchpwm(unsigned short r, unsigned short g, unsigned short b);
 /* Same as rgb_matchpwm, taking 0 to 1.0 sRGB input */
 RGBAPI bool rgb_matchpwm_srgb(double r, double g, double b);
 
+/* Same as rgb_matchpwm, taking 0 to 255 sRGB input */
+RGBAPI bool rgb_matchpwm_srgb256(unsigned char r,
+                                 unsigned char g,
+                                 unsigned char b);
+
 /* Use rgbout to re-set PWM values via rgb_squared, so fading works after */
 RGBAPI bool rgb_fadeprep(void);
 
@@ -91,6 +96,9 @@ RGBAPI bool rgb_getout(unsigned short *dest);
 
 /* Same as rgb_getout, but returning 0.0 to 1.0 sRGB value */
 RGBAPI bool rgb_getout_srgb(double *dest);
+
+/* Same as rgb_getout, but returning 0 to 255 sRGB value */
+RGBAPI bool rgb_getout_srgb256(unsigned char *dest);
 
 /* Send command, get 3 values. Use defines below */
 RGBAPI bool rgb_getnormal(unsigned char cmd, unsigned short *dest);
@@ -108,7 +116,7 @@ RGBAPI bool rgb_getdot(unsigned short *dest);
 
 RGBAPI void rgb_close(void);
 
-RGBAPI bool rgb_open(char *fn);
+RGBAPI bool rgb_open(const char *fn);
 
 #ifdef __cplusplus
 } // extern "C"
