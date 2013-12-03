@@ -6,7 +6,8 @@ SERIO_DIR := ../../serio
 
 CFLAGS := $(CFLAGS) -I$(SERIO_DIR)
 
-LIBFULLNAME := $(DLPREFIX)$(LIBNAME)$(DLSUFFIX)
+DLFULLNAME := $(DLPREFIX)$(LIBNAME)$(DLSUFFIX)
+SLFULLNAME := lib$(LIBNAME).a
 
 ifneq ($(PLATFORM),Cygwin)
 ifneq ($(PLATFORM),Windows)
@@ -14,9 +15,8 @@ CFLAGS := $(CFLAGS) -fPIC
 endif
 endif
 
-$(LIBFULLNAME): $(LIBNAME).a Makefile
-	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
-	-Wl,--whole-archive $< -Wl,--no-whole-archive -o $@ $(LIBS)
+.PHONY : all
+all: $(SLFULLNAME) $(DLFULLNAME)
 
 .PHONY : install
 install: $(TARGET) $(LIBINCLUDE)
@@ -32,7 +32,13 @@ uninstall:
 
 OBJS := $(SRCS:%.c=%.o)
 
-$(LIBNAME).a: $(OBJS) $(SERIO_DIR)/libserio.a Makefile
+# Rebuild with visibility normal to export symbols in Unix library.
+# Depends on OBJS so dependencies still apply.
+$(DLFULLNAME): $(OBJS)
+	$(CC) $(CFLAGS) -shared -fvisibility=default -Wl,--no-undefined \
+	-o $@ $(SRCS) $(SERIO_DIR)/libserio.a $(LIBS)
+
+$(SLFULLNAME): $(OBJS) $(SERIO_DIR)/libserio.a Makefile
 	cp $(SERIO_DIR)/libserio.a $@
 	ar rs $@ $(OBJS)
 
