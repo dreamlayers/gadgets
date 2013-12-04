@@ -10,8 +10,8 @@ module LEDSign
   attach_function :clear, :sign_clear, [ ], :int
   attach_function :full, :sign_full, [ ], :int
 
-  SIGN_HWP_APPEND = 1
-  SIGN_HWP_LOOP = 2
+  SIGN_APPEND = 1
+  SIGN_LOOP = 2
   attach_function :nhwprint, :sign_nhwprint, [ :string, :size_t, :uint ], :int
 # attach_function :hwprint, :sign_hwprint, [ :string, int hwpflags ], :int
 
@@ -22,6 +22,13 @@ module LEDSign
   end
   attach_function :loadfont, :sign_loadfont, [ :string, Sign_font.by_ref ], :int
 # attach_function :fontfromresource, :sign_fontfromresource, [ WORD resid, Sign_font.by_ref ], :int
+
+  attach_function :nswprint, :sign_nswprint, [ :string, :size_t,
+                                               Sign_font.by_ref, :int,
+                                               :int ], :int
+  attach_function :swprint, :sign_swprint, [ :string,
+                                             Sign_font.by_ref, :int,
+                                             :int ], :int
 
   SIGN_FONT_INVERTED = 1
   SIGN_FONT_BOLD = 2

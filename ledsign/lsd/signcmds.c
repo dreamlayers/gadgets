@@ -285,13 +285,13 @@ static int sc_hprint(scmdblk *scb) {
         /* Do it with 1 command */
         l = ((chainhdr *)(scb->data))->size;
 
-        if (scb->flags & SFLAG_LOOP) flags |= SIGN_HWP_LOOP;
-        if (scb->flags & SFLAG_APPEND) flags |= SIGN_HWP_APPEND;
+        if (scb->flags & SFLAG_LOOP) flags |= SIGN_LOOP;
+        if (scb->flags & SFLAG_APPEND) flags |= SIGN_APPEND;
 
         return sign_nhwprint((char *)(scb->data + sizeof(chainhdr)), l, flags);
     } else {
         /* Do it with multiple commands, keep issuing */
-        if (scb->flags & SFLAG_APPEND) flags |= SIGN_HWP_APPEND;
+        if (scb->flags & SFLAG_APPEND) flags |= SIGN_APPEND;
 
         bp = (chainhdr *)(scb->data);
         remain = bp->size;
@@ -322,7 +322,7 @@ static int sc_hprint(scmdblk *scb) {
                 ending = 0;
             }
 
-            flags |= SIGN_HWP_APPEND;
+            flags |= SIGN_APPEND;
         } while (!ending);
 
         return 0;

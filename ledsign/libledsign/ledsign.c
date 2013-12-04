@@ -610,8 +610,9 @@ void sign_dl_represent(FILE *f) {
 #endif
 
 int sign_nhwprint(const char *s, size_t l, unsigned int hwpflags) {
-    /* #define SIGN_HWP_APPEND 1
-     * #define SIGN_HWP_LOOP 2 */
+#if SIGN_APPEND != 1 || SIGN_LOOP != 2
+#error Flags mismatch with hwpcmd
+#endif
     static const char hwpcmd[] = "psOo";
     int res;
     unsigned char buf[19];
@@ -628,7 +629,7 @@ int sign_nhwprint(const char *s, size_t l, unsigned int hwpflags) {
 
     PROPAGATE_ERROR(serio_write(buf, usablel+2));
 
-    if (hwpflags & SIGN_HWP_LOOP) {
+    if (hwpflags & SIGN_LOOP) {
         signmode = SIGNMODE_SEND1;
     } else {
         signmode = SIGNMODE_NEEDSYNC;
@@ -636,3 +637,177 @@ int sign_nhwprint(const char *s, size_t l, unsigned int hwpflags) {
 
     return 0;
 }
+
+/* This requires bufl >= 1 */
+static int xsign_formline(char *buf, size_t bufl, /* destination */
+                          const char *s, unsigned int l, /* whole string */
+                          const char **p, /* current position, updated */
+                          size_t *remains, /* remaining, updated */
+                          int flags) { /* flags, for looping */
+    char *bufp = buf;
+    size_t bufremains = bufl;
+    const char *ptr = *p; /* Current pointer in string */
+
+    /* Handle case where function is called at end of buffer */
+    if (*remains == 0) {
+        ptr = s;
+        *remains = l;
+    }
+
+    while (1) {
+        if (*ptr == '\n' || *ptr == '\r') /* End of line */
+            break;
+
+        *(bufp++) = *(ptr++); /* Copy character to buffer */
+
+        if (--(*remains) == 0) {
+            if (flags & SIGN_LOOP) {
+                /* End of string, re-start from beginning */
+                ptr = s;
+                *remains = l;
+            } else {
+                /* No looping, finished */
+                bufremains--;
+                break;
+            }
+        }
+
+        if (--bufremains == 0) /* Filled buffer */
+            break;
+    }
+
+    *p = ptr; /* Update pointer. */
+    return bufl - bufremains; /* Return length */
+}
+
+int sign_nswprint(const char *s, size_t l,
+                  sign_font_t *font, font_style fs, unsigned int flags) {
+    const char *p = s;
+    size_t remains = l;
+    int inscrl = 0;
+    int res, qnow;
+    char buf[72];
+    int was_cr = 0;
+
+    if (s == NULL || l == 0) {
+        return 0; //xsign_printnull(flags);
+    } else {
+        p = s;
+        remains = l;
+
+        /* If not appending, upload first part left->right */
+        if (!(flags & SIGN_APPEND)) {
+            int len;
+
+            /* How much to print? */
+            len = xsign_formline(buf, 72 / font->width,
+                                 s, l,
+                                 &p, &remains, flags);
+
+            if (len > 0) {
+                /* Upload left -> right */
+                PROPAGATE_ERROR(sign_ul_nstr(buf, len, font, fs));
+            }
+        }
+
+        /* Loop for message looping */
+        while (1) {
+            /* Loop for going through message */
+            while (remains > 0) {
+                qnow = 0; //cmd_cb_pollquit();
+                if (qnow && !inscrl) return 0;
+
+                if (*p == '\r') {
+                    p++;
+                    remains--;
+
+                    was_cr = 1;
+                } else if (was_cr || *p == '\n') {
+                    int len, was_nl;
+
+                    was_nl = (*p == '\n');
+
+                    if (was_nl) {
+                        p++;
+                        remains--;
+                        /* Let xsign_formline() handle end of string wrap */
+                    }
+
+                    len = xsign_formline(buf, 72 / font->width,
+                                         s, l,
+                                         &p, &remains, flags);
+
+                    if (was_nl) {
+                        /* "\r\n" or "\n" */
+                        PROPAGATE_ERROR(sign_scru_nstr(buf, len, font, fs));
+                    } else {
+                        /* Only "\r" */
+                        PROPAGATE_ERROR(sign_ul_nstr(buf, len, font, fs));
+                    }
+
+                    was_cr = 0;
+                } else {
+                    /* Horizontal scrolling */
+                    if (!inscrl) {
+                        PROPAGATE_ERROR(sign_scrl_start());
+                    }
+
+                    /* Continue horizontal scroll mode if next character
+                     * can be appended that way.
+                     */
+                    if (qnow) {
+                        inscrl = 0;
+                    } else if (remains == 1) {
+                        /* Last character */
+                        if (flags & SIGN_LOOP) {
+                            /* Next character is first character in message.
+                             * It must exist because remains >= l.
+                             */
+                            inscrl = (*s != '\r' && *s != '\n');
+                        } else {
+                            inscrl = 0;
+                        }
+                    } else /* remains > 1 */ {
+                        inscrl = (*(p+1) != '\r' && *(p+1) != '\n');
+                    }
+                    res = sign_scrl_char(*p, font, fs, inscrl);
+                    if (res != 0 || qnow) return res;
+                    p++;
+                    remains--;
+                }
+            } /* while (remains > 0) */
+
+            if (flags & SIGN_LOOP) {
+#if 0
+                /* Notify after one completion */
+                if (ntfy) {
+                cmd_cb_notify(scb);
+                ntfy = 0;
+}
+#endif
+                /* Reset to start */
+                p = s;
+                remains = l;
+            } else {
+                /* No looping */
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+int sign_swprint(const char *s,
+                 sign_font_t *font, font_style fs, unsigned int flags) {
+    return sign_nswprint(s, strlen(s), font, fs, flags);
+}
+
+#if 0
+int main(void) {
+    sign_font_t font;
+    sign_open("COM9");
+    sign_loadfont("..\\lsd\\6x7.rawfont", &font);
+    sign_swprint("xyz\r123\nabc\n\nABC\r", &font, 0, SIGN_LOOP);
+    return 0;
+}
+#endif

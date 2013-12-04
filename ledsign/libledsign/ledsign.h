@@ -40,8 +40,8 @@ LEDAPI void sign_close(void);
 LEDAPI int sign_clear(void) ;
 LEDAPI int sign_full(void);
 
-#define SIGN_HWP_APPEND 1
-#define SIGN_HWP_LOOP 2
+#define SIGN_APPEND 1
+#define SIGN_LOOP 2
 
 LEDAPI int sign_nhwprint(const char *s, size_t n, unsigned int hwpflags);
 LEDAPI /* int sign_hwprint(const char *s, int hwpflags); */
@@ -56,6 +56,13 @@ typedef int font_style;
 #define SIGN_FONT_INVERTED 1
 #define SIGN_FONT_BOLD 2
 #define SIGN_FONT_ITALIC 4
+
+LEDAPI int sign_nswprint(const char *s, size_t l,
+                         sign_font_t *font, font_style fs,
+                         unsigned int flags);
+LEDAPI int sign_swprint(const char *s,
+                        sign_font_t *font, font_style fs,
+                        unsigned int flags);
 
 LEDAPI int sign_scrl_start(void);
 LEDAPI int sign_scrl_char(const char c, sign_font_t *font, font_style fs,
