@@ -709,6 +709,14 @@ VFD_RETURN vfd_setclock(const unsigned char *al) {
 #endif
 }
 
+VFD_RETURN vfd_flush(void) {
+    if (serio_flush() == SERIO_OK) {
+        VFD_SUCCESS();
+    } else {
+        VFD_ERROR("failed to flush serial port");
+    }
+}
+
 #ifdef TESTING
 int main(int argc, char **argv) {
   unsigned long i;

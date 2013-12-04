@@ -167,6 +167,7 @@ static void vfdm_thread(void) {
                 }
 
                 if (curplaystate == VFDM_PLAYING) {
+                    vfd_flush(); /* Decrease latency of VU display? */
                     vfd_bmsetvu(vu[0], vu[1]);
 
                     if (nosct >= NOSCT_FINAL) {
