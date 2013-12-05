@@ -7,9 +7,11 @@ SUBDIRS := serio \
            rgblamp/librgblamp
 
 ifeq ($(PLATFORM),Windows)
-SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb ledsign/gen_led rgblamp/winrgbchoose
-else
-SUBDIRS := $(SUBDIRS) rgblamp/aud_rgb
+SUBDIRS := $(SUBDIRS) ledsign/gen_led rgblamp/winrgbchoose
+endif
+
+ifneq ($(PLATFORM),Cygwin)
+SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb
 endif
 
 CLEANDIRS := $(SUBDIRS:%=clean-%)
