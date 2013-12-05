@@ -127,6 +127,7 @@ static bool rgb_unpacked(unsigned char cmd, unsigned short r, unsigned short g, 
     buf[4] = (g >> 8) & 0xFF;
     buf[5] = b & 0xFF;
     buf[6] = (b >> 8) & 0xFF;
+    serio_flush();
     return serio_write(buf, 7) >= 0;
 }
 
@@ -434,6 +435,14 @@ void rgb_endpots(void) {
     }
 }
 #endif
+
+RGBAPI bool rgb_flush(void) {
+    if (serio_flush() == SERIO_OK) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 /*** INITIALIZATION ***/
 

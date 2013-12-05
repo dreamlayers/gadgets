@@ -117,6 +117,8 @@ RGBAPI bool rgb_getnormal(unsigned char cmd, unsigned short *dest);
 /* Get dot correction values */
 RGBAPI bool rgb_getdot(unsigned short *dest);
 
+RGBAPI bool rgb_flush(void);
+
 /*** Initialization functions ***/
 
 RGBAPI void rgb_close(void);

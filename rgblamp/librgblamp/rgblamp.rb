@@ -109,6 +109,8 @@ module RGBLamp
     ptr.read_array_of_ushort(3)
   end
 
+  attach_function :flush, :rgb_flush, [ ], :bool
+
   # ** Initialization functions **
 
   attach_function :close, :rgb_close, [ ], :void
