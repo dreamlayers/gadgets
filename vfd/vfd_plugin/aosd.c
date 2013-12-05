@@ -104,31 +104,44 @@ aosd_about ( void )
 static void
 aosd_render_pcm(const float * pcm, int channels)
 {
-    gint chan, x;
     unsigned int vu[2];
+    unsigned int chan, usech, x, xlmt;
+
+    if (channels >= 2) {
+        usech = 2;
+    } else if (channels == 1) {
+        usech = 1;
+    } else {
+        return;
+    }
 
 //    g_static_mutex_lock(&rgb_buf_mutex);
-
-    for (chan = 0; chan < 2; chan++) {
+    xlmt = 512 * channels;
+    for (chan = 0; chan < usech; chan++) {
         double d, total = 0;
 
-        for (x = chan; x < (512*2); x+=2) {
+        for (x = chan; x < xlmt; x+=channels) {
           d = pcm[x] * 32768.0;
           d /= 128.0 * 256.0;
           total += d * d;
         }
 
-        if (total == 0) total = 1.0 / 1000000 / 1000000;
-        total = sqrt(total);
-        total /= 12.0;
+        if (total > 0) {
+            total = sqrt(total);
+            total /= 12.0;
 
-        total = log(total) * 20.0 / log(10);
+            total = log(total) * 20.0 / log(10);
 
-        d = total + 50.0;
-        d = d * 14.0 / 50.0;
+            d = total + 50.0;
+            d = d * 14.0 / 50.0;
 
-        vu[chan] = lrint(d);
+            vu[chan] = lrint(d);
+        } else {
+            vu[chan] = 0;
+        }
     }
+
+    if (usech == 1) vu[1] = vu[0];
 
     vfdm_vu(vu[0], vu[1]);
 
