@@ -20,13 +20,13 @@ all: $(SLFULLNAME) $(DLFULLNAME)
 
 .PHONY : install
 install: $(TARGET) $(LIBINCLUDE)
-	install $(LIBNAME).$(DLSUFFIX) /usr/local/lib
+	install $(DLFULLNAME) /usr/local/lib
 	install $(LIBINCLUDE) /usr/local/include
 	install $(LIBRUBY) /usr/local/lib/site_ruby
 
 .PHONY : uninstall
 uninstall:
-	rm -f /usr/local/lib/$(LIBNAME).$(DLSUFFIX)
+	rm -f /usr/local/lib/$(DLFULLNAME)
 	rm -f /usr/local/include/$(LIBINCLUDE)
 	rm -f /usr/local/lib/site_ruby/$(LIBRUBY)
 
