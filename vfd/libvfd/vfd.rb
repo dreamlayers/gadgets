@@ -33,10 +33,10 @@ module Vfd
   VFDPAR_ON =  0x40
   VFDPAR_SET = 0xC0
 
-  attach_function :vfd_connect, [ :string ], :int
-  attach_function :vfd_disconnect, [ ], :void
-  attach_function :vfd_clear, [ ], :int
-  attach_function :vfd_full, [ ], :int
+  attach_function :connect, :vfd_connect, [ :string ], :int
+  attach_function :disconnect, :vfd_disconnect, [ ], :void
+  attach_function :clear, :vfd_clear, [ ], :int
+  attach_function :full, :vfd_full, [ ], :int
 
   attach_function :vfd_ulbmp, [ :buffer_in ], :int
   attach_function :vfd_dlbmp, [ :buffer_out ], :int
@@ -47,30 +47,30 @@ module Vfd
   attach_function :vfd_blit7segdec, [ :buffer_inout, :int ], :void
   attach_function :vfd_blit7seghex, [ :buffer_inout, :int ], :void
 
-  attach_function :vfd_enterbm, [ ], :int
-  attach_function :vfd_exitbm, [ ], :int
+  attach_function :enterbm, :vfd_enterbm, [ ], :int
+  attach_function :exitbm, :vfd_exitbm, [ ], :int
 
-  attach_function :vfd_bms7dec, [ :int ], :int
-  attach_function :vfd_bms7hex, [ :int ], :int
+  attach_function :bms7dec, :vfd_bms7dec, [ :int ], :int
+  attach_function :bms7hex, :vfd_bms7hex, [ :int ], :int
 
-  attach_function :vfd_bmreadadc, [ :int ], :int
-  attach_function :vfd_bmsetvu, [ :int, :int ], :int
+  attach_function :bmreadadc, :vfd_bmreadadc, [ :int ], :int
+  attach_function :bmsetvu, :vfd_bmsetvu, [ :int, :int ], :int
   attach_function :vfd_bmind, [ :buffer_in ], :int
 
-  attach_function :vfd_bmclear, [ ], :int
+  attach_function :bmclear, :vfd_bmclear, [ ], :int
 
-  attach_function :vfd_bmsetscw, [ :int, :int ], :int
-  attach_function :vfd_bmntxt, [ :uint, :string, :int ], :int
-  attach_function :vfd_bmtxt, [ :uint, :string ], :int
-  attach_function :vfd_bmsetc, [ :int, :char ], :int
-  attach_function :vfd_bmnsets, [ :int, :string, :int ], :int
-  attach_function :vfd_bmsets, [ :int, :string ], :int
+  attach_function :bmsetscw, :vfd_bmsetscw, [ :int, :int ], :int
+  attach_function :bmntxt, :vfd_bmntxt, [ :uint, :string, :int ], :int
+  attach_function :bmtxt, :vfd_bmtxt, [ :uint, :string ], :int
+  attach_function :bmsetc, :vfd_bmsetc, [ :int, :char ], :int
+  attach_function :bmnsets, :vfd_bmnsets, [ :int, :string, :int ], :int
+  attach_function :bmsets, :vfd_bmsets, [ :int, :string ], :int
 
-  attach_function :vfd_bmparset, [ :int ], :int
-  attach_function :vfd_bmparon, [ :int ], :int
-  attach_function :vfd_bmparoff, [ :int ], :int
-  attach_function :vfd_bmparop, [ :int ], :int
-  attach_function :vfd_bmreadpar, [ ], :int
+  attach_function :bmparset, :vfd_bmparset, [ :int ], :int
+  attach_function :bmparon, :vfd_bmparon, [ :int ], :int
+  attach_function :bmparoff, :vfd_bmparoff, [ :int ], :int
+  attach_function :bmparop, :vfd_bmparop, [ :int ], :int
+  attach_function :bmreadpar, :vfd_bmreadpar, [ ], :int
 
   attach_function :vfd_clearalarms, [ :buffer_out ], :void
   # void vfd_addalarm(unsigned char *c, int op, int par, int h, int m, int s, int r);
@@ -81,16 +81,16 @@ end
 
 # This is for testing only
 if __FILE__ == $0
-  puts Vfd.vfd_connect("/dev/ttyS0")
-  puts Vfd.vfd_enterbm
-  puts Vfd.vfd_bmtxt(Vfd::VFDTXT_LOOP, "Testing...")
+  puts Vfd.connect("/dev/ttyS0")
+  puts Vfd.enterbm
+  puts Vfd.bmtxt(Vfd::VFDTXT_LOOP, "Testing...")
   for i in 0 .. 99
-    Vfd.vfd_bms7dec i
+    Vfd.bms7dec i
   end
-  puts Vfd.vfd_bmreadpar
-  Vfd.vfd_bmparon 2
-  Vfd.vfd_bmtxt(0, "ADC0: " << Vfd.vfd_bmreadadc(0).to_s)
-  Vfd.vfd_exitbm
+  puts Vfd.bmreadpar
+  Vfd.bmparon 2
+  Vfd.bmtxt(0, "ADC0: " << Vfd.bmreadadc(0).to_s)
+  Vfd.exitbm
   #Vfd.vfd_setclock(nil)
-  Vfd.vfd_disconnect
+  Vfd.disconnect
 end
