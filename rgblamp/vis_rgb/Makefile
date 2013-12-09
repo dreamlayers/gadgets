@@ -22,6 +22,10 @@ LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) aud_rgb.c
 TARGET := aud_rgb.so
 
+.PHONY : install uninstall all
+
+all: $(TARGET)
+
 install: $(TARGET)
 	cp $(TARGET) ~/.local/share/audacious/Plugins/
 
@@ -38,12 +42,22 @@ $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
-.PHONY : clean
+.PHONY : clean veryclean
 clean:
 	rm -f $(OBJS) $(TARGET) *~ *.bak
+
+veryclean: clean
+	rm -f freqadj_audacious.h greentab_audacious.h
 
 rgbvis.o: rgbvis.c $(WINAMPAPI_DIR)/vis.h rgbm.h Makefile
 
 aud_rgb.o: aud_rgb.c rgbm.h Makefile
 
-rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
+rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile \
+        greentab_audacious.h freqadj_audacious.h
+
+freqadj_audacious.h: makefreqadj.m
+	octave -q $^
+
+greentab_audacious.h: makeramps.rb
+	ruby makeramps.rb > $@
