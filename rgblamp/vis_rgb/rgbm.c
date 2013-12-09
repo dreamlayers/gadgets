@@ -27,7 +27,8 @@
 #define RGBM_BLUESCALE 1.60948950058501
 
 /* Overall scaling to adapt output to values needed by librgblamp */
-#define RGBM_SCALE (12000.0 / 4095.0)
+#define RGBM_SCALE (12000.0)
+#define RGBM_LIMIT 4095
 
 /* Table for bin weights for summing bin powers (amplitued squared) to green.
  * Below RGBM_PIVOTBIN, red + green = 1.0. At and above, red + blue = 1.0.
@@ -177,7 +178,7 @@ int rgbm_init(void) {
 
 void rgbm_shutdown(void) {
     if (wrotepwm)
-        rgb_matchpwm_srgb(binavg[0], binavg[1], binavg[2]);
+        rgb_matchpwm(binavg[0], binavg[1], binavg[2]);
     rgb_close();
 #ifdef RGBM_LOGGING
     if (testlog != NULL) fclose(testlog);
@@ -191,7 +192,7 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
     rgbm_sumbins(bins, sums);
     sums[0] *= RGBM_REDSCALE;
     sums[2] *= RGBM_BLUESCALE;
-    rgbm_avgsums(sums, binavg, RGBM_SCALE, 1.0);
+    rgbm_avgsums(sums, binavg, RGBM_SCALE, RGBM_LIMIT);
     rgb_flush();
 #ifdef RGBM_LOGGING
     for (res = 0; res < 3; res++) {
@@ -206,10 +207,7 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
         fprintf(testlog, "%9f, %9f, %9f\n", binavg[0], binavg[1], binavg[2]);
     }
 #endif
-    /* When using peak values, using rgb_pwm() may make more sense,
-     * but sRGB is more colourful.
-     */
-    res = rgb_pwm_srgb(binavg[0], binavg[1], binavg[2]);
+    res = rgb_pwm(binavg[0], binavg[1], binavg[2]);
     if (res) wrotepwm = 1;
     return res;
 } /* rgbm_render */
