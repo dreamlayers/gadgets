@@ -1,14 +1,20 @@
-def make_hz last
+def make_hz last, add, div
     hz = []
     for i in 0..last
-        hz[i] = (i+1).to_f*44100/512
+        hz[i] = (i+add).to_f*44100/div
     end
     return hz
 end
 
-lastbin = 144
-hz = make_hz lastbin
-pitch = hz.map{ |x| 69+12*Math.log2(x/440) }
+lastbin = ARGV[0].to_i
+hz = make_hz lastbin, ARGV[1].to_i, ARGV[2].to_i
+pitch = hz.map{ |x|
+if x <= 0 then
+  0
+else
+  69+12*Math.log2(x/440)
+end
+}
 midpoint = (pitch[0] + pitch[lastbin])/2
 
 green = pitch.map{ |x| 1-(midpoint-x).abs/(midpoint-pitch[0]) }
