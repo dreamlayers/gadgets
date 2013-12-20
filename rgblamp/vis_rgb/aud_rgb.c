@@ -1,3 +1,6 @@
+/* Audacious-specific visualization plugin code for the RGB lamp. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <glib.h>
 #include <audacious/plugin.h>
 #include "rgbm.h"

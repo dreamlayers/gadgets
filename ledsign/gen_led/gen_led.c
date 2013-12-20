@@ -1,3 +1,6 @@
+/* Winamp plugin for the LED sign. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <ctype.h>
 #include <windows.h>
 

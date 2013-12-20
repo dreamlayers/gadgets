@@ -1,4 +1,5 @@
-/* Sign daemon */
+/* Header file for the TCP sign daemon. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #ifndef _SIGND_H_
 #define _SIGND_H_

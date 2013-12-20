@@ -1,3 +1,6 @@
+/* Header file for library for accessing LED sign via daemon. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _LIBSIGNTCP_H_
 #define _LIBSIGNTCP_H_
 

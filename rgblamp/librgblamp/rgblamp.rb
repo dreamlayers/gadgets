@@ -1,3 +1,6 @@
+# Ruby bindings for RGB lamp direct interfacing library
+# Copyright 2013 Boris Gjenero. Released under the MIT license.
+
 require 'ffi'
 
 module RGBLamp

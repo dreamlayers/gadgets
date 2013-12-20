@@ -1,3 +1,6 @@
+/* Cross-platform code for the serio serial port library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 //#define SERIO_ERRORS_FATAL
 #include <stdlib.h>
 #include <stdio.h>

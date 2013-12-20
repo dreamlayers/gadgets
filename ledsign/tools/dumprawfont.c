@@ -1,3 +1,6 @@
+/* Raw font dumper tool for the LED sign. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <stdio.h>
 
 #ifdef _WIN32

@@ -1,3 +1,6 @@
+/* Direct access library for the LED sign. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <stdlib.h>
 #include <string.h>
 #ifdef WIN32

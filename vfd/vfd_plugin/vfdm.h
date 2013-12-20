@@ -1,3 +1,6 @@
+/* Header file for VFD gadget music player plugin. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _VFDM_H_
 #define _VFDM_H_
 

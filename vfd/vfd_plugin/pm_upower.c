@@ -1,4 +1,7 @@
+/* Linux system sleep and resume triggers. */
 /* Source: https://github.com/KABA-CCEAC/node-pm-notify/blob/master/src/pm_linux.cpp */
+/* Copyright (c) 2013 Kaba AG */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus.h>

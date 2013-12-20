@@ -1,4 +1,5 @@
-// rgbclient.cpp : Defines the entry point for the console application.
+/* Library for direct interfacing to the RGB lamp. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #include <stdlib.h>
 //#include <stdio.h>

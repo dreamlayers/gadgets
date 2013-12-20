@@ -1,3 +1,6 @@
+/* Header file defining shared aspects of sign daemon protocol. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _SDPROTOCOL_H_
 
 #define SPROTO_OK "OK\r\n"

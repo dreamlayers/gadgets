@@ -1,3 +1,6 @@
+/* 14 segment display font for the VFD display. */
+/* Adapted from unknown source */
+
 #define S15 0
 #define S4 SD_TOP
 #define S3  SD_LEFTUPPER

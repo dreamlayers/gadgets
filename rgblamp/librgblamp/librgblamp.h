@@ -1,3 +1,6 @@
+/* Header file for RGB lamp direct access library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _RGBCLIENT_H_
 #define _RGBCLIENT_H_
 

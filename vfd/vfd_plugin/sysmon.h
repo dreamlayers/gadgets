@@ -1,3 +1,6 @@
+/* Header file for system monitor code for the VFD gadget music player plugin */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _SYSMON_H_
 #define _SYSMON_H_
 

@@ -1,3 +1,6 @@
+/* POSIX-specific code for the VFD display music player plugin. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <pthread.h>
 #include <time.h>
 #include <errno.h>

@@ -1,3 +1,6 @@
+/* Header file for direct access library for the VFD gadget. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _VFD_H_
 
 #ifdef __cplusplus

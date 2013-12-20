@@ -1,3 +1,6 @@
+/* Shared visualization plugin code for the RGB lamp. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 /* Define to output averaged per-bin sums for calibration */
 /* #define RGBM_LOGGING */
 

@@ -1,6 +1,6 @@
-//#define __W32API_USE_DLLIMPORT__
-//#define WIN32_LEAN_AND_MEAN
-//#include <windows.h>
+/* System-independent code for the VFD display music player plugin. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <time.h>
 #include <string.h>
 

@@ -1,3 +1,6 @@
+/* Header file for serio serial port library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _SERIO_H_
 #define _SERIO_H_
 

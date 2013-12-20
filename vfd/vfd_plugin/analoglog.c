@@ -1,3 +1,6 @@
+/* ADC logger for the VFD display. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <string.h>
 #include <stdio.h>
 

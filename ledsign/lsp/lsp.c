@@ -1,3 +1,6 @@
+/* CGI client for web access to the LED sign. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <stdio.h>
 #include "cgic.h"
 #include <string.h>

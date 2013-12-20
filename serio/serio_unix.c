@@ -1,3 +1,6 @@
+/* Unix code for the serio serial port library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

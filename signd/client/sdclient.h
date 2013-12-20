@@ -1,3 +1,6 @@
+/* Header file for shared parts of sign daemon protocol client. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _SDCLIENT_H_
 
 #include "../sdprotocol.h"

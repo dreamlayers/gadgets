@@ -1,3 +1,6 @@
+/* Winamp-specific code for the VFD display music player plugin. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #define VFDPORT "COM1"
 #define SPECTRUMVU
 #if !defined(DSPPLUG) && !defined(VISPLUG)

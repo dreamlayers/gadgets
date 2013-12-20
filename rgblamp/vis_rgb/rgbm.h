@@ -1,3 +1,6 @@
+/* Header file for RGB lamp visualization plugin. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #ifndef _RGBM_H_
 
 #ifdef __cplusplus

@@ -1,3 +1,6 @@
+/* Library for accessing the LED sign via the lsd daemon. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <string.h>
 #define IN_SDCLIENT
 #include "sdclient.h"

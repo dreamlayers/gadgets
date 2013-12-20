@@ -1,3 +1,6 @@
+/* Windows code for the serio serial port library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #ifdef _MSC_VER

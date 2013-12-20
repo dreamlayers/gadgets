@@ -1,4 +1,5 @@
-/* This is glue between the socket/daemon code and the LED sign API */
+/* Glue between the daemon code and the LED sign direct access library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #include <stdlib.h>
 #include <stdio.h>

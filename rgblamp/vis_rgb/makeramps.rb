@@ -1,3 +1,6 @@
+# Program for building tables for computing colours from FFT bins.
+# Copyright 2013 Boris Gjenero. Released under the MIT license.
+
 def make_hz last, add, div
     hz = []
     for i in 0..last

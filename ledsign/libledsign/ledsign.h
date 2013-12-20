@@ -1,4 +1,5 @@
-/* libsign.h */
+/* Header file for LED sign direct access library. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #ifndef _LIBSIGN_H_
 #define _LIBSIGN_H_

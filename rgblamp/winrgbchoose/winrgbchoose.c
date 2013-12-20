@@ -1,3 +1,6 @@
+/* Windows colour chooser for the RGB lamp. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+
 #include <windows.h>
 #include "librgblamp.h"
 #include <stdio.h>

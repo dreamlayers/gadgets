@@ -1,3 +1,6 @@
+# Ruby bindings for VFD gadget direct interfacing library.
+# Copyright 2013 Boris Gjenero. Released under the MIT license.
+
 require 'ffi'
 
 module Vfd

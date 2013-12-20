@@ -1,4 +1,5 @@
-/* Winamp plugin for RGB lamp, by Boris Gjenero */
+/* Winamp-specific visualization plugin code for the RGB lamp. */
+/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #define __W32API_USE_DLLIMPORT__
 #define WIN32_LEAN_AND_MEAN
