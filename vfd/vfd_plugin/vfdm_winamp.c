@@ -282,7 +282,7 @@ static int render(struct winampVisModule *this_mod)
 #endif
 {
   int x, y, usech;
-  unsigned int vu[2];
+  int vu[2];
 
 #if defined(DSPPLUG)
   usech = (nch > 2) ? 2 : nch;
