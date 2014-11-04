@@ -2,7 +2,7 @@
 /* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #define VFDPORT "COM1"
-#define SPECTRUMVU
+//#define SPECTRUMVU
 #if !defined(DSPPLUG) && !defined(VISPLUG)
 //#define DSPPLUG
 #define VISPLUG
