@@ -4,6 +4,8 @@ SIGND_DIR := ../../signd
 LIBLEDSIGN_DIR := ../libledsign
 CFLAGS := $(CFLAGS) -I$(SIGND_DIR)/daemon -I$(SIGND_DIR)/client \
           -I$(LIBLEDSIGN_DIR)
+OBJS := signcmds.o
+TARGET := lsd
 
 all: lsd libsigntcp.a
 
@@ -14,13 +16,13 @@ CFLAGS := $(CFLAGS) -mwindows -I../../serio
 
 lsd-res.o: lsd.rc LEDsign.ico
 	windres -I$(SIGND_DIR)/daemon $< $@
-lsd: lsd-res.o
+OBJS := $(OBJS) lsd-res.o
 
 else
 LIBS := -lpthread
 endif
 
-lsd: signcmds.o $(SIGND_DIR)/daemon/signd.a $(LIBLEDSIGN_DIR)/libledsign.a
+$(TARGET): $(OBJS) $(SIGND_DIR)/daemon/signd.a $(LIBLEDSIGN_DIR)/libledsign.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
@@ -29,7 +31,7 @@ libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
 
 .PHONY : clean
 clean:
-	rm -f $(OBJS) libsigntcp.o signcmds.o $(TARGET) *~ *.bak
+	rm -f $(OBJS) libsigntcp.o libsigntcp.a $(TARGET) *~ *.bak
 
 libsigntcp.o: libsigntcp.c libsigntcp.h $(SIGND_DIR)/client/sdclient.h \
 			  $(SIGND_DIR)/sdprotocol.h Makefile

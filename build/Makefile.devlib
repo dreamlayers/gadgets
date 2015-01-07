@@ -44,4 +44,4 @@ $(SLFULLNAME): $(OBJS) $(SERIO_DIR)/libserio.a Makefile
 
 .PHONY : clean
 clean:
-	rm -f $(OBJS) $(LIBNAME).a $(LIBNAME).so $(LIBNAME).dll *~ *.bak
+	rm -f $(OBJS) $(SLFULLNAME) $(DLFULLNAME) *~ *.bak
