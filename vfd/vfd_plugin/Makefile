@@ -35,7 +35,7 @@ else
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
 CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) $(PIC)
 LIBS := $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
-SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_upower.c aosd.c aosd_trigger.c
+SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_systemd.c aosd.c aosd_trigger.c
 
 TARGET := aud_vfd.so
 TARGETS := $(TARGET)
@@ -64,7 +64,7 @@ analoglog.o: analoglog.c Makefile
 aosd.o: aosd.c aosd_trigger.h vfdm.h Makefile
 aosd_trigger.o: aosd_trigger.c aosd_trigger.h aosd_trigger_private.h \
  vfdm.h Makefile
-pm_upower.o: pm_upower.c vfdm.h sysmon.h Makefile
+pm_systemd.o: pm_systemd.c vfdm.h sysmon.h Makefile
 sysmon_linux.o: sysmon_linux.c sysmon.h Makefile
 sysmon_windows.o: sysmon_windows.c sysmon.h Makefile
 vfdm.o: vfdm.c $(LIBVFD_DIR)/vfd.h sysmon.h vfdm.h Makefile
