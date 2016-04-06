@@ -34,8 +34,6 @@
 */
 typedef struct
 {
-  const gchar * name;
-  const gchar * desc;
   void (*onoff_func)( gboolean );
   void (*callback_func)( gpointer , gpointer );
 }

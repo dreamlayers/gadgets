@@ -6,6 +6,10 @@
 
 #define VFD_SCROLLMAX 46
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Play state, matching Winamp return values */
 enum vfdm_playstate {
     VFDM_UNKNOWNSTATE = -1,
@@ -35,5 +39,9 @@ unsigned int vfdm_cb_wait(void);
 void vfdm_cb_lock(void);
 void vfdm_cb_signal(unsigned int flagstoset);
 void vfdm_cb_unlock(void);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* ifndef _VFDM_H_ */

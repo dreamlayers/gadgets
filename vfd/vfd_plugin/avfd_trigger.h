@@ -18,21 +18,9 @@
 *
 */
 
-#ifndef _I_AOSD_TRIGGER_H
-#define _I_AOSD_TRIGGER_H 1
+#ifndef _I_AVFD_TRIGGER_H
+#define _I_AVFD_TRIGGER_H 1
 
-//#undef PACKAGE
-//#define PACKAGE "audacious-plugins"
-
-//#include "aosd_common.h"
-//#include "aosd_cfg.h"
-#include <glib.h>
-
-
-/* trigger public API */
-void aosd_trigger_get_codes_array ( gint ** , gint * );
-const gchar * aosd_trigger_get_name ( gint );
-const gchar * aosd_trigger_get_desc ( gint );
 void aosd_trigger_start ( void );
 void aosd_trigger_stop ( void );
 

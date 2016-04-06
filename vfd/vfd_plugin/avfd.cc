@@ -18,51 +18,63 @@
 *
 */
 
-#include <glib.h>
-#include <audacious/plugin.h>
-//#include "aosd_ui.h"
-//#include "aosd_osd.h"
-//#include "aosd_cfg.h"
-#include "aosd_trigger.h"
-#include <audacious/i18n.h>
-
-#define VFDPORT "/dev/ttyS0"
-#define VISPLUGIN
-
 #include <math.h>
 #include <string.h>
-#include <stdbool.h>
+#include <glib.h>
+#include <libaudcore/i18n.h>
+#define AUD_PLUGIN_GLIB_ONLY
+#include <libaudcore/plugin.h>
+#include "avfd_trigger.h"
 
 #include "vfdm.h"
 
+#define VFDPORT "/dev/ttyS0"
+
+class AVFD : public VisPlugin
+{
+public:
+    static const char about[];
+
+    static constexpr PluginInfo info = {
+        N_("Audacious VFD"),
+        N_("gadgets"),
+        about
+    };
+
+    constexpr AVFD () : VisPlugin (info, Visualizer::MultiPCM) {}
+
+    bool init ();
+    void cleanup ();
+
+    void render_multi_pcm (const float * pcm, int channels);
+    void clear ();
+};
+
+
+__attribute__((visibility("default"))) AVFD aud_plugin_instance;
+
 gboolean plugin_is_active = FALSE;
+
+const char AVFD::about[] =
+ N_("Audacious VFD\n");
+
 
 /* ***************** */
 /* plug-in functions */
 
-static bool_t
-aosd_init ( void )
+bool AVFD::init ()
 {
   if (vfdm_init(VFDPORT) != 0) return false;
 
   plugin_is_active = TRUE;
-#if 0
-  g_log_set_handler( NULL , G_LOG_LEVEL_WARNING , g_log_default_handler , NULL );
 
-  global_config = aosd_cfg_new();
-  aosd_cfg_load( global_config );
-
-  aosd_osd_init( global_config->osd->misc.transparency_mode );
-
-#endif
   aosd_trigger_start();
 
   return true;
 }
 
 
-static void
-aosd_cleanup ( void )
+void AVFD::cleanup ()
 {
   if ( plugin_is_active == TRUE )
   {
@@ -76,33 +88,7 @@ aosd_cleanup ( void )
   return;
 }
 
-
-#if 0
-void
-aosd_configure ( void )
-{
-  /* create a new configuration object */
-  aosd_cfg_t *cfg = aosd_cfg_new();
-  /* fill it with information from config file */
-  aosd_cfg_load( cfg );
-  /* call the configuration UI */
-  aosd_ui_configure( cfg );
-  /* delete configuration object */
-  aosd_cfg_delete( cfg );
-  return;
-}
-
-
-void
-aosd_about ( void )
-{
-  aosd_ui_about();
-  return;
-}
-#endif
-
-static void
-aosd_render_pcm(const float * pcm, int channels)
+void AVFD::render_multi_pcm(const float * pcm, int channels)
 {
     unsigned int vu[2];
     unsigned int chan, usech, x, xlmt;
@@ -150,31 +136,7 @@ aosd_render_pcm(const float * pcm, int channels)
     return;
 }
 
-#if defined(__GNUC__) && __GNUC__ >= 4
-#define HAVE_VISIBILITY 1
-#else
-#define HAVE_VISIBILITY 0
-#endif
-
-#if HAVE_VISIBILITY
-#pragma GCC visibility push(default)
-#endif
-
-#ifdef VISPLUGIN
-AUD_VIS_PLUGIN(
-#else
-AUD_GENERAL_PLUGIN(
-#endif
-    .name = "Audacious VFD",
-    .init = aosd_init,
-    //.about = aosd_about,
-    //.configure = aosd_configure,
-    .cleanup = aosd_cleanup,
-#ifdef VISPLUGIN
-    .render_multi_pcm = aosd_render_pcm,
-#endif
-)
-
-#if HAVE_VISIBILITY
-#pragma GCC visibility pop
-#endif
+void AVFD::clear ()
+{
+    vfdm_vu(0, 0);
+}

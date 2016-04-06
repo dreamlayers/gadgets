@@ -34,16 +34,18 @@ else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
 CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) $(PIC)
+CXXFLAGS := $(CFLAGS) -std=c++11
 LIBS := $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
-SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_systemd.c aosd.c aosd_trigger.c
+SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_systemd.c avfd.cc avfd_trigger.cc
 
 TARGET := aud_vfd.so
 TARGETS := $(TARGET)
 
 OBJS := $(SRCS:%.c=%.o)
+OBJS := $(OBJS::%.cc=%.o)
 
 $(TARGET): $(OBJS) $(LIBVFD_DIR)/libvfd.a
-	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
+	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 .PHONY : install uninstall
@@ -61,8 +63,8 @@ clean:
 	rm -f $(OBJS) $(TARGETS) $(CLEAN_EXTRA) *~ *.bak
 
 analoglog.o: analoglog.c Makefile
-aosd.o: aosd.c aosd_trigger.h vfdm.h Makefile
-aosd_trigger.o: aosd_trigger.c aosd_trigger.h aosd_trigger_private.h \
+avfd.o: avfd.cc avfd_trigger.h vfdm.h Makefile
+avfd_trigger.o: avfd_trigger.cc avfd_trigger.h avfd_trigger_private.h \
  vfdm.h Makefile
 pm_systemd.o: pm_systemd.c vfdm.h sysmon.h Makefile
 sysmon_linux.o: sysmon_linux.c sysmon.h Makefile
