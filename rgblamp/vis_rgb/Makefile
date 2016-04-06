@@ -40,12 +40,13 @@ rgbm.o: greentab_audacious.h freqadj_audacious.h
 
 endif
 
-CFLAGS := $(CFLAGS)
+CXXFLAGS := $(CFLAGS) -std=c++11
 
 OBJS := $(SRCS:%.c=%.o)
+OBJS := $(OBJS:%.cc=%.o)
 
 $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
-	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
+	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 .PHONY : clean veryclean
@@ -57,7 +58,7 @@ veryclean: clean
 
 rgbvis.o: rgbvis.c $(WINAMPAPI_DIR)/vis.h rgbm.h Makefile
 
-aud_rgb.o: aud_rgb.c rgbm.h Makefile
+aud_rgb.o: aud_rgb.cc rgbm.h Makefile
 
 rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile \
 
