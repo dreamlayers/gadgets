@@ -1,6 +1,7 @@
 include build/Makefile.config
 
-SUBDIRS := serio \
+SUBDIRS := common \
+           serio \
            signd/client signd/daemon \
            ledsign/lsd ledsign/libledsign ledsign/lsp \
            vfd/libvfd vfd/vfd_plugin vfd/vfdd \

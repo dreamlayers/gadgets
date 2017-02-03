@@ -3,20 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifdef WIN32
-#include <winsock.h>
-#else
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#define INVALID_SOCKET -1
-#define SOCKET_ERROR -1
-#define LPSOCKADDR (struct sockaddr *)
-#define SOCKET int
-#endif
+#include "../../common/tcp.h"
 #define IN_SDCLIENT
 #include "sdclient.h"
 
@@ -29,86 +16,29 @@ static const char *resp[NUMRESP] = {
 static const char signflagl[] = SFLAG_CHARACTERS;
 
 /* Static variables */
-static SOCKET sc_xsock = INVALID_SOCKET;
+static SOCKET sc_xsock = -1;
 static int    sc_keepopen = 0;
 
 /* Actually open connection to sign */
 static int sc_xopen(void) {
-    int nRet;
-#ifdef WIN32
-    WORD version = MAKEWORD(1,1);
-    WSADATA wsaData;
-    SOCKET theSocket;
-    LPHOSTENT lpHostEntry;
-    SOCKADDR_IN saServer;
-
-    /* Start up Winsock */
-    WSAStartup(version, &wsaData);
-#else
-    struct hostent *lpHostEntry;
     int theSocket;
-    struct sockaddr_in saServer;
-#endif
 
-    /* Store information about the server */
-    lpHostEntry = gethostbyname("localhost");
-    if (lpHostEntry == NULL) {
-      printf("Error at gethostbyname()");
-#ifdef WIN32
-      WSACleanup();
-#endif
-      return -1;
-    }
+    theSocket = tcpc_open("localhost", tcpport);
 
-    /* Create the socket */
-    theSocket = socket(AF_INET,            /* Go over TCP/IP */
-                       SOCK_STREAM,        /* Socket type */
-                       IPPROTO_TCP);    /* Protocol */
-    if (theSocket == INVALID_SOCKET) {
-        printf("Error at socket()");
-#ifdef WIN32
-      WSACleanup();
-#endif
+    if (theSocket != -1) {
+        sc_xsock = theSocket;
+        return 0;
+    } else {
+        sc_xsock = -1;
         return -1;
     }
-
-
-    /* Use SOCKADDR_IN to fill in address information */
-    saServer.sin_family = AF_INET;
-#ifdef WIN32
-    saServer.sin_addr = *((LPIN_ADDR)*lpHostEntry->h_addr_list);
-#else
-    saServer.sin_addr = *((struct in_addr *)*lpHostEntry->h_addr_list);
-#endif
-    saServer.sin_port = htons(tcpport);
-
-    /* Connect to the server */
-    nRet = connect(theSocket,
-               (struct sockaddr *)&saServer,        // Server address
-               sizeof(struct sockaddr));    // Length of address structure
-        if (nRet == SOCKET_ERROR) {
-       /* FIXME:  closesocket ? */
-       printf("Error at connect()");
-#ifdef WIN32
-       WSACleanup();
-#endif
-       return -1;
-    }
-    sc_xsock = theSocket;
-
-    return 0;
 }
 
 /* Actually close connection to sign */
 static void sc_xclose(void) {
-  if (!sc_keepopen && sc_xsock != INVALID_SOCKET) {
-#ifdef WIN32
-    closesocket(sc_xsock);
-    WSACleanup();
-#else
-    close(sc_xsock);
-#endif
-    sc_xsock = INVALID_SOCKET;
+  if (!sc_keepopen && sc_xsock != -1) {
+    tcpc_close(sc_xsock);
+    sc_xsock = -1;
   }
 }
 

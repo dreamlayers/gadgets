@@ -4,7 +4,7 @@ SRCS := sdclient.c
 
 TARGET := libsdclient.a
 
-OBJS := $(SRCS:%.c=%.o)
+OBJS := $(SRCS:%.c=%.o) ../../common/tcp.o
 
 $(TARGET): $(OBJS)
 	ar rcs $@ $^
