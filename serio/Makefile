@@ -1,6 +1,6 @@
 include ../build/Makefile.config
 
-SRCS := serio.c
+SRCS := serio.c serio_tcp.c
 TARGET := libserio.a
 
 ifeq ($(PLATFORM),Windows)
@@ -14,7 +14,7 @@ SRCS := $(SRCS) serio_unix.c
 
 endif
 
-OBJS := $(SRCS:%.c=%.o)
+OBJS := $(SRCS:%.c=%.o) ../common/tcp.o
 
 $(TARGET): $(OBJS)
 	ar rcs $@ $^

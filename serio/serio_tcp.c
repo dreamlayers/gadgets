@@ -29,50 +29,19 @@
 #define TIMEOUT_CLOCK CLOCK_REALTIME
 #endif
 
-/*** PORT CONTROL ***/
-
-SERIO_RETURN serio_purge(unsigned int what) {
-#if 0    
-    int flags = 0;
-
-    if (what & SERIO_PURGEIN) {
-        if (what & SERIO_PURGEOUT) {
-        flags = TCIOFLUSH;
-        } else {
-            flags = TCIFLUSH;
-        }
-    } else if (what & SERIO_PURGEOUT) {
-        flags = TCOFLUSH;
-    }
-
-    if (tcflush(fd, flags) != 0) {
-        SERIO_ERROR("serio_purge: tcflush failed");
-    } else {
-        SERIO_SUCCESS();
-    }
-#endif    
-    SERIO_SUCCESS();
-}
-
-
-SERIO_RETURN serio_flush(void) {
-    if (tcdrain(fd) != 0) {
-        SERIO_ERROR("serio_flush: tcdrain failed");
-    }
-    SERIO_SUCCESS();
-}
 
 /*** SETUP AND INITIALIZATION ***/
 
 SERIO_RETURN serio_connect_tcp(const char *address, unsigned int port) {
     int size = 0;
     int flag = 1;
-
     fd = tcpc_open(address, port);
     if (fd == -1) {
         SERIO_ERROR("serio_connect_tcp: tcpc_open failed");
     }
 
+    /* This avoids crashing due to https://github.com/jeelabs/esp-link #259
+       while still allowing decent performance. */
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int)) != 0) {
         SERIO_ERROR("serio_connect_tcp: TCP_NODELAY failed");
     }

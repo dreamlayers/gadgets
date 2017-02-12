@@ -255,6 +255,7 @@ fprintf(stderr, "Buf: i = %i (max = %i), o = %i (max = %i)\n", cp.dwCurrentRxQue
 }
 */
 
+    serio_tcp = 0;
 #ifdef SERIO_OVERLAPPED
     return xserio_initovl();
 #else

@@ -28,11 +28,12 @@
 
 /*** GLOBAL VARIABLES ***/
 
-static int fd;
+int fd;
 static int readtmout = 0;
 
 /*** ERROR MANAGEMENT ***/
 
+#ifdef SERIO_ERRORS_FATAL
 #if defined(__GNUC__)
 static void fatalerr(char *s) __attribute__ ((noreturn));
 #endif
@@ -40,6 +41,7 @@ static void fatalerr(char *s) {
     fputs(s, stderr);
     exit(-1);
 }
+#endif
 
 /*** TIMEOUT HANDLING ***/
 
@@ -202,31 +204,42 @@ SERIO_LENGTH_RETURN serio_read(unsigned char *s, size_t l) {
 /*** PORT CONTROL ***/
 
 SERIO_RETURN serio_purge(unsigned int what) {
-    int flags = 0;
+    if (serio_tcp == 0) {
+        int flags = 0;
 
-    if (what & SERIO_PURGEIN) {
-        if (what & SERIO_PURGEOUT) {
-        flags = TCIOFLUSH;
-        } else {
-            flags = TCIFLUSH;
+        if (what & SERIO_PURGEIN) {
+            if (what & SERIO_PURGEOUT) {
+            flags = TCIOFLUSH;
+            } else {
+                flags = TCIFLUSH;
+            }
+        } else if (what & SERIO_PURGEOUT) {
+            flags = TCOFLUSH;
         }
-    } else if (what & SERIO_PURGEOUT) {
-        flags = TCOFLUSH;
-    }
 
-    if (tcflush(fd, flags) != 0) {
-        SERIO_ERROR("serio_purge: tcflush failed");
+        if (tcflush(fd, flags) != 0) {
+            SERIO_ERROR("serio_purge: tcflush failed");
+        } else {
+            SERIO_SUCCESS();
+        }
     } else {
+        /* There seem to be no special socket operations for this, though
+           you could just keep reading until there's nothing left to read. */
         SERIO_SUCCESS();
     }
 }
 
-
 SERIO_RETURN serio_flush(void) {
-    if (tcdrain(fd) != 0) {
-        SERIO_ERROR("serio_flush: tcdrain failed");
+    if (serio_tcp == 0) {
+        if (tcdrain(fd) != 0) {
+            SERIO_ERROR("serio_flush: tcdrain failed");
+        }
+        SERIO_SUCCESS();
+    } else {
+        /* This is apparently impossible for sockets. 
+           All you can do is use TCP_NODELAY, which is already used. */
+        SERIO_SUCCESS();
     }
-    SERIO_SUCCESS();
 }
 
 /*** SETUP AND INITIALIZATION ***/
@@ -236,7 +249,7 @@ SERIO_RETURN serio_setreadtmout(unsigned int tmout) {
     SERIO_SUCCESS();
 }
 
-SERIO_RETURN serio_connect(const char *fname, unsigned int baud) {
+SERIO_RETURN serio_connect_com(const char *fname, unsigned int baud) {
     struct termios temptermios;
     speed_t speed;
 
@@ -306,9 +319,10 @@ SERIO_RETURN serio_connect(const char *fname, unsigned int baud) {
         SERIO_ERROR("serio_open: tcsetattr failed");
     }
 
+    serio_tcp = 0;
     SERIO_SUCCESS();
 }
 
-void serio_disconnect(void) {
+void serio_disconnect_com(void) {
     close(fd);
 }

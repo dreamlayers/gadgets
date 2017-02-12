@@ -73,9 +73,13 @@ SERIO_RETURN serio_flush(void);
 SERIO_RETURN serio_setreadtmout(unsigned int tmout);
 
 SERIO_RETURN serio_connect(const char *fname, unsigned int baud);
+SERIO_RETURN serio_connect_tcp(const char *address, unsigned int port);
+SERIO_RETURN serio_connect_com(const char *fname, unsigned int baud);
 void serio_disconnect(void);
 
 void serio_setabortpoll(int (*func)(void));
+
+int serio_is_tcp(void);
 
 #ifdef IN_SERIO
 /* Definitions only visble to other parts of serio. */
@@ -83,14 +87,30 @@ void serio_setabortpoll(int (*func)(void));
 #ifdef SERIO_ERRORS_FATAL
 #define SERIO_ERROR(s) fatalerr(s)
 #define SERIO_SUCCESS()
+#define SERIO_PROPAGATE_ERROR(x) x
 #else /* !SERIO_ERRORS_FATAL */
 #define SERIO_ERROR(s) return SERIO_FAIL
 #define SERIO_SUCCESS() return SERIO_OK
+#define SERIO_PROPAGATE_ERROR(x) return x
 #endif  /* !SERIO_ERRORS_FATAL */
 
 #ifdef SERIO_ABORT_POLL
 extern int (*abortpollf)(void);
 #endif
+
+extern int fd;
+extern int serio_tcp;
+
+#if defined(__GNUC__)
+void fatalerr(char *s) __attribute__ ((noreturn));
+#elif defined(_MSC_VER)
+__declspec(noreturn) void fatalerr(char *s);
+#else
+void fatalerr(char *s);
+#endif
+
+void serio_disconnect_tcp(void);
+void serio_disconnect_com(void);
 
 #endif /* IN_SERIO */
 

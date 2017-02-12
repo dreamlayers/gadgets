@@ -10,6 +10,7 @@
 #define IN_SERIO
 #include "serio.h"
 
+int serio_tcp;
 #ifdef SERIO_ABORT_POLL
 int (*abortpollf)(void);
 #endif
@@ -51,3 +52,45 @@ void serio_setabortpoll(int (*func)(void)) {
     abortpollf = func;
 }
 #endif
+
+SERIO_RETURN serio_connect(const char *name, unsigned int baud) {
+    unsigned int port = 0;
+    unsigned int mul = 1;
+    const char *nameend = name + strlen(name) - 1;
+    const char *p = nameend;
+    while (p > name && *p >= '0' && *p <= '9' && mul < 100000) {
+        port += (*p - '0') * mul;
+        mul *= 10;
+        p--;
+    }
+    if (p > name && p < nameend && *p == ':') {
+        int adrlen = p - name;
+        char *address = malloc(adrlen + 1);
+#ifndef SERIO_ERRORS_FATAL
+        int ret;
+#endif
+        memcpy(address, name, adrlen);
+        address[adrlen] = 0;
+#ifdef SERIO_ERRORS_FATAL
+        serio_connect_tcp(address, port);
+#else
+        ret = serio_connect_tcp(address, port);
+        free(address);
+        return ret;
+#endif
+    } else {
+        SERIO_PROPAGATE_ERROR(serio_connect_com(name, baud));
+    }
+}
+
+void serio_disconnect(void) {
+    if (serio_tcp == 0) {
+        serio_disconnect_com();
+    } else {
+        serio_disconnect_tcp();
+    }
+}
+
+int serio_is_tcp(void) {
+    return serio_tcp;
+}
