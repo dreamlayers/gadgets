@@ -40,7 +40,7 @@ rgbm.o: greentab_audacious.h freqadj_audacious.h
 
 endif
 
-CXXFLAGS := $(CFLAGS) -std=c++11
+CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
 
 OBJS := $(SRCS:%.c=%.o)
 OBJS := $(OBJS:%.cc=%.o)

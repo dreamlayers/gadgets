@@ -34,7 +34,7 @@ else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
 CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) $(PIC)
-CXXFLAGS := $(CFLAGS) -std=c++11
+CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
 LIBS := $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) sysmon_linux.c vfdm_unix.c pm_systemd.c avfd.cc avfd_trigger.cc
 
@@ -42,7 +42,7 @@ TARGET := aud_vfd.so
 TARGETS := $(TARGET)
 
 OBJS := $(SRCS:%.c=%.o)
-OBJS := $(OBJS::%.cc=%.o)
+OBJS := $(OBJS:%.cc=%.o)
 
 $(TARGET): $(OBJS) $(LIBVFD_DIR)/libvfd.a
 	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
