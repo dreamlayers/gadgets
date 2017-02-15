@@ -10,7 +10,7 @@
 #define IN_SERIO
 #include "serio.h"
 
-int serio_tcp;
+int serio_tcp = 0;
 #ifdef SERIO_ABORT_POLL
 int (*abortpollf)(void);
 #endif
@@ -53,6 +53,7 @@ void serio_setabortpoll(int (*func)(void)) {
 }
 #endif
 
+#ifndef WIN32
 SERIO_RETURN serio_connect(const char *name, unsigned int baud) {
     unsigned int port = 0;
     unsigned int mul = 1;
@@ -90,6 +91,7 @@ void serio_disconnect(void) {
         serio_disconnect_tcp();
     }
 }
+#endif
 
 int serio_is_tcp(void) {
     return serio_tcp;

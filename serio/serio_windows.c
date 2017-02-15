@@ -19,6 +19,7 @@ static HANDLE hComm;
 
 /*** ERROR MANAGEMENT ***/
 
+static void ErrorExit(LPTSTR lpszFunction)__attribute__ ((noreturn));
 static void ErrorExit(LPTSTR lpszFunction)
 {
     // Retrieve the system error message for the last-error code
@@ -53,11 +54,11 @@ static void ErrorExit(LPTSTR lpszFunction)
 }
 
 #if defined(__GNUC__)
-static void fatalerr(char *s) __attribute__ ((noreturn));
+void fatalerr(char *s) __attribute__ ((noreturn));
 #elif defined(_MSC_VER)
 __declspec(noreturn)
 #endif
-static void fatalerr(char *s) {
+void fatalerr(char *s) {
   //MessageBox(NULL, s, "VFD client", MB_OK | MB_ICONERROR);
   ErrorExit(s);
 }

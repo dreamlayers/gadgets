@@ -49,7 +49,8 @@ LEDAPI /* int sign_hwprint(const char *s, int hwpflags); */
 
 LEDAPI int sign_loadfont(const char *fname, sign_font_t *font);
 #ifdef WIN32
-LEDAPI int sign_fontfromresource(WORD resid, sign_font_t *font);
+LEDAPI int sign_fontfromresource(unsigned short resid,
+                                 sign_font_t *font);
 #endif
 
 typedef int font_style;

@@ -13,7 +13,9 @@ CFLAGS := $(CFLAGS) -DRGBM_WINAMP -I$(WINAMPAPI_DIR)
 SRCS := $(SRCS) rgbvis.c
 TARGET := vis_rgb.dll
 
-all: $(TARGET)
+$(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
+	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
+	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 rgbm.o: greentab_winamp.h
 
@@ -25,10 +27,13 @@ CFLAGS := $(CFLAGS) -DRGBM_AUDACIOUS \
 LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) aud_rgb.c
 TARGET := aud_rgb.so
+CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
 
-.PHONY : install uninstall all
+.PHONY : install uninstall
 
-all: $(TARGET)
+$(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
+	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
+	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 install: $(TARGET)
 	cp $(TARGET) ~/.local/share/audacious/Plugins/
@@ -40,14 +45,8 @@ rgbm.o: greentab_audacious.h freqadj_audacious.h
 
 endif
 
-CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
-
 OBJS := $(SRCS:%.c=%.o)
 OBJS := $(OBJS:%.cc=%.o)
-
-$(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
-	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
-	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 .PHONY : clean veryclean
 clean:

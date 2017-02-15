@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "tcp.h"
 
-int tcpc_open(const char *name, unsigned int port)
+SOCKET tcpc_open(const char *name, unsigned int port)
 {
     int nRet;
 #ifdef WIN32
@@ -67,7 +67,7 @@ int tcpc_open(const char *name, unsigned int port)
     return theSocket;
 }
 
-void tcpc_close(int sock)
+void tcpc_close(SOCKET sock)
 {
 #ifdef WIN32
     closesocket(sock);
