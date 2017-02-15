@@ -323,7 +323,7 @@ static void *client(void *lpParameter) {
         }
 
         /* Final OK / FAILED response */
-        if (scb->result == 0) {
+        if (res == 0) {
             send(sock, mOk, sizeof(mOk), 0);
         } else {
             send(sock, mFailed, sizeof(mFailed), 0);
