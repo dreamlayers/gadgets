@@ -114,6 +114,9 @@ VFDAPI VFD_RETURN vfd_setclock(const unsigned char *al);
 
 VFDAPI VFD_RETURN vfd_flush(void);
 
+VFDAPI int vfd_need_keepalive(void);
+VFDAPI VFD_RETURN vfd_call_keepalive(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

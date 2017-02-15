@@ -620,11 +620,34 @@ void *signproc(void *lpParameter) {
           }
         }
       } else {
+        if (cmd_need_keepalive()) {
+          /* Keep alive handling is not perfect. Transience and guarantee
+             times could defeat it, and it is incompatible with situations
+             where sending a character aborts sign operation. */
 #ifdef WIN32
-        WaitForSingleObject(qevent, INFINITE);
+          if (WaitForSingleObject(qevent, 60 * 1000) == WAIT_TIMEOUT)
 #else
-        pthread_cond_wait(&qevent, &qevent_mtx);
+          struct timeval tp;
+
+          gettimeofday(&tp, NULL);
+          transtmr.tv_sec = tp.tv_sec + 60;
+          transtmr.tv_nsec = tp.tv_usec * 1000;
+          if (transtmr.tv_nsec > 1000000000) {
+            transtmr.tv_nsec -= 1000000000;
+            transtmr.tv_sec++;
+          }
+          if (pthread_cond_timedwait(&qevent, &qevent_mtx, &transtmr) == ETIMEDOUT)
 #endif
+          {
+            cmd_call_keepalive();
+          }
+        } else {
+#ifdef WIN32
+          WaitForSingleObject(qevent, INFINITE);
+#else
+          pthread_cond_wait(&qevent, &qevent_mtx);
+#endif
+        }
       }
     } /* while (1) */
 #ifndef WIN32

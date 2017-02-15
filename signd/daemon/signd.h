@@ -174,6 +174,10 @@ int sc_d_msg(scmdblk *cmd, SOCKET sock);
 /* Respond with help information */
 int sc_r_help(scmdblk *scb, SOCKET sock);
 
+/* Keepalive handling for TCP connections */
+int cmd_need_keepalive(void);
+int cmd_call_keepalive(void);
+
 #ifdef __cplusplus
 }
 #endif

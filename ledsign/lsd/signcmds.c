@@ -473,6 +473,14 @@ void cmd_cleanup(void) {
     sign_close();
 }
 
+int cmd_need_keepalive(void) {
+    return sign_need_keepalive();
+}
+
+int cmd_call_keepalive(void) {
+    return sign_call_keepalive();
+}
+
 /*
  * Data about commands for use by generic daemon code.
  */

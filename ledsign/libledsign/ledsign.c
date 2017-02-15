@@ -805,6 +805,15 @@ int sign_swprint(const char *s,
     return sign_nswprint(s, strlen(s), font, fs, flags);
 }
 
+int sign_need_keepalive(void) {
+    return serio_is_tcp();
+}
+
+int sign_call_keepalive(void) {
+    static const unsigned char keepalive[] = " \b";
+    return serio_write(keepalive, sizeof(keepalive));
+}
+
 #if 0
 int main(void) {
     sign_font_t font;

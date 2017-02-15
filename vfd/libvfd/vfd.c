@@ -720,6 +720,16 @@ VFD_RETURN vfd_flush(void) {
     }
 }
 
+int vfd_need_keepalive(void) {
+    return serio_is_tcp();
+}
+
+int vfd_call_keepalive(void) {
+    /* TODO: handle byte mode keepalive */
+    static const unsigned char keepalive[] = " \b";
+    return serio_write(keepalive, sizeof(keepalive));
+}
+
 #ifdef TESTING
 int main(int argc, char **argv) {
   unsigned long i;

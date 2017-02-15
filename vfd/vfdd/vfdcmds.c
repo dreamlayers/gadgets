@@ -112,3 +112,11 @@ void cmd_cleanup(void) {
     vfd_exitbm();
     vfd_disconnect();
 }
+
+int cmd_need_keepalive(void) {
+    return vfd_need_keepalive();
+}
+
+int cmd_call_keepalive(void) {
+    return vfd_call_keepalive();
+}
