@@ -8,3 +8,6 @@ vfd/vfdd/vfdd
 ledsign/lsd/lsd
 ledsign/lsp/cgic205
 ledsign/lsp/lsp
+ledsign/lsd/6x7font.h
+ledsign/lsd/font2c
+ledsign/lsd/font2c.exe

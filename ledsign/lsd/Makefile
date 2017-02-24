@@ -33,8 +33,14 @@ libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
 clean:
 	rm -f $(OBJS) libsigntcp.o libsigntcp.a $(TARGET) *~ *.bak
 
+font2c: font2c.c $(LIBLEDSIGN_DIR)/ledsign.h Makefile
+	$(CC) $(CFLAGS) -o $@ $< $(LIBLEDSIGN_DIR)/libledsign.a
+
+6x7font.h: 6x7.rawfont font2c
+	./font2c $< > $@
+
 libsigntcp.o: libsigntcp.c libsigntcp.h $(SIGND_DIR)/client/sdclient.h \
 			  $(SIGND_DIR)/sdprotocol.h Makefile
 
-signcmds.o: signcmds.c $(LIBLEDSIGN_DIR)/ledsign.h $(SIGND_DIR)/daemon/signd.h \
-            $(SIGND_DIR)/sdprotocol.h Makefile
+signcmds.o: signcmds.c 6x7font.h $(LIBLEDSIGN_DIR)/ledsign.h \
+	    $(SIGND_DIR)/daemon/signd.h $(SIGND_DIR)/sdprotocol.h Makefile

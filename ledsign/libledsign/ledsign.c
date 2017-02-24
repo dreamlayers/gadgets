@@ -272,7 +272,8 @@ void sign_setabortpoll(int (*func)(void)) {
     abortproc = func;
 }
 
-static unsigned char xsign_styledfnt(unsigned char c, int r, sign_font_t *font, font_style fs) {
+static unsigned char xsign_styledfnt(unsigned char c, int r,
+                                     const sign_font_t *font, font_style fs) {
     unsigned char d = font->data[c*font->height+r];
     int i;
     int a = 0, b = 0;
@@ -309,7 +310,8 @@ int sign_scrl_start(void) {
 
 
 /* Scroll left one character */
-static int xscrl_char(const char c, sign_font_t *font, font_style fs, int chain) {
+static int xscrl_char(const char c, const sign_font_t *font, font_style fs,
+                      int chain) {
     int col, row, ob, sc[7];
     unsigned char buf[8];
     unsigned char *p = &buf[0];
@@ -333,14 +335,16 @@ static int xscrl_char(const char c, sign_font_t *font, font_style fs, int chain)
     return serio_write(&buf[0], font->width);
 }
 
-int sign_scrl_char(const char c, sign_font_t *font, font_style fs, int chain) {
+int sign_scrl_char(const char c,
+                   const sign_font_t *font, font_style fs, int chain) {
     int res;
     PROPAGATE_ERROR(xscrl_char(c, font, fs, chain));
     if (!chain) signmode = SIGNMODE_NEEDSYNC;
     return 0;
 }
 
-int sign_scrl_nstr(const char *s, size_t n, sign_font_t *font, font_style fs) {
+int sign_scrl_nstr(const char *s, size_t n,
+                   const sign_font_t *font, font_style fs) {
     size_t i;
     int res;
 
@@ -355,12 +359,13 @@ int sign_scrl_nstr(const char *s, size_t n, sign_font_t *font, font_style fs) {
     return 0;
 }
 
-int sign_scrl_str(const char *s, sign_font_t *font, font_style fs) {
+int sign_scrl_str(const char *s, const sign_font_t *font, font_style fs) {
     if (s == NULL) return 0;
     return sign_scrl_nstr(s, strlen(s), font, fs);
 }
 
-static int xsign_sendrow(const char *s, size_t n, sign_font_t *font, font_style fs, unsigned int row) {
+static int xsign_sendrow(const char *s, size_t n,
+                         const sign_font_t *font, font_style fs, unsigned int row) {
     unsigned int curchar = 0;    /* Current char in string */
     unsigned int ledgroup;
     unsigned int fontbitsleft = 0;
@@ -411,7 +416,8 @@ static int xsign_sendrow(const char *s, size_t n, sign_font_t *font, font_style 
 }
 
 /* Scroll up */
-int sign_scru_nstr(const char *s, size_t n, sign_font_t *font, font_style fs) {
+int sign_scru_nstr(const char *s, size_t n,
+                   const sign_font_t *font, font_style fs) {
     unsigned int row;
     int res;
 
@@ -425,7 +431,7 @@ int sign_scru_nstr(const char *s, size_t n, sign_font_t *font, font_style fs) {
     return 0;
 }
 
-int sign_scru_str(const char *s, sign_font_t *font, font_style fs) {
+int sign_scru_str(const char *s, const sign_font_t *font, font_style fs) {
     size_t n;
 
     if (s == NULL) {
@@ -443,7 +449,7 @@ int sign_scru_str(const char *s, sign_font_t *font, font_style fs) {
 
 #if 0
 /* Upload string top->bottom */
-int xxul_nstr(const char *s, int n, sign_font_t *font, font_style fs) {
+int xxul_nstr(const char *s, int n, const sign_font_t *font, font_style fs) {
     int row, res;
 
     PROPAGATE_ERROR(xsign_command(SIGNCMD_UL));
@@ -459,7 +465,8 @@ int xxul_nstr(const char *s, int n, sign_font_t *font, font_style fs) {
 #endif
 
 /* Upload string left->right */
-int sign_ul_nstr(const char *s, size_t n, sign_font_t *font, font_style fs) {
+int sign_ul_nstr(const char *s, size_t n,
+                 const sign_font_t *font, font_style fs) {
     int i, cont, res;
     size_t lmt;
 
@@ -490,7 +497,7 @@ int sign_ul_nstr(const char *s, size_t n, sign_font_t *font, font_style fs) {
     return 0;
 }
 
-int sign_ul_str(const char *s, sign_font_t *font, font_style fs) {
+int sign_ul_str(const char *s, const sign_font_t *font, font_style fs) {
     size_t n;
 
     if (s == NULL) {
@@ -504,7 +511,7 @@ int sign_ul_str(const char *s, sign_font_t *font, font_style fs) {
 
 #if 0
 /* Upload string centre->left,right */
-int sign_ul_nstr(const char *s, int n, sign_font_t *font, font_style fs) {
+int sign_ul_nstr(const char *s, int n, const sign_font_t *font, font_style fs) {
     int i, j, k, col, lmt, res;
     unsigned char cc[7], cols[72], buf[4];
 
@@ -684,7 +691,7 @@ static int xsign_formline(char *buf, size_t bufl, /* destination */
 }
 
 int sign_nswprint(const char *s, size_t l,
-                  sign_font_t *font, font_style fs, unsigned int flags) {
+                  const sign_font_t *font, font_style fs, unsigned int flags) {
     const char *p = s;
     size_t remains = l;
     int inscrl = 0;
@@ -801,7 +808,7 @@ int sign_nswprint(const char *s, size_t l,
 }
 
 int sign_swprint(const char *s,
-                 sign_font_t *font, font_style fs, unsigned int flags) {
+                 const sign_font_t *font, font_style fs, unsigned int flags) {
     return sign_nswprint(s, strlen(s), font, fs, flags);
 }
 

@@ -29,7 +29,7 @@
 /* size of allocation block for scmd->data */
 #define CHAINBLK 10000
 
-static sign_font_t font1;
+#include "6x7font.h"
 
 /*
  * Constant data
@@ -455,13 +455,6 @@ int cmd_init(const char *device) {
   /* Prolific drivers won't work with cheap piece of shit */
   /* Initialize LED sign */
   if (sign_open((device != NULL) ? device : defdev) != 0) {
-    return -1;
-  }
-
-#ifdef WIN32
-  if (sign_fontfromresource(25, &font1) != 0)
-#endif
-  if (sign_loadfont("6x7.rawfont", &font1) != 0) {
     return -1;
   }
 

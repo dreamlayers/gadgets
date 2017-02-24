@@ -9,5 +9,3 @@
 #define IDM_CONTEXTPOPUP 21
 #define IDM_MESSAGEBOX 22
 #define IDM_EXIT 23
-
-#define SIGNFONT_RES 25

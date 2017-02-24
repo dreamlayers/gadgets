@@ -60,26 +60,26 @@ typedef int font_style;
 #define SIGN_FONT_ITALIC 4
 
 LEDAPI int sign_nswprint(const char *s, size_t l,
-                         sign_font_t *font, font_style fs,
+                         const sign_font_t *font, font_style fs,
                          unsigned int flags);
 LEDAPI int sign_swprint(const char *s,
-                        sign_font_t *font, font_style fs,
+                        const sign_font_t *font, font_style fs,
                         unsigned int flags);
 
 LEDAPI int sign_scrl_start(void);
-LEDAPI int sign_scrl_char(const char c, sign_font_t *font, font_style fs,
+LEDAPI int sign_scrl_char(const char c, const sign_font_t *font, font_style fs,
                           int chain);
-LEDAPI int sign_scrl_str(const char *s, sign_font_t *font, font_style fs);
+LEDAPI int sign_scrl_str(const char *s, const sign_font_t *font, font_style fs);
 LEDAPI int sign_scrl_nstr(const char *s, size_t n,
-                          sign_font_t *font, font_style fs);
+                          const sign_font_t *font, font_style fs);
 
-LEDAPI int sign_scru_str(const char *s, sign_font_t *font, font_style fs);
+LEDAPI int sign_scru_str(const char *s, const sign_font_t *font, font_style fs);
 LEDAPI int sign_scru_nstr(const char *s, size_t n,
-                          sign_font_t *font, font_style fs);
+                          const sign_font_t *font, font_style fs);
 
-LEDAPI int sign_ul_str(const char *s, sign_font_t *font, font_style fs);
+LEDAPI int sign_ul_str(const char *s, const sign_font_t *font, font_style fs);
 LEDAPI int sign_ul_nstr(const char *s, size_t n,
-                        sign_font_t *font, font_style fs);
+                        const sign_font_t *font, font_style fs);
 
 LEDAPI int sign_ul_bmap(const unsigned char *s);
 
