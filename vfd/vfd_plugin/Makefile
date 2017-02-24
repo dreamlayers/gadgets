@@ -33,6 +33,10 @@ CLEAN_EXTRA := vfd_winamp_vis.o vfd_winamp_dsp.o
 else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
+ifeq ($(shell pkg-config --exists $(PKG_PREREQ) || echo no),no)
+fail:
+	$(warning WARNING: Not building vfd plugin due to lack of prerequisites.)
+endif
 CFLAGS := $(shell pkg-config --cflags $(PKG_PREREQ)) $(CFLAGS) $(PIC)
 CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
 LIBS := $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm

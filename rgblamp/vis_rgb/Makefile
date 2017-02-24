@@ -22,6 +22,10 @@ rgbm.o: greentab_winamp.h
 else
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
+ifeq ($(shell pkg-config --exists $(PKG_PREREQ) || echo no),no)
+fail:
+        $(warning WARNING: Not building RGB lamp plugin due to lack of prerequisites.)
+endif
 CFLAGS := $(CFLAGS) -DRGBM_AUDACIOUS \
 		  $(shell pkg-config --cflags $(PKG_PREREQ)) $(PIC)
 LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
