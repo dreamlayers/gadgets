@@ -18,6 +18,7 @@
 *
 */
 
+//#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -37,12 +38,6 @@
 #include <string.h>
 #include "vfdm.h"
 
-//#define DEBUG
-
-//static unsigned char ind[5];
-
-//extern aosd_cfg_t * global_config;
-
 enum vfdm_playstate playstate = VFDM_UNKNOWNSTATE;
 
 enum vfdm_playstate vfdm_cb_getplaystate(void) {
@@ -50,6 +45,9 @@ enum vfdm_playstate vfdm_cb_getplaystate(void) {
 }
 
 static void updatestate(enum vfdm_playstate newstate) {
+#ifdef DEBUG
+    printf("updatestate: %i\n", newstate);
+#endif
     playstate = newstate;
     vfdm_playstatechanged();
 }
@@ -89,33 +87,16 @@ enum
 {
   AOSD_TRIGGER_PB_START = 0,
   AOSD_TRIGGER_PB_TITLECHANGE,
-  //AOSD_TRIGGER_VOL_CHANGE,
   AOSD_TRIGGER_PB_PAUSEON,
   AOSD_TRIGGER_PB_PAUSEOFF,
   AOSD_TRIGGER_PB_STOP
 };
-
-#if 0
-/* trigger codes array */
-gint aosd_trigger_codes[] =
-{
-  AOSD_TRIGGER_PB_START,
-  AOSD_TRIGGER_PB_TITLECHANGE,
-  //AOSD_TRIGGER_VOL_CHANGE,
-  AOSD_TRIGGER_PB_PAUSEON,
-  AOSD_TRIGGER_PB_PAUSEOFF
-};
-#endif
 
 /* prototypes of trigger functions */
 static void aosd_trigger_func_pb_start_onoff ( gboolean );
 static void aosd_trigger_func_pb_start_cb ( gpointer , gpointer );
 static void aosd_trigger_func_pb_titlechange_onoff ( gboolean );
 static void aosd_trigger_func_pb_titlechange_cb ( gpointer , gpointer );
-#if 0
-static void aosd_trigger_func_vol_change_onoff ( gboolean );
-static void aosd_trigger_func_vol_change_cb ( gpointer , gpointer );
-#endif
 static void aosd_trigger_func_pb_pauseon_onoff ( gboolean );
 static void aosd_trigger_func_pb_pauseon_cb ( gpointer , gpointer );
 static void aosd_trigger_func_pb_pauseoff_onoff ( gboolean );
@@ -132,10 +113,7 @@ aosd_trigger_t aosd_triggers[] =
 
   [AOSD_TRIGGER_PB_TITLECHANGE] = { aosd_trigger_func_pb_titlechange_onoff ,
                                     aosd_trigger_func_pb_titlechange_cb },
-#if 0
-  [AOSD_TRIGGER_VOL_CHANGE] = { aosd_trigger_func_vol_change_onoff ,
-                                aosd_trigger_func_vol_change_cb },
-#endif
+
   [AOSD_TRIGGER_PB_PAUSEON] = { aosd_trigger_func_pb_pauseon_onoff ,
                                 aosd_trigger_func_pb_pauseon_cb },
 
@@ -272,23 +250,9 @@ aosd_trigger_func_pb_titlechange_cb ( gpointer plentry_gp , gpointer prevs_gp )
         if ( ( pl_entry_title != NULL ) && ( strcmp(pl_entry_title,prevs->title) ) )
         {
 #ifdef DEBUG
-          printf("Titlechange: %s\n", pl_entry_title);
+          printf("Titlechange: %s\n", static_cast<const char*>(pl_entry_title));
 #endif
           audvfd_settitle(pl_entry_title);
-#if 0
-          /* string formatting is done here a.t.m. - TODO - improve this area */
-          gchar *utf8_title = aosd_trigger_utf8convert( pl_entry_title );
-          if ( g_utf8_validate( utf8_title , -1 , NULL ) == TRUE )
-          {
-            gchar *utf8_title_markup = g_markup_printf_escaped(
-              "<span font_desc='%s'>%s</span>" , global_config->osd->text.fonts_name[0] , utf8_title );
-            aosd_osd_display( utf8_title_markup , global_config->osd , FALSE );
-            g_free( utf8_title_markup );
-          }
-          g_free( utf8_title );
-          g_free( prevs->title );
-          prevs->title = g_strdup(pl_entry_title);
-#endif
         }
       }
       else
