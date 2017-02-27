@@ -188,7 +188,17 @@ aosd_trigger_func_pb_start_cb(gpointer hook_data, gpointer user_data)
     }
 #endif
 
-    updatestate(VFDM_PLAYING);
+    /* If Audacious 3.7.2 was quit while playing, then on next startup
+       there will be a "playback ready" callback but playback will
+       actually be paused. Test for paused must come first because
+       playing will also return true. */
+    if (aud_drct_get_paused()) {
+        updatestate(VFDM_PAUSED);
+    } else if (aud_drct_get_playing()) {
+        updatestate(VFDM_PLAYING);
+    } else {
+        updatestate(VFDM_STOPPED); /* Unnecessary? */
+    }
 
     if (title) audvfd_settitle((const char *)title);
 
