@@ -1,8 +1,6 @@
 /* Audacious-specific visualization plugin code for the RGB lamp. */
 /* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
-#include <stdio.h>
-
 #include <glib.h>
 #include <libaudcore/i18n.h>
 #define AUD_PLUGIN_GLIB_ONLY
@@ -20,12 +18,13 @@ public:
         about
     };
 
-    constexpr ARGB () : VisPlugin (info, Visualizer::MonoPCM) {}
+    constexpr ARGB () : VisPlugin (info, Visualizer::Freq) {}
 
     bool init ();
     void cleanup ();
 
-    void render_mono_pcm (const float * pcm);
+    /* intensity of frequencies 1/512, 2/512, ..., 256/512 of sample rate */
+    void render_freq (const float * freq);
     void clear ();
 };
 
@@ -40,7 +39,6 @@ const char ARGB::about[] =
 bool ARGB::init(void)
 {
     int i = rgbm_init();
-    printf("init %i\n", i);
     return i;
 }
 
@@ -49,7 +47,7 @@ void ARGB::cleanup(void)
     rgbm_shutdown();
 }
 
-void ARGB::render_mono_pcm(const gfloat *freq)
+void ARGB::render_freq(const gfloat *freq)
 {
     rgbm_render(freq);
 }
