@@ -12,6 +12,7 @@ WINAMPAPI_DIR := ../../pluginapi/winamp
 CFLAGS := $(CFLAGS) -DRGBM_WINAMP -I$(WINAMPAPI_DIR)
 SRCS := $(SRCS) rgbvis.c
 TARGET := vis_rgb.dll
+OBJS := $(SRCS:%.c=%.o)
 
 $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
@@ -32,6 +33,8 @@ LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
 SRCS := $(SRCS) aud_rgb.c
 TARGET := aud_rgb.so
 CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
+OBJS := $(SRCS:%.c=%.o)
+OBJS := $(OBJS:%.cc=%.o)
 
 .PHONY : install uninstall
 
@@ -48,9 +51,6 @@ uninstall:
 rgbm.o: greentab_audacious.h freqadj_audacious.h
 
 endif
-
-OBJS := $(SRCS:%.c=%.o)
-OBJS := $(OBJS:%.cc=%.o)
 
 .PHONY : clean veryclean
 clean:
