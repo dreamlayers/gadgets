@@ -8,7 +8,9 @@
 
 
 static unsigned int savedr = 0, savedg = 0, savedb = 0;
-static unsigned width, height;
+static unsigned int winwidth = 640, winheight = 480;
+static unsigned int nativewidth = 0, nativeheight = 0;
+bool fullscreen = false;
 static SDL_Surface *screen = NULL;
 
 static void sdlError(const char *str)
@@ -26,15 +28,28 @@ static bool redraw(void) {
     if SDL_MUSTLOCK(screen) {
         SDL_UnlockSurface(screen);
     }
-    SDL_UpdateRect(screen, 0, 0, width, height);
+    SDL_UpdateRect(screen, 0, 0, screen->w, screen->h);
     return true; // TODO: error handling
 }
 
 static bool screen_init(unsigned int newwidth, unsigned int newheight) {
-    width = newwidth;
-    height = newheight;
+    Uint32 flags = SDL_HWSURFACE;
+    if (newwidth == 0) {
+        if (screen && !fullscreen) {
+            winwidth = screen->w;
+            winheight = screen->h;
+        }
+        newwidth = nativewidth;
+        newheight = nativeheight;
+        flags |= SDL_FULLSCREEN;
+        fullscreen = true;
+    } else {
+        flags |= SDL_RESIZABLE;
+        fullscreen = false;
+    }
 
-    screen = SDL_SetVideoMode(width, height, 0, SDL_HWSURFACE | SDL_RESIZABLE);
+    screen = SDL_SetVideoMode(newwidth, newheight, 0, flags);
+    printf("GOT: %i, %i\n", screen->w, screen->h);
 
     SDL_WM_SetCaption("RGB lamp visualizer", "RGB lamp visualizer");
 
@@ -47,6 +62,7 @@ static bool screen_init(unsigned int newwidth, unsigned int newheight) {
 }
 
 RGBAPI bool rgb_open(const char *fn) {
+    const SDL_VideoInfo *vi;
     (void)fn;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -54,7 +70,13 @@ RGBAPI bool rgb_open(const char *fn) {
         return false;
     }
 
-    return screen_init(640, 480);
+    vi = SDL_GetVideoInfo();
+    if (vi != NULL) {
+      nativewidth = vi->current_w;
+      nativeheight = vi->current_h;
+    }
+
+    return screen_init(winwidth, winheight);
 }
 
 static unsigned int pwm2srgb256(unsigned short n) {
@@ -81,8 +103,20 @@ static bool pollevents(void) {
             if (!redraw()) return false;
             break;
         case SDL_VIDEORESIZE:
-            if (width != (event.resize.w) || height != (event.resize.h)) {
+            if (screen->w != (event.resize.w) ||
+                screen->h != (event.resize.h)) {
                 if (!screen_init(event.resize.w, event.resize.h)) return false;
+            }
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                bool res;
+                if (!fullscreen) {
+                    res = screen_init(0, 0);
+                } else {
+                    res = screen_init(winwidth, winheight);
+                }
+                if (!res) return false;
             }
             break;
         case SDL_QUIT:
