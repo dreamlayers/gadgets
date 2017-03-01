@@ -44,7 +44,7 @@
 #ifdef RGBM_AUDACIOUS
 #define RGBM_SCALE (12000.0)
 #else
-#define RGBM_SCALE (68571.0)
+#define RGBM_SCALE (23500.0)
 #endif
 #define RGBM_LIMIT 4095
 
@@ -199,7 +199,7 @@ int rgbm_init(void) {
 #ifdef RGBM_FFTW
     fft_in = (double *)fftw_malloc(sizeof(double) * RGBM_NUMSAMP);
     fft_out = (double *)fftw_malloc(sizeof(double) * RGBM_NUMSAMP);
-    fft_plan = fftw_plan_r2r_1d(RGBM_NUMBINS,
+    fft_plan = fftw_plan_r2r_1d(RGBM_NUMSAMP,
                                 fft_in, fft_out,
                                 FFTW_R2HC,
                                 FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
