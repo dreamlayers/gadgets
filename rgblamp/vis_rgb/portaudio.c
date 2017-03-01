@@ -1,3 +1,7 @@
+/* Standalone sound code using PortAudio for RGB lamp visualizer. */
+/* Copyright 2017 Boris Gjenero. Released under the MIT license. */
+
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>

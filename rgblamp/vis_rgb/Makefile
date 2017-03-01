@@ -45,6 +45,24 @@ rgbm-standalone.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h  \
 portaudio.o: portaudio.c rgbm.h
 	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
 
+SDLVIS_PREREQ := sdl
+ifeq ($(shell pkg-config --exists $(SDLVIS_PREREQ) || echo no),no)
+$(warning WARNING: Not building SDL standalone visualizer due to lack of prerequisites.)
+else
+SDLVIS := visrgbsdl
+SDLVIS_CFLAGS := $(STANDALONE_CFLAGS) $(shell pkg-config --cflags $(SDLVIS_PREREQ))
+SDLVIS_LIBS := $(shell pkg-config --libs $(STANDALONE_PREREQ) $(SDLVIS_PREREQ)) -lm
+SDLVIS_OBJS := rgbm-standalone.o portaudio.o sdl_rgb.o
+all: $(SDLVIS)
+
+$(SDLVIS): $(SDLVIS_OBJS)
+	$(CC) $(SDLVIS_CFLAGS) $^ -o $@ $(SDLVIS_LIBS)
+
+sdl_rgb.o: sdl_rgb.c $(LIBRGBLAMP_DIR)/librgblamp.h
+	$(CC) $(SDLVIS_CFLAGS) -c $< -o $@
+
+endif
+
 endif
 
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
