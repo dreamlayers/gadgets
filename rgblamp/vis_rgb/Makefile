@@ -22,39 +22,66 @@ rgbm.o: greentab_winamp.h
 
 else
 
+.PHONY : install uninstall all dummy
+
+STANDALONE_PREREQ := fftw3 portaudio-2.0
+ifeq ($(shell pkg-config --exists $(STANDALONE_PREREQ) || echo no),no)
+$(warning WARNING: Not building RGB lamp standalone visualizer due to lack of prerequisites.)
+else
+STANDALONE := visrgb
+STANDALONE_CFLAGS := $(CFLAGS) -DRGBM_FFTW -pthread $(shell pkg-config --cflags $(STANDALONE_PREREQ))
+STANDALONE_LIBS := $(LIBRGBLAMP_DIR)/librgblamp.a $(shell pkg-config --libs $(STANDALONE_PREREQ)) -lm
+STANDALONE_OBJS := rgbm-standalone.o portaudio.o
+all: $(STANDALONE)
+
+$(STANDALONE): $(STANDALONE_OBJS)
+	$(CC) $(STANDALONE_CFLAGS) $^ -o $@ $(STANDALONE_LIBS)
+
+rgbm-standalone.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h  \
+                   greentab_audacious.h freqadj_audacious.h Makefile
+
+	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
+
+portaudio.o: portaudio.c rgbm.h
+	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
+
+endif
+
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
 ifeq ($(shell pkg-config --exists $(PKG_PREREQ) || echo no),no)
-fail:
-        $(warning WARNING: Not building RGB lamp plugin due to lack of prerequisites.)
-endif
+$(warning WARNING: Not building RGB lamp plugin due to lack of prerequisites.)
+else
 CFLAGS := $(CFLAGS) -DRGBM_AUDACIOUS \
 		  $(shell pkg-config --cflags $(PKG_PREREQ)) $(PIC)
-LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lpthread -lm
+LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lm
 SRCS := $(SRCS) aud_rgb.c
 TARGET := aud_rgb.so
 CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
 OBJS := $(SRCS:%.c=%.o)
 OBJS := $(OBJS:%.cc=%.o)
-
-.PHONY : install uninstall
+all: $(TARGET)
 
 $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
 	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
+rgbm.o: greentab_audacious.h freqadj_audacious.h
+
 install: $(TARGET)
 	cp $(TARGET) ~/.local/share/audacious/Plugins/
 
+endif
+
+dummy:
+
 uninstall:
 	rm ~/.local/share/audacious/Plugins/$(TARGET)
-
-rgbm.o: greentab_audacious.h freqadj_audacious.h
 
 endif
 
 .PHONY : clean veryclean
 clean:
-	rm -f $(OBJS) $(TARGET) *~ *.bak
+	rm -f $(OBJS) $(TARGET) visrgb *~ *.bak
 
 veryclean: clean
 	rm -f freqadj_audacious.h greentab_audacious.h greentab_winamp.h
@@ -63,7 +90,7 @@ rgbvis.o: rgbvis.c $(WINAMPAPI_DIR)/vis.h rgbm.h Makefile
 
 aud_rgb.o: aud_rgb.cc rgbm.h Makefile
 
-rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile \
+rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
 
 freqadj_audacious.h: makefreqadj.m
 	octave -q $^

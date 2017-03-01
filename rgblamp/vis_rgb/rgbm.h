@@ -7,11 +7,18 @@
 extern "C" {
 #endif
 
-#if defined(RGBM_AUDACIOUS)
+#if defined(RGBM_FFTW)
 
 /* Number of FFT bins */
 #define RGBM_NUMBINS 256
 /* Type of FFT bins */
+#define RGBM_BINTYPE double
+/* Number of samples used as input to FFT to produce bins */
+#define RGBM_NUMSAMP (RGBM_NUMBINS*2)
+
+#elif defined(RGBM_AUDACIOUS)
+
+#define RGBM_NUMBINS 256
 #define RGBM_BINTYPE float
 
 #elif defined (RGBM_WINAMP)
@@ -26,7 +33,12 @@ extern "C" {
 /* Here int really means bool, but some compilers can't handle bool */
 int rgbm_init(void);
 void rgbm_shutdown(void);
+#if !defined(RGBM_FFTW)
 int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]);
+#else
+RGBM_BINTYPE *rgbm_get_wave_buffer(void);
+int rgbm_render_wave(void);
+#endif
 
 #ifdef __cplusplus
 }

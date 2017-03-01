@@ -5,14 +5,16 @@
 /* #define RGBM_LOGGING */
 
 #include <math.h>
-#include <math.h>
 #include "rgbm.h"
 #ifdef RGBM_LOGGING
 #include <stdio.h>
 #endif
+#ifdef RGBM_FFTW
+#include <fftw3.h>
+#endif
 #include "librgblamp.h"
 
-#if defined(RGBM_AUDACIOUS)
+#if defined(RGBM_AUDACIOUS) || defined(RGBM_FFTW)
 
 #define RGBPORT "/dev/ttyUSB0"
 /* Calibrated in Audacious 3.4 in Ubuntu 13.10 */
@@ -20,17 +22,30 @@
  * Value corresponds to amplitude (not power or dB).
  */
 
+#if defined(RGBM_AUDACIOUS)
+/* 1797/60 = 30 fps */
 /* Moving average size when value is increasing */
 #define RGBM_AVGUP 5
 /* Moving average size when value is decreasing */
 #define RGBM_AVGDN 15
+#else
+/* 1000/8 = 125 fps */
+/* Moving average size when value is increasing */
+#define RGBM_AVGUP 21
+/* Moving average size when value is decreasing */
+#define RGBM_AVGDN 63
+#endif
 
 /* Colour scaling to balance red and blue with green */
 #define RGBM_REDSCALE 2.40719835270744
 #define RGBM_BLUESCALE 1.60948950058501
 
 /* Overall scaling to adapt output to values needed by librgblamp */
+#ifdef RGBM_AUDACIOUS
 #define RGBM_SCALE (12000.0)
+#else
+#define RGBM_SCALE (68571.0)
+#endif
 #define RGBM_LIMIT 4095
 
 /* Table for bin weights for summing bin powers (amplitued squared) to green.
@@ -74,6 +89,12 @@ static const double freq_adj[RGBM_USEBINS] = {
 
 #else
 #error Need to set define for type of music player.
+#endif
+
+#ifdef RGBM_FFTW
+static fftw_plan fft_plan;
+static double *fft_in, *fft_out;
+static double hamming[RGBM_NUMSAMP];
 #endif
 
 /*
@@ -172,9 +193,21 @@ static void rgbm_testsum(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
 
 int rgbm_init(void) {
     int i;
-
     if (!rgb_open(RGBPORT))
         return false;
+
+#ifdef RGBM_FFTW
+    fft_in = (double *)fftw_malloc(sizeof(double) * RGBM_NUMSAMP);
+    fft_out = (double *)fftw_malloc(sizeof(double) * RGBM_NUMSAMP);
+    fft_plan = fftw_plan_r2r_1d(RGBM_NUMBINS,
+                                fft_in, fft_out,
+                                FFTW_R2HC,
+                                FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
+    for (i = 0; i < RGBM_NUMSAMP; i++) {
+        /* This has been scaled to maintain amplitude */
+        hamming[i] = 1 - 0.852 * cos(2 * M_PI * i / (RGBM_NUMSAMP - 1));
+    }
+#endif
 
     for (i = 0; i < 3; i++) binavg[i] = 0.0;
 #ifdef RGBM_LOGGING
@@ -190,11 +223,19 @@ void rgbm_shutdown(void) {
     if (wrotepwm)
         rgb_matchpwm(binavg[0], binavg[1], binavg[2]);
     rgb_close();
+#ifdef RGBM_FFTW
+    fftw_destroy_plan(fft_plan);
+    fftw_free(fft_in);
+    fftw_free(fft_out);
+#endif
 #ifdef RGBM_LOGGING
     if (testlog != NULL) fclose(testlog);
 #endif
 }
 
+#ifdef RGBM_FFTW
+static
+#endif
 int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
     double sums[3];
     int res;
@@ -221,3 +262,36 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
     if (res) wrotepwm = 1;
     return res;
 } /* rgbm_render */
+
+#ifdef RGBM_FFTW
+/* Convert FFTW halfcomplex format to real amplitudes.
+ * bins[0] and bins[RGBM_NUMSAMP / 2] are real due to FFT symmetry. */
+static void fft_complex_to_real(RGBM_BINTYPE bins[RGBM_NUMSAMP]) {
+    int i;
+    for (i = 1; i < RGBM_NUMSAMP / 2; i++) {
+        double t;
+        t = bins[i] * bins[i];
+        t += bins[RGBM_NUMSAMP - i] * bins[RGBM_NUMSAMP - i];
+        bins[i - 1] = sqrt(t) / RGBM_NUMSAMP;
+    }
+    bins[RGBM_NUMSAMP / 2 - 1] = fabs(bins[RGBM_NUMSAMP / 2]) / RGBM_NUMSAMP;
+}
+
+RGBM_BINTYPE *rgbm_get_wave_buffer(void) {
+    return fft_in;
+}
+
+static void fft_apply_window(double *samp) {
+    int i;
+    for (i = 0; i < RGBM_NUMSAMP; i++) {
+      samp[i] *= hamming[i];
+    }
+}
+
+int rgbm_render_wave(void) {
+    fft_apply_window(fft_in);
+    fftw_execute(fft_plan);
+    fft_complex_to_real(fft_out);
+    return rgbm_render(fft_out);
+}
+#endif
