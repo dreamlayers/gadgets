@@ -6,12 +6,23 @@
 #include <SDL.h>
 #include "librgblamp.h"
 
+#define TITLE "RGB lamp visualizer"
+#define DEFAULT_WIDTH (640)
+#define DEFAULT_HEIGHT (480)
 
 static unsigned int savedr = 0, savedg = 0, savedb = 0;
-static unsigned int winwidth = 640, winheight = 480;
+#if !SDL_VERSION_ATLEAST(2,0,0)
+static unsigned int winwidth = DEFAULT_WIDTH, winheight = DEFAULT_HEIGHT;
 static unsigned int nativewidth = 0, nativeheight = 0;
+#endif
 bool fullscreen = false;
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+#else
 static SDL_Surface *screen = NULL;
+#endif
 
 static void sdlError(const char *str)
 {
@@ -20,6 +31,13 @@ static void sdlError(const char *str)
 }
 
 static bool redraw(void) {
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (SDL_SetRenderDrawColor(renderer, savedr, savedg, savedb,
+                                SDL_ALPHA_OPAQUE) ||
+        SDL_RenderClear(renderer))
+        return false;
+    SDL_RenderPresent(renderer);
+#else
     if SDL_MUSTLOCK(screen) {
         SDL_LockSurface(screen);
     }
@@ -29,10 +47,23 @@ static bool redraw(void) {
         SDL_UnlockSurface(screen);
     }
     SDL_UpdateRect(screen, 0, 0, screen->w, screen->h);
-    return true; // TODO: error handling
+     // TODO: SDL 1 error handling
+#endif
+    return true;
 }
 
 static bool screen_init(unsigned int newwidth, unsigned int newheight) {
+#if SDL_VERSION_ATLEAST(2,0,0)
+    window = SDL_CreateWindow(TITLE,
+                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                              newwidth, newheight,
+                              newwidth ? SDL_WINDOW_RESIZABLE :
+                                         SDL_WINDOW_FULLSCREEN_DESKTOP);
+    if (window) {
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    }
+    if (!window || !renderer)
+#else
     Uint32 flags = SDL_HWSURFACE;
     if (newwidth == 0) {
         if (screen && !fullscreen) {
@@ -49,11 +80,10 @@ static bool screen_init(unsigned int newwidth, unsigned int newheight) {
     }
 
     screen = SDL_SetVideoMode(newwidth, newheight, 0, flags);
-    printf("GOT: %i, %i\n", screen->w, screen->h);
-
-    SDL_WM_SetCaption("RGB lamp visualizer", "RGB lamp visualizer");
-
-    if (!screen) {
+    SDL_WM_SetCaption(TITLE, TITLE);
+    if (!screen)
+#endif
+    {
         sdlError("setting video mode");
         return false;
     } else {
@@ -62,7 +92,9 @@ static bool screen_init(unsigned int newwidth, unsigned int newheight) {
 }
 
 RGBAPI bool rgb_open(const char *fn) {
+#if !SDL_VERSION_ATLEAST(2,0,0)
     const SDL_VideoInfo *vi;
+#endif
     (void)fn;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -70,13 +102,15 @@ RGBAPI bool rgb_open(const char *fn) {
         return false;
     }
 
+#if !SDL_VERSION_ATLEAST(2,0,0)
     vi = SDL_GetVideoInfo();
     if (vi != NULL) {
-      nativewidth = vi->current_w;
-      nativeheight = vi->current_h;
+        nativewidth = vi->current_w;
+        nativeheight = vi->current_h;
     }
+#endif
 
-    return screen_init(winwidth, winheight);
+    return screen_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
 static unsigned int pwm2srgb256(unsigned short n) {
@@ -99,6 +133,13 @@ static bool pollevents(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event) > 0) {
         switch (event.type) {
+#if SDL_VERSION_ATLEAST(2,0,0)
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
+                if (!redraw()) return false;
+            }
+            break;
+#else
         case SDL_VIDEOEXPOSE:
             if (!redraw()) return false;
             break;
@@ -108,15 +149,34 @@ static bool pollevents(void) {
                 if (!screen_init(event.resize.w, event.resize.h)) return false;
             }
             break;
+#endif
         case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_LEFT) {
+            if (event.button.button == SDL_BUTTON_LEFT
+#if SDL_VERSION_ATLEAST(2,0,2)
+                 && event.button.clicks == 2
+#endif
+                ) {
                 bool res;
                 if (!fullscreen) {
+#if SDL_VERSION_ATLEAST(2,0,0)
+                    res = !SDL_SetWindowFullscreen(window,
+                                                   SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    fullscreen = true;
+#else
                     res = screen_init(0, 0);
+#endif
                 } else {
+#if SDL_VERSION_ATLEAST(2,0,0)
+                    res = !SDL_SetWindowFullscreen(window, 0);
+                    fullscreen = false;
+#else
                     res = screen_init(winwidth, winheight);
+#endif
                 }
-                if (!res) return false;
+                if (!res) {
+                    sdlError("toggling full screen size");
+                    return false;
+                }
             }
             break;
         case SDL_QUIT:

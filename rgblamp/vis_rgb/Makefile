@@ -45,7 +45,7 @@ rgbm-standalone.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h  \
 portaudio.o: portaudio.c rgbm.h
 	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
 
-SDLVIS_PREREQ := sdl
+SDLVIS_PREREQ := sdl2
 ifeq ($(shell pkg-config --exists $(SDLVIS_PREREQ) || echo no),no)
 $(warning WARNING: Not building SDL standalone visualizer due to lack of prerequisites.)
 else
