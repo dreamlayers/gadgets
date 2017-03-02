@@ -14,23 +14,27 @@ SRCS := $(SRCS) rgbvis.c
 TARGET := vis_rgb.dll
 OBJS := $(SRCS:%.c=%.o)
 
+all: $(TARGET)
+
 $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 rgbm.o: greentab_winamp.h
 
-else
+endif
 
 .PHONY : install uninstall all dummy
-
 STANDALONE_PREREQ := fftw3 portaudio-2.0
-ifeq ($(shell pkg-config --exists $(STANDALONE_PREREQ) || echo no),no)
+ifeq ($(shell $(PKG_CONFIG) --exists $(STANDALONE_PREREQ) || echo no),no)
 $(warning WARNING: Not building RGB lamp standalone visualizer due to lack of prerequisites.)
 else
 STANDALONE := visrgb
-STANDALONE_CFLAGS := $(CFLAGS) -DRGBM_FFTW -pthread $(shell pkg-config --cflags $(STANDALONE_PREREQ))
-STANDALONE_LIBS := $(LIBRGBLAMP_DIR)/librgblamp.a $(shell pkg-config --libs $(STANDALONE_PREREQ)) -lm
+STANDALONE_CFLAGS := $(CFLAGS) -DRGBM_FFTW -pthread $(shell $(PKG_CONFIG) --cflags $(STANDALONE_PREREQ))
+ifeq ($(PLATFORM),Windows)
+STANDALONE_CFLAGS := $(STANDALONE_CFLAGS) -static
+endif
+STANDALONE_LIBS := $(LIBRGBLAMP_DIR)/librgblamp.a $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ)) -lm
 STANDALONE_OBJS := rgbm-standalone.o portaudio.o
 all: $(STANDALONE)
 
@@ -46,12 +50,12 @@ portaudio.o: portaudio.c rgbm.h
 	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
 
 SDLVIS_PREREQ := sdl2
-ifeq ($(shell pkg-config --exists $(SDLVIS_PREREQ) || echo no),no)
+ifeq ($(shell $(PKG_CONFIG) --exists $(SDLVIS_PREREQ) || echo no),no)
 $(warning WARNING: Not building SDL standalone visualizer due to lack of prerequisites.)
 else
 SDLVIS := visrgbsdl
-SDLVIS_CFLAGS := $(STANDALONE_CFLAGS) $(shell pkg-config --cflags $(SDLVIS_PREREQ))
-SDLVIS_LIBS := $(shell pkg-config --libs $(STANDALONE_PREREQ) $(SDLVIS_PREREQ)) -lm
+SDLVIS_CFLAGS := $(STANDALONE_CFLAGS) $(shell $(PKG_CONFIG) --cflags $(SDLVIS_PREREQ))
+SDLVIS_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ) $(SDLVIS_PREREQ)) -lm
 SDLVIS_OBJS := rgbm-standalone.o portaudio.o sdl_rgb.o
 all: $(SDLVIS)
 
@@ -65,13 +69,15 @@ endif
 
 endif
 
+ifneq ($(PLATFORM),Windows)
+
 PKG_PREREQ := audacious glib-2.0 dbus-glib-1 dbus-1
-ifeq ($(shell pkg-config --exists $(PKG_PREREQ) || echo no),no)
+ifeq ($(shell $(PKG_CONFIG) --exists $(PKG_PREREQ) || echo no),no)
 $(warning WARNING: Not building RGB lamp plugin due to lack of prerequisites.)
 else
 CFLAGS := $(CFLAGS) -DRGBM_AUDACIOUS \
-		  $(shell pkg-config --cflags $(PKG_PREREQ)) $(PIC)
-LIBS = $(shell pkg-config --libs $(PKG_PREREQ)) -lm
+		  $(shell $(PKG_CONFIG) --cflags $(PKG_PREREQ)) $(PIC)
+LIBS = $(shell $(PKG_CONFIG) --libs $(PKG_PREREQ)) -lm
 SRCS := $(SRCS) aud_rgb.c
 TARGET := aud_rgb.so
 CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
@@ -99,7 +105,7 @@ endif
 
 .PHONY : clean veryclean
 clean:
-	rm -f $(OBJS) $(TARGET) visrgb *~ *.bak
+	rm -f $(OBJS) $(STANDALONE_OBJS) sdl_rgb.o $(TARGET) visrgb visrgbsdl *~ *.bak
 
 veryclean: clean
 	rm -f freqadj_audacious.h greentab_audacious.h greentab_winamp.h

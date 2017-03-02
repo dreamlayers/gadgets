@@ -14,9 +14,14 @@
 #endif
 #include "librgblamp.h"
 
+#ifdef WIN32
+#define RGBPORT "COM8"
+#else
+#define RGBPORT "/dev/ttyUSB0"
+#endif
+
 #if defined(RGBM_AUDACIOUS) || defined(RGBM_FFTW)
 
-#define RGBPORT "/dev/ttyUSB0"
 /* Calibrated in Audacious 3.4 in Ubuntu 13.10 */
 /* Frequency of bin is (i+1)*44100/512 (array starts with i=0).
  * Value corresponds to amplitude (not power or dB).
@@ -60,8 +65,6 @@ static const double freq_adj[RGBM_USEBINS] = {
 };
 
 #elif defined(RGBM_WINAMP)
-
-#define RGBPORT "COM8"
 
 /* Calibrated in Winamp v5.666 Build 3512 (x86)
  * Frequency of bin roughly corresponds to (i - 1) * 44100 / 1024
