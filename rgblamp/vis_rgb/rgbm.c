@@ -50,6 +50,11 @@
 #define RGBM_SCALE (12000.0)
 #else
 #define RGBM_SCALE (23500.0)
+#ifdef WIN32
+/* Stereo Mix stupidly scales down based on playback volume.
+   AGC is needed to avoid dimness. */
+#define RGBM_AGCUP (500.0)
+#endif
 #endif
 #define RGBM_LIMIT 4095
 
@@ -105,6 +110,9 @@ static double hamming[RGBM_NUMSAMP];
  */
 
 static double binavg[3];
+#ifdef RGBM_AGCUP
+double pwm[3];
+#endif
 /* Set after successful PWM write, and enables rgb_matchpwm afterwards */
 static int wrotepwm;
 
@@ -162,9 +170,41 @@ static void rgbm_avgsums(const double sums[3],
         }
 
         avg[i] = ((avgsize - 1.0) * avg[i] + sum) / avgsize;
+#ifndef RGBM_AGCUP
+        /* Clip to bound without AGC. Otherwise AGC avoids clipping. */
         if (avg[i] > bound) avg[i] = bound;
+#endif
     } /* for i */
 } /* rgbm_avgsums */
+
+#ifdef RGBM_AGCUP
+static void rgbm_agc(const double avg[3], double pwm[3]) {
+    static double scale = 1.0 / 4095;
+    /* Limit scale during low volume and avoids division by zero */
+    double maxval = 1.0;
+    int i;
+
+    /* Calculate scale based on maximum of R, G, B values */
+    for (i = 0; i < 3; i++) {
+        if (avg[i] > maxval) maxval = avg[i];
+    }
+
+    maxval = 1.0 / maxval;
+    if (maxval < scale) {
+        /* Peaks reset scale immediately */
+        scale = maxval;
+    } else {
+        /* Otherwise scale can go up slowly according to RGBM_AGCUP */
+        scale = (RGBM_AGCUP - 1) / RGBM_AGCUP * scale +
+                1 / RGBM_AGCUP * maxval;
+    }
+
+    /* Scale PWM values based on scale */
+    for (i = 0; i < 3; i++) {
+        pwm[i] = avg[i] * scale;
+    }
+}
+#endif /* RGBM_AGCUP */
 
 #ifdef RGBM_LOGGING
 static void rgbm_testsum(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
@@ -223,8 +263,13 @@ int rgbm_init(void) {
 }
 
 void rgbm_shutdown(void) {
-    if (wrotepwm)
+    if (wrotepwm) {
+#ifdef RGBM_AGCUP
+        rgb_matchpwm_srgb(pwm[0], pwm[1], pwm[2]);
+#else
         rgb_matchpwm(binavg[0], binavg[1], binavg[2]);
+#endif
+    }
     rgb_close();
 #ifdef RGBM_FFTW
     fftw_destroy_plan(fft_plan);
@@ -261,7 +306,14 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
         fprintf(testlog, "%9f, %9f, %9f\n", binavg[0], binavg[1], binavg[2]);
     }
 #endif
+#ifdef RGBM_AGCUP
+    rgbm_agc(binavg, pwm);
+    /* AGC washes out the colours if the output is used as raw PWM,
+       so sRGB coversion is used for gamma correction. */
+    res = rgb_pwm_srgb(pwm[0], pwm[1], pwm[2]);
+#else
     res = rgb_pwm(binavg[0], binavg[1], binavg[2]);
+#endif
     if (res) wrotepwm = 1;
     return res;
 } /* rgbm_render */

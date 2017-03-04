@@ -130,6 +130,13 @@ static unsigned int pwm2srgb256(unsigned short n) {
     return r * 255.0;
 }
 
+static unsigned int srgb2srgb256(double r) {
+    if (r < 0.0) r = 0.0;
+    if (r > 1.0) r = 1.0;
+
+    return r * 255.0;
+}
+
 static bool pollevents(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event) > 0) {
@@ -199,6 +206,13 @@ RGBAPI bool rgb_pwm(unsigned short r, unsigned short g, unsigned short b) {
     return redraw() && pollevents();
 }
 
+RGBAPI bool rgb_pwm_srgb(double r, double g, double b) {
+    savedr = srgb2srgb256(r);
+    savedg = srgb2srgb256(g);
+    savedb = srgb2srgb256(b);
+    return redraw() && pollevents();
+}
+
 RGBAPI void rgb_close(void) {
     SDL_Quit();
 }
@@ -211,6 +225,12 @@ RGBAPI bool rgb_matchpwm(unsigned short r, unsigned short g, unsigned short b) {
     return true;
 }
 
+RGBAPI bool rgb_matchpwm_srgb(double r, double g, double b) {
+    (void)r;
+    (void)g;
+    (void)b;
+    return true;
+}
 RGBAPI bool rgb_flush(void) {
     return true;
 }
