@@ -79,30 +79,43 @@ static void sound_open(const char *devname) {
     err = Pa_Initialize();
     if(err != paNoError) error("initializing PortAudio.");
 
-    /* Search through devices to find one matching devname */
-    if (devname == NULL) {
-        devname = MONITOR_NAME;
-    }
-    numDevices = Pa_GetDeviceCount();
+    if ((devname == NULL) ?
 #ifdef WIN32
-    namelen = strlen(devname);
-#endif
-    for (inputParameters.device = 0; inputParameters.device < numDevices;
-         inputParameters.device++) {
-        const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(inputParameters.device);
-        if (deviceInfo != NULL && deviceInfo->name != NULL &&
-#ifdef WIN32
-        /* Allow substring matches, for eg. "Stereo Mix (Sound card name)" */
-        !strncmp(deviceInfo->name, devname, namelen)
+        0
 #else
-        !strcmp(deviceInfo->name, devname)
+        /* PULSE_SOURCE sets default input device. Don't automatically
+           over-ride that with our monitor name guess. */
+        (getenv("PULSE_SOURCE") != NULL)
 #endif
-         ) break;
-    }
-    if (inputParameters.device == numDevices) {
-        fprintf(stderr, "Warning: couldn't find %s sound device, using default\n",
-                devname);
+        /* Use "default" to explicitly select default sound source.
+           Needed because otherwise MONITOR_NAME would be used. */
+        : (!strcmp(devname, "default"))) {
         inputParameters.device = Pa_GetDefaultInputDevice();
+    } else {
+        if (devname == NULL) devname = MONITOR_NAME;
+
+        /* Search through devices to find one matching devname */
+        numDevices = Pa_GetDeviceCount();
+#ifdef WIN32
+        namelen = strlen(devname);
+#endif
+        for (inputParameters.device = 0; inputParameters.device < numDevices;
+             inputParameters.device++) {
+            const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(inputParameters.device);
+            if (deviceInfo != NULL && deviceInfo->name != NULL &&
+#ifdef WIN32
+                /* Allow substring matches, for eg. "Stereo Mix (Sound card name)" */
+                !strncmp(deviceInfo->name, devname, namelen)
+#else
+                !strcmp(deviceInfo->name, devname)
+#endif
+                ) break;
+        }
+        if (inputParameters.device == numDevices) {
+            fprintf(stderr, "Warning: couldn't find %s sound device, using default\n",
+                    devname);
+            inputParameters.device = Pa_GetDefaultInputDevice();
+        }
     }
 
     inputParameters.channelCount = 1;
