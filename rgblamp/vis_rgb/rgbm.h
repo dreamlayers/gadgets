@@ -37,7 +37,7 @@ void rgbm_shutdown(void);
 int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]);
 #else
 RGBM_BINTYPE *rgbm_get_wave_buffer(void);
-int rgbm_render_wave(void);
+int rgbm_render_wave(double deltat);
 #endif
 
 #ifdef __cplusplus

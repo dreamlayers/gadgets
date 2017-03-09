@@ -2,7 +2,6 @@
 /* Copyright 2017 Boris Gjenero. Released under the MIT license. */
 
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -32,7 +31,7 @@ static double ring[RGBM_NUMSAMP];
 static int ring_write = 0;
 static pthread_mutex_t mutex;
 static pthread_cond_t cond;
-static bool sound_available = false;
+static unsigned long frames_available = 0;
 
 static void error(const char *s) {
     fprintf(stderr, "Error: %s\n", s);
@@ -61,7 +60,7 @@ static int pa_callback(const void *input, void *output,
 
     pthread_mutex_lock(&mutex);
     sound_store((int16_t *)input);
-    sound_available = true;
+    frames_available += frameCount;
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&mutex);
 
@@ -156,10 +155,12 @@ static void sound_close(void) {
     pthread_mutex_destroy(&mutex);
 }
 
-static void sound_retrieve(void) {
+static unsigned long sound_retrieve(void) {
+    unsigned long res;
+
     pthread_mutex_lock(&mutex);
 
-    while (!sound_available) {
+    while (frames_available == 0) {
         pthread_cond_wait(&cond, &mutex);
     }
 
@@ -171,8 +172,12 @@ static void sound_retrieve(void) {
                sizeof(double) * ring_write);
     }
 
-    sound_available = false;
+    res = frames_available;
+    frames_available = 0;
+
     pthread_mutex_unlock(&mutex);
+
+    return res;
 }
 
 
@@ -186,10 +191,11 @@ static void sig_handler(int signo)
 }
 
 static void sound_visualize(void) {
+    double deltat;
     do {
         if (quit) break;
-        sound_retrieve();
-    } while (rgbm_render_wave());
+        deltat = (double)sound_retrieve() / 44100.0;
+    } while (rgbm_render_wave(deltat));
 }
 
 int main(int argc, char **argv) {

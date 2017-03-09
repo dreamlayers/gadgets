@@ -4,7 +4,9 @@
 /* Define to output averaged per-bin sums for calibration */
 /* #define RGBM_LOGGING */
 
+#include <stdlib.h>
 #include <math.h>
+#include <sys/time.h>
 #include "rgbm.h"
 #ifdef RGBM_LOGGING
 #include <stdio.h>
@@ -14,10 +16,25 @@
 #endif
 #include "librgblamp.h"
 
+/*
+ * Configuration you can tweak
+ */
+
 #ifdef WIN32
 #define RGBPORT "COM8"
 #else
 #define RGBPORT "/dev/ttyUSB0"
+#endif
+
+/* These exponential moving average coefficients are for 1 FPS.
+ * Divide by time in seconds since last frame to get coefficient for
+ * current frame.
+ */
+#ifndef RGBM_WINAMP
+/* Moving average size when value is increasing */
+#define RGBM_AVGUP 0.16695
+/* Moving average size when value is decreasing */
+#define RGBM_AVGDN 0.50085
 #endif
 
 #if defined(RGBM_AUDACIOUS) || defined(RGBM_FFTW)
@@ -27,19 +44,11 @@
  * Value corresponds to amplitude (not power or dB).
  */
 
-#if defined(RGBM_AUDACIOUS)
-/* 1797/60 = 30 fps */
-/* Moving average size when value is increasing */
-#define RGBM_AVGUP 5
-/* Moving average size when value is decreasing */
-#define RGBM_AVGDN 15
-#else
-/* 1000/8 = 125 fps */
-/* Moving average size when value is increasing */
-#define RGBM_AVGUP 21
-/* Moving average size when value is decreasing */
-#define RGBM_AVGDN 63
-#endif
+/* Audacious 3.7.2 gave 0.03339 seconds per frame (about 30 fps), and
+ * exponential moving average size was 5 down and 15 up.
+ * Standalone in Linux gave 0.00774 seconds per frame, and
+ * exponential moving average size was 21 down and 63 up.
+ */
 
 /* Colour scaling to balance red and blue with green */
 #define RGBM_REDSCALE 2.40719835270744
@@ -97,6 +106,20 @@ static const double freq_adj[RGBM_USEBINS] = {
 
 #else
 #error Need to set define for type of music player.
+#endif
+
+/*
+ * Automatic configuration
+ */
+
+#ifdef RGBM_FFTW
+#define RGBM_STANDALONE
+#endif
+
+#ifdef RGBM_STANDALONE
+#define IF_STANDALONE(x...) x
+#else
+#define IF_STANDALONE(x...)
 #endif
 
 /*
@@ -158,6 +181,58 @@ static void rgbm_sumbins(const RGBM_BINTYPE bins[RGBM_NUMBINS],
     sums[1] = sqrt(greensum);
 } /* rgbm_sumbins */
 
+#if !defined(RGBM_STANDALONE) && !defined(RGBM_WINAMP)
+/* From https://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html */
+static int
+timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
+{
+  /* Perform the carry for the later subtraction by updating y. */
+  if (x->tv_usec < y->tv_usec) {
+    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+    y->tv_usec -= 1000000 * nsec;
+    y->tv_sec += nsec;
+  }
+  if (x->tv_usec - y->tv_usec > 1000000) {
+    int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+    y->tv_usec += 1000000 * nsec;
+    y->tv_sec -= nsec;
+  }
+
+  /* Compute the time remaining to wait.
+     tv_usec is certainly positive. */
+  result->tv_sec = x->tv_sec - y->tv_sec;
+  result->tv_usec = x->tv_usec - y->tv_usec;
+
+  /* Return 1 if result is negative. */
+  return x->tv_sec < y->tv_sec;
+}
+
+static double calc_deltat(void) {
+    static struct timeval lasttime;
+    static int haveltime = 0;
+    struct timeval thistime;
+    double deltat;
+
+    /* Calculate length of time since last frame */
+    gettimeofday(&thistime, NULL);
+    if (haveltime) {
+        struct timeval deltatv;
+        if (timeval_subtract(&deltatv, &thistime, &lasttime) == 0) {
+            deltat = deltatv.tv_sec + (double)deltatv.tv_usec / 1000000.0;
+        } else {
+            deltat = 0.0;
+        }
+    } else {
+        deltat = 1.0;
+        haveltime = 1;
+    }
+    lasttime.tv_sec = thistime.tv_sec;
+    lasttime.tv_usec = thistime.tv_usec;
+
+    return deltat;
+}
+#endif
+
 /* Scale R, G, B sums from rgbm_sumbins(), and perform an exponential moving
  * average. Moving average coefficient changes between RGBM_AVGUP and
  * RGBM_AVGDN depending on whether current sum is higher or lower than average.
@@ -166,17 +241,37 @@ static void rgbm_sumbins(const RGBM_BINTYPE bins[RGBM_NUMBINS],
 static void rgbm_avgsums(const double sums[3],
                          double avg[3],
                          double scale,
-                         double bound) {
+                         double bound
+                         IF_STANDALONE(, double deltat)
+                         ) {
     int i = 0;
+    double avgup, avgdn;
+#if !defined(RGBM_STANDALONE) && !defined(RGBM_WINAMP)
+    double deltat = calc_deltat();
+#endif
+
+    /* Calculate exponential moving average coefficients
+     * based on time since last frame.
+     */
+#ifdef RGBM_WINAMP
+    avgup = RGBM_AVGUP;
+    avgdn = RGBM_AVGDN;
+#else
+    if (deltat == 0.0) return;
+    avgup = RGBM_AVGUP / deltat;
+    avgdn = RGBM_AVGDN / deltat;
+#endif
+
+    /* Scale sums and add them to exponential moving average */
     for (i = 0; i < 3; i++) {
         double avgsize, sum;
 
         sum = (double)sums[i] * scale;
 
         if (sum > avg[i]) {
-            avgsize = RGBM_AVGUP;
+            avgsize = avgup;
         } else {
-            avgsize = RGBM_AVGDN;
+            avgsize = avgdn;
         }
 
         avg[i] = ((avgsize - 1.0) * avg[i] + sum) / avgsize;
@@ -297,14 +392,17 @@ void rgbm_shutdown(void) {
 #ifdef RGBM_FFTW
 static
 #endif
-int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
+int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]
+                IF_STANDALONE(, double deltat))
+{
     double sums[3];
     int res;
 
     rgbm_sumbins(bins, sums);
     sums[0] *= RGBM_REDSCALE;
     sums[2] *= RGBM_BLUESCALE;
-    rgbm_avgsums(sums, binavg, RGBM_SCALE, RGBM_LIMIT);
+    rgbm_avgsums(sums, binavg, RGBM_SCALE, RGBM_LIMIT IF_STANDALONE(, deltat));
+
     rgb_flush();
 #ifdef RGBM_LOGGING
     for (res = 0; res < 3; res++) {
@@ -364,10 +462,10 @@ static void fft_apply_window(double *samp) {
  * data first needs to be copied to buffer returned by rgbm_get_wave_buffer(),
  * and then this function is called.
  */
-int rgbm_render_wave(void) {
+int rgbm_render_wave(double deltat) {
     fft_apply_window(fft_in);
     fftw_execute(fft_plan);
     fft_complex_to_real(fft_out);
-    return rgbm_render(fft_out);
+    return rgbm_render(fft_out, deltat);
 }
 #endif
