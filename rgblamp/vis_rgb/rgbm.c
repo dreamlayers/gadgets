@@ -99,19 +99,19 @@ static const double freq_adj[RGBM_USEBINS] = {
 #error Need to set define for type of music player.
 #endif
 
+/*
+ * Static global variables
+ */
+
 #ifdef RGBM_FFTW
 static fftw_plan fft_plan;
 static double *fft_in, *fft_out;
 static double hamming[RGBM_NUMSAMP];
 #endif
 
-/*
- * Static global variables
- */
-
 static double binavg[3];
 #ifdef RGBM_AGCUP
-double pwm[3];
+static double pwm[3];
 #endif
 /* Set after successful PWM write, and enables rgb_matchpwm afterwards */
 static int wrotepwm;
@@ -128,6 +128,11 @@ static double avgavg[3];
  * Internal routines
  */
 
+/* Sum bins into R, G, B colours. Bins before RGBM_PIVOTBIN sum into R and G.
+ * Bins starting at RGBM_PIVOTBIN and before RGBM_USEBINS sum into G and B.
+ * The green_tab array determines what portion of bin goes into G, and the
+ * rest goes into the other colour.
+ */
 static void rgbm_sumbins(const RGBM_BINTYPE bins[RGBM_NUMBINS],
                          double sums[3]){
     double greensum = 0;
@@ -153,6 +158,11 @@ static void rgbm_sumbins(const RGBM_BINTYPE bins[RGBM_NUMBINS],
     sums[1] = sqrt(greensum);
 } /* rgbm_sumbins */
 
+/* Scale R, G, B sums from rgbm_sumbins(), and perform an exponential moving
+ * average. Moving average coefficient changes between RGBM_AVGUP and
+ * RGBM_AVGDN depending on whether current sum is higher or lower than average.
+ * Clipping to bound is performed if AGC is not in use.
+ */
 static void rgbm_avgsums(const double sums[3],
                          double avg[3],
                          double scale,
@@ -281,6 +291,9 @@ void rgbm_shutdown(void) {
 #endif
 }
 
+/* The function tying it all together, taking new FFT bins as input,
+ * calling calculation functions, and setting new LED colours.
+ */
 #ifdef RGBM_FFTW
 static
 #endif
@@ -332,6 +345,10 @@ static void fft_complex_to_real(RGBM_BINTYPE bins[RGBM_NUMSAMP]) {
     bins[RGBM_NUMSAMP / 2 - 1] = fabs(bins[RGBM_NUMSAMP / 2]) / RGBM_NUMSAMP;
 }
 
+/* It may seem more logical to pass data to rgbm_render_wave() using a
+ * parameter, but this buffer is allocated via fftw_malloc(), and this
+ * avoids memcpy().
+ */
 RGBM_BINTYPE *rgbm_get_wave_buffer(void) {
     return fft_in;
 }
@@ -343,6 +360,10 @@ static void fft_apply_window(double *samp) {
     }
 }
 
+/* Alternate entry point when input is wave data, and not FFT bins. The wave
+ * data first needs to be copied to buffer returned by rgbm_get_wave_buffer(),
+ * and then this function is called.
+ */
 int rgbm_render_wave(void) {
     fft_apply_window(fft_in);
     fftw_execute(fft_plan);
