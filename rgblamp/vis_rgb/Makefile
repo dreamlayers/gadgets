@@ -9,7 +9,7 @@ LIBRGBLAMP_DIR := ../librgblamp
 ifeq ($(PLATFORM),Windows)
 
 WINAMPAPI_DIR := ../../pluginapi/winamp
-CFLAGS := $(CFLAGS) -DRGBM_WINAMP -I$(WINAMPAPI_DIR)
+WINAMP_CFLAGS := $(CFLAGS) -DRGBM_WINAMP -I$(WINAMPAPI_DIR)
 SRCS := $(SRCS) rgbvis.c
 TARGET := vis_rgb.dll
 OBJS := $(SRCS:%.c=%.o)
@@ -20,7 +20,11 @@ $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
-rgbm.o: greentab_winamp.h
+rgbm.o: rgbm.c greentab_winamp.h
+	$(CC) $(WINAMP_CFLAGS) -c $< -o $@
+
+rgbvis.o: rgbvis.c $(WINAMPAPI_DIR)/vis.h rgbm.h Makefile
+	$(CC) $(WINAMP_CFLAGS) -c $< -o $@
 
 endif
 
@@ -109,8 +113,6 @@ clean:
 
 veryclean: clean
 	rm -f freqadj_audacious.h greentab_audacious.h greentab_winamp.h
-
-rgbvis.o: rgbvis.c $(WINAMPAPI_DIR)/vis.h rgbm.h Makefile
 
 aud_rgb.o: aud_rgb.cc rgbm.h Makefile
 
