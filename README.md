@@ -47,6 +47,8 @@ Some other parts are ancient and probably uninteresting.
     but the output file is in the repository so GNU Octave is not required.
   * [winrgbchoose](rgblamp/winrgbchoose/) : Windows colour chooser for the RGB
     lamp.
+  * [rgbmacpick](rgblamp/rgbmacpick/) : Mac OS colour chooser for the RGB lamp.
+    This does not include other Xcode generated stuff needed to build.
 
 * [vfd](vfd/) : Code for my VFD display
   * [libvfd](vfd/libvfd/) : Direct interfacing library for VFD display
