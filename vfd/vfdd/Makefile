@@ -25,7 +25,7 @@ LIBS := -lpthread
 endif
 
 vfdd: $(OBJS) $(SIGND_DIR)/daemon/signd.a $(LIBVFD_DIR)/libvfd.a
-	$(CC) $(CFLAGS) -Wl,-u,_WinMain@16 -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 #libsigntcp.a: libsigntcp.o $(SIGND_DIR)/client/libsdclient.a
 #	cp $(SIGND_DIR)/client/libsdclient.a $@
