@@ -20,10 +20,12 @@
 #include "serio.h"
 
 /* Clock to use for timeouts */
-#ifdef _POSIX_MONOTONIC_CLOCK
+#if _POSIX_TIMERS > 0
+#if _POSIX_MONOTONIC_CLOCK > 0
 #define TIMEOUT_CLOCK CLOCK_MONOTONIC
 #else
 #define TIMEOUT_CLOCK CLOCK_REALTIME
+#endif
 #endif
 
 /*** GLOBAL VARIABLES ***/
@@ -45,6 +47,15 @@ static void fatalerr(char *s) {
 
 /*** TIMEOUT HANDLING ***/
 
+#if _POSIX_TIMERS <= 0
+#define clock_gettime(x, y) use_gettimeofday(y)
+static void use_gettimeofday(struct timespec *ts) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ts->tv_sec = tv.tv_sec;
+    ts->tv_nsec = tv.tv_usec * 1000;
+}
+#endif
 
 static void timespec_add_ms(struct timespec *ts, unsigned int milliseconds) {
     ts->tv_sec += milliseconds / 1000;
