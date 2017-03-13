@@ -5,7 +5,7 @@ include ../../build/Makefile.config
 SERIO_DIR := ../../serio
 
 CFLAGS := $(CFLAGS) -I$(SERIO_DIR)
-
+DLL_LDFLAGS := -shared -fvisibility=default -DBUILDING_DLL
 DLFULLNAME := $(DLPREFIX)$(LIBNAME)$(DLSUFFIX)
 SLFULLNAME := lib$(LIBNAME).a
 
@@ -13,6 +13,10 @@ ifneq ($(PLATFORM),Cygwin)
 ifneq ($(PLATFORM),Windows)
 CFLAGS := $(CFLAGS) -fPIC
 endif
+endif
+
+ifneq ($(PLATFORM),Darwin)
+DLL_LDFLAGS += -Wl,--no-undefined
 endif
 
 .PHONY : all
@@ -35,8 +39,7 @@ OBJS := $(SRCS:%.c=%.o)
 # Rebuild with visibility normal to export symbols in Unix library.
 # Depends on OBJS so dependencies still apply.
 $(DLFULLNAME): $(OBJS)
-	$(CC) $(CFLAGS) -shared -fvisibility=default -Wl,--no-undefined \
-	-DBUILDING_DLL -o $@ $(SRCS) $(SERIO_DIR)/libserio.a $(LIBS)
+	$(CC) $(CFLAGS) $(DLL_LDFLAGS) -o $@ $(SRCS) $(SERIO_DIR)/libserio.a $(LIBS)
 
 $(SLFULLNAME): $(OBJS) $(SERIO_DIR)/libserio.a Makefile
 	cp $(SERIO_DIR)/libserio.a $@
