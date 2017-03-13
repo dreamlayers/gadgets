@@ -16,10 +16,11 @@ TARGET := lsp
 OBJS := $(SRCS:%.c=%.o)
 
 $(TARGET): $(OBJS) $(LIBSIGNTCP_DIR)/libsigntcp.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	-$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY : clean
 clean:
 	rm -f $(OBJS) $(TARGET) $(CLEAN_EXTRA) *~ *.bak
 
-gen_led.o: gen_led.c $(LIBSIGNTCP_DIR)/libsigntcp.h Makefile
+lsp.o: lsp.c $(LIBSIGNTCP_DIR)/libsigntcp.h Makefile
+	-$(CC) $(CFLAGS) -o $@ $<
