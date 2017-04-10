@@ -259,7 +259,9 @@ static void rgbm_avgsums(const double sums[3],
 #else
     if (deltat == 0.0) return;
     avgup = RGBM_AVGUP / deltat;
+    if (avgup <= 1.0) avgup = 1.0;
     avgdn = RGBM_AVGDN / deltat;
+    if (avgdn <= 1.0) avgdn = 1.0;
 #endif
 
     /* Scale sums and add them to exponential moving average */
