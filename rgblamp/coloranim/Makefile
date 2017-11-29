@@ -1,10 +1,16 @@
-#include ../../build/Makefile.config
+include ../../build/Makefile.config
 
 LIBRGBLAMP_DIR := ../librgblamp
 CFLAGS := $(CFLAGS)
 CC := gcc
 LIBS := -lm
 EXTRA_DEPS :=
+
+ifeq ($(DRIVER),)
+ifeq ($(PLATFORM),Windows)
+DRIVER := rgblamp
+endif
+endif
 
 ifeq ($(DRIVER),rgblamp)
 CFLAGS += -I$(LIBRGBLAMP_DIR)
@@ -26,7 +32,7 @@ endif
 #.PHONY : install uninstall all dummy
 
 SRCS := coloranim.c parser.c drv_$(DRIVER).c
-TARGET := coloranim$(EXEEXT)
+TARGET := coloranim$(EXESUFFIX)
 OBJS := $(SRCS:%.c=%.o)
 
 $(TARGET): $(OBJS) $(EXTRA_DEPS)
