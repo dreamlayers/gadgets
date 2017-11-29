@@ -9,6 +9,7 @@ const unsigned int components = 3;
 static const char *(*parse_getnext)(void) = NULL;
 static const char *(*parse_peeknext)(void) = NULL;
 static int (*parse_eof)(void) = NULL;
+static void (*parse_rewind)(void) = NULL;
 
 void parse_fatal(const char *s)
 {
@@ -124,6 +125,15 @@ static double parse_transarg(keyword kw) {
     }
 }
 
+static keyword parse_looping_keyword(void)
+{
+    const keywordmap kw_looping[] = {
+        { "repeat", KW_REPEAT },
+        { NULL, KW_NONE }
+    };
+    return parse_keyword(kw_looping);
+}
+
 static void parse_main(void)
 {
     keyword kw = EXPECT_COLOR;
@@ -143,6 +153,8 @@ static void parse_main(void)
     };
 
     while (!parse_eof()) {
+        keyword looping;
+
         printf("PARSE\n");
         parse_rgb(&colorspec[specidx * COLORCNT]);
         colorkw[specidx++] = KW_NONE;
@@ -160,6 +172,7 @@ static void parse_main(void)
             if (newtrans == KW_NONE) parse_fatal("unknown keyword");
         }
 
+        /* This actually does the previous transition, not the one just read */
         fx_makestate(colorspec, colorkw, specidx, newclr);
         fx_transition(oldclr, trans, transarg, newclr);
 
@@ -171,6 +184,17 @@ static void parse_main(void)
         newclr = tempclr;
 
         transarg = parse_transarg(trans);
+
+        looping = parse_looping_keyword();
+        switch (looping) {
+        case KW_REPEAT:
+            parse_rewind();
+            break;
+        case KW_NONE:
+            break;
+        default:
+            parse_fatal("unknown looping keyword");
+        }
     }
 }
 
@@ -196,6 +220,11 @@ static int parse_args_eof(void)
     return argidx >= sargc;
 }
 
+static void parse_args_rewind(void)
+{
+    argidx = 1;
+}
+
 void parse_args(int argc, char **argv)
 {
     sargc = argc;
@@ -204,5 +233,6 @@ void parse_args(int argc, char **argv)
     parse_getnext = parse_args_getnext;
     parse_peeknext = parse_args_peeknext;
     parse_eof = parse_args_eof;
+    parse_rewind = parse_args_rewind;
     parse_main();
 }

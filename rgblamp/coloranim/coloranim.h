@@ -23,7 +23,8 @@ typedef enum {
     EXPECT_COLOR,
     KW_GRADIENT,
     KW_CROSSFADE,
-    KW_FOR
+    KW_FOR,
+    KW_REPEAT
 } keyword;
 
 void parse_fatal(const char *s);
