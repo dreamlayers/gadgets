@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include "coloranim.h"
 
+void fatal(const char *s) __attribute__ ((noreturn));
 void fatal(const char *s)
 {
     fprintf(stderr, "Fatal error: %s\n", s);
@@ -78,14 +79,6 @@ static inline double interp_one(double a, double b, double p)
     return a * (1.0 - p) + b * p;
 }
 
-static void interp_pix(const pixel a, const pixel b, double p, pixel r)
-{
-    unsigned int i;
-    for (i = 0; i < COLORCNT; i++) {
-        r[i] = interp_one(a[i], b[i], p);
-    }
-}
-
 static void interp_fade(const pixel a, const pixel b, double p, pixel r)
 {
     unsigned int i, cnt = COLORCNT * PIXCNT;
@@ -144,7 +137,7 @@ void fx_makestate(const pixel colorspec, const keyword *colorkw,
     }
 }
 
-void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
+static void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
 {
     pixel cross = pix_alloc();
 
@@ -179,8 +172,6 @@ void fx_transition(const pixel oldclr, keyword kw, double arg,
 
 int main(int argc, char **argv)
 {
-    pixel pixa, pixb, pixr;
-
     render_open();
 
     parse_args(argc, argv);

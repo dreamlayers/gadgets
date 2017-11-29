@@ -11,6 +11,7 @@ static const char *(*parse_peeknext)(void) = NULL;
 static int (*parse_eof)(void) = NULL;
 static void (*parse_rewind)(void) = NULL;
 
+void parse_fatal(const char *s) __attribute__ ((noreturn));
 void parse_fatal(const char *s)
 {
     fprintf(stderr, "Fatal parse error: %s\n", s);
@@ -138,12 +139,11 @@ static void parse_main(void)
 {
     keyword kw = EXPECT_COLOR;
     keyword trans = KW_NONE, newtrans;
-    double transarg;
+    double transarg = 0.0;
 
     pixel colorspec = pix_alloc();
     unsigned int specidx = 0;
     keyword colorkw[60];
-    double darg;
 
     pixel tempclr, oldclr = pix_alloc(), newclr = pix_alloc();
 
