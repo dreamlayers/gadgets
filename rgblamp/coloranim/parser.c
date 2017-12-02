@@ -152,7 +152,7 @@ static void parse_main(void)
         AFTER_COLOR,
     };
 
-    while (!parse_eof()) {
+    while (1) {
         keyword looping;
 
         printf("PARSE\n");
@@ -175,6 +175,8 @@ static void parse_main(void)
         /* This actually does the previous transition, not the one just read */
         fx_makestate(colorspec, colorkw, specidx, newclr);
         fx_transition(oldclr, trans, transarg, newclr);
+
+        if (parse_eof()) break;
 
         trans = newtrans;
         specidx = 0;
