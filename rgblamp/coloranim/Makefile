@@ -9,6 +9,8 @@ EXTRA_DEPS :=
 ifeq ($(DRIVER),)
 ifeq ($(PLATFORM),Windows)
 DRIVER := rgblamp
+else ifneq ("$(wildcard /usr/include/wiringPi.h)","")
+DRIVER := rpi_ws281x
 endif
 endif
 
@@ -21,7 +23,7 @@ LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
 else ifeq ($(DRIVER),rpi_ws281x)
 CFLAGS += -I/home/pi/gitapps/rpi_ws281x
 PIXCNT ?= 60
-LIBS += -lws2811
+LIBS += -lws2811 -lwiringPi
 
 endif
 
