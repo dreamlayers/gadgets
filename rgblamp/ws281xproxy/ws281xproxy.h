@@ -13,7 +13,8 @@ pixel pix_alloc(void);
 #endif
 
 void render_open(void);
-void render(const pixel pixr);
-void render1(const pixel pixr);
 void render_close(void);
 
+void render(const pixel pixr);
+void render_1pwm(const unsigned short *pix);
+void render_1srgb(const pixel pix);

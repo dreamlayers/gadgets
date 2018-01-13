@@ -93,7 +93,19 @@ void render(const pixel pix)
     ws2811_render(&ledstring);
 }
 
-void render1(const pixel pix)
+void render_1pwm(const unsigned short *pix)
+{
+    unsigned int i;
+    uint32_t t = ((pix[0] >> 4) & 0xFF) |
+                 (((pix[1] >> 4) & 0xFF) << 8) |
+                 (((pix[2] >> 4) & 0xFF) << 16);
+    for (i = 0; i < LED_COUNT; i++) {
+        ledstring.channel[0].leds[i] = t;
+    }
+    ws2811_render(&ledstring);
+}
+
+void render_1srgb(const pixel pix)
 {
     unsigned int i;
     uint32_t t = srgb2pwm(pix[0]) |
@@ -104,6 +116,7 @@ void render1(const pixel pix)
     }
     ws2811_render(&ledstring);
 }
+
 void render_close(void)
 {
     int i, allblack = 1;

@@ -1,0 +1,1 @@
+gcc -g -I/home/pi/gitapps/rpi_ws281x/ ws281xproxy.c drv_rpi_ws281x.c -o ws281xproxy -lrt -lwiringPi -lws2811 -lm

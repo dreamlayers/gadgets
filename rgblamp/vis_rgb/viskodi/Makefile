@@ -6,8 +6,8 @@ PREFIX=/usr
 
 all: ${OUTLIB}
 
-$(OUTLIB): addon.o
-	$(CC) $(LDFLAGS) -o $@ $^ ../rgbm.o ../../librgblamp/librgblamp.a
+$(OUTLIB): addon.o ../rgbm.o ../../ws281xproxy/ws281x_rgb.o
+	$(CC) $(LDFLAGS) -o $@ $^ -lrt
 
 addon.o: addon.cpp
 	$(CC) $(CFLAGS) addon.cpp

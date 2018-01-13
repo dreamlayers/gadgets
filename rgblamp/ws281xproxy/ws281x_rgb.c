@@ -12,17 +12,46 @@ RGBAPI bool rgb_open(const char *fn) {
 }
 
 RGBAPI bool rgb_pwm_srgb(double r, double g, double b) {
-    msg.type = 0;
+    msg.type = WSCMD_SRGB;
     msg.rgb[0] = r;
     msg.rgb[1] = g;
     msg.rgb[2] = b;
     return mq_send(mq, (char *)&msg, sizeof(msg), 0) == 0;
 }
 
+#if 0
 int main(void)
 {
     printf("OPN: %i\n", rgb_open("foo"));
     perror("FOO");
     printf("SEND: %i\n", rgb_pwm_srgb(1, 0, 0));
     return 0;
+}
+#endif
+
+RGBAPI bool rgb_pwm(unsigned short r, unsigned short g, unsigned short b)
+{
+    msg.type = WSCMD_PWM;
+    msg.pwm[0] = r;
+    msg.pwm[1] = g;
+    msg.pwm[2] = b;
+    return mq_send(mq, (char *)&msg, sizeof(msg), 0) == 0;
+    return true;
+}
+
+RGBAPI bool rgb_matchpwm(unsigned short r, unsigned short g, unsigned short b)
+{
+    /* TODO */
+    return true;
+}
+
+RGBAPI bool rgb_flush(void)
+{
+    /* TODO */
+    return true;
+}
+
+RGBAPI void rgb_close(void)
+{
+    /* TODO */
 }

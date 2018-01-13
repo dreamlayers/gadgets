@@ -1,10 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <mqueue.h>
 #include "ws281xproxy.h"
 #include "ws281xproto.h"
 
-const ssize_t msglen[] = { sizeof(struct rgbmsg) };
+const ssize_t msglen[] = {
+    0,
+    sizeof(struct rgbmsg),
+    sizeof(struct rgbmsg)
+};
 
 void fatal(const char *s) __attribute__ ((noreturn));
 void fatal(const char *s)
@@ -13,8 +21,23 @@ void fatal(const char *s)
     exit(-1);
 }
 
+static int quitflag = 0;
+
+static void termination_handler(int signo)
+{
+    switch (signo) {
+    case SIGINT:
+    case SIGHUP:
+    case SIGQUIT:
+    case SIGTERM:
+        quitflag = 1;
+    }
+}
+
 int main(void)
 {
+    struct sigaction new_action, old_action;
+
     mqd_t mq;
     struct rgbmsg msg;
 
@@ -24,6 +47,22 @@ int main(void)
     attr.mq_msgsize = sizeof(msg);
     attr.mq_curmsgs = 0;
 
+
+    /* Set up the structure to specify the new action. */
+    new_action.sa_handler = termination_handler;
+    sigemptyset (&new_action.sa_mask);
+    new_action.sa_flags = 0;
+
+    sigaction (SIGINT, NULL, &old_action);
+    if (old_action.sa_handler != SIG_IGN)
+    sigaction (SIGINT, &new_action, NULL);
+    sigaction (SIGHUP, NULL, &old_action);
+    if (old_action.sa_handler != SIG_IGN)
+    sigaction (SIGHUP, &new_action, NULL);
+    sigaction (SIGTERM, NULL, &old_action);
+    if (old_action.sa_handler != SIG_IGN)
+    sigaction (SIGTERM, &new_action, NULL);
+
     umask(~(S_IRUSR | S_IWOTH));
     mq = mq_open("/ws281xproxy", O_RDONLY | O_CREAT, S_IRUSR | S_IWOTH, &attr);
     if (mq == (mqd_t)-1) {
@@ -32,7 +71,7 @@ int main(void)
     }
     render_open();
 
-    while (1) {
+    while (!quitflag) {
         ssize_t len = mq_receive(mq, (char *)&msg, sizeof(msg), NULL);
         if (len < 0) {
             perror("Failed to receive message");
@@ -47,13 +86,17 @@ int main(void)
             continue;
         }
         if (len != msglen[msg.type]) {
-            fprintf(stderr, "Invalid length message received\n");
+            fprintf(stderr, "Got %i bytes but should have %i for message %i\n",
+                    len, msglen[msg.type], msg.type);
             continue;
         }
 
         switch (msg.type) {
-        case 0:
-            render1(msg.rgb);
+        case WSCMD_SRGB:
+            render_1srgb(msg.rgb);
+            break;
+        case WSCMD_PWM:
+            render_1pwm(msg.pwm);
             break;
         default:
             fprintf(stderr, "Message not handled\n");
@@ -61,4 +104,6 @@ int main(void)
         }
 
     }
+
+    render_close();
 }
