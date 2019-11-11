@@ -24,7 +24,7 @@ static double parse_double(void)
     const char *s = parse_getnext();
     char *endptr;
     d = strtod(s, &endptr);
-    printf("D: %f\n", d);
+    DEBUG_PRINT("D: %f\n", d);
     if (*endptr == 0) {
         return d;
     } else {
@@ -59,7 +59,7 @@ static pixel parse_colorname(void)
 
 static pixel parse_rgb(pixel res)
 {
-    printf("RGB\n");
+    DEBUG_PRINT("RGB\n");
     if (parse_isnum()) {
         int i;
         res[0] = parse_zerotoone();
@@ -155,7 +155,7 @@ static void parse_main(void)
     while (1) {
         keyword looping;
 
-        printf("PARSE\n");
+        DEBUG_PRINT("PARSE\n");
         parse_rgb(&colorspec[specidx * COLORCNT]);
         colorkw[specidx++] = KW_NONE;
         if (parse_eof()) {
@@ -168,7 +168,7 @@ static void parse_main(void)
             }
 
             newtrans = parse_transition_keyword();
-            printf("%i\n", newtrans);
+            DEBUG_PRINT("%i\n", newtrans);
             if (newtrans == KW_NONE) parse_fatal("unknown keyword");
         }
 

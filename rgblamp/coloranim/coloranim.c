@@ -62,16 +62,18 @@ pixel pix_alloc(void) {
     return res;
 }
 
+#ifdef DEBUG
 static void pix_print(pixel pix) {
     unsigned int i, j;
     for (i = 0; i < PIXCNT; i++) {
-        printf("%u: ", i);
+        DEBUG_PRINT("%u: ", i);
         for (j = 0; j < COLORCNT; j++) {
-            printf("%f, ", pix[i * COLORCNT + j]);
+            DEBUG_PRINT("%f, ", pix[i * COLORCNT + j]);
         }
-        printf("\n");
+        DEBUG_PRINT("\n");
     }
 }
+#endif /* DEBUG */
 
 /* p = idx / (len - 1) */
 static inline double interp_one(double a, double b, double p)
@@ -146,7 +148,7 @@ static void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
         double t = stopwatch_elapsed();
         if (t > seconds) break;
         interp_fade(oldclr, newclr, t / seconds, cross);
-        //pix_print(cross);
+        /* pix_print(cross); */
         render(cross);
     }
 
@@ -158,7 +160,9 @@ void fx_transition(const pixel oldclr, keyword kw, double arg,
 {
     switch (kw) {
     case KW_NONE:
+#ifdef DEBUG
         pix_print(newclr);
+#endif /* DEBUG */
         render(newclr);
         break;
     case KW_CROSSFADE:
