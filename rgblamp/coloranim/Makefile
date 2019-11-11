@@ -1,6 +1,7 @@
 include ../../build/Makefile.config
 
 LIBRGBLAMP_DIR := ../librgblamp
+RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
 CFLAGS := $(CFLAGS)
 CC := gcc
 LIBS := -lm
@@ -21,9 +22,9 @@ EXTRA_DEPS += $(LIBRGBLAMP_DIR)/librgblamp.a
 LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
 
 else ifeq ($(DRIVER),rpi_ws281x)
-CFLAGS += -I/home/pi/gitapps/rpi_ws281x
+CFLAGS += -I$(RPI_WS281X_DIR)
 PIXCNT ?= 60
-LIBS += -lws2811 -lwiringPi
+LIBS += -L$(RPI_WS281X_DIR) -lws2811 -lwiringPi
 
 endif
 
