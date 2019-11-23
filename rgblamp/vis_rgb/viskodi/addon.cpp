@@ -2,8 +2,7 @@
 #define __cdecl
 #endif
 
-#include <kodi/xbmc_vis_types.h>
-#include <kodi/xbmc_vis_dll.h>
+#include <kodi/addon-instance/Visualization.h>
 
 #include <cstdlib>
 #include <cmath>
@@ -25,29 +24,32 @@ bool warnGiven = false;
 float audio_data[513];
 float audio_data_freq[513];
 
-
-extern "C" ADDON_STATUS ADDON_Create (void* hdl, void* props)
+class CRGBLampVisualization : public kodi::addon::CAddonBase,
+                         public kodi::addon::CInstanceVisualization
 {
-    if (!props)
-        return ADDON_STATUS_UNKNOWN;
+public:
+  CRGBLampVisualization();
+  bool Start(int channels, int samplesPerSec, int bitsPerSample, std::string songName) override;
+  void Stop(void) override;
+  void AudioData(const float* pAudioData, int iAudioDataLength,
+                 float* pFreqData, int iFreqDataLength) override;
+  void Render() override;
+  void GetInfo (bool &wantsFreq, int &syncDelay) override;
+};
 
-    //VIS_PROPS* visProps = (VIS_PROPS*) props;
-
-    if (!initialized) {
-        if (!rgbm_init())
-            return ADDON_STATUS_UNKNOWN;
+CRGBLampVisualization::CRGBLampVisualization()
+{
+    if (!initialized && rgbm_init())
         initialized = true;
-    }
-
-
-    return ADDON_STATUS_NEED_SETTINGS;
 }
 
-extern "C" void Start (int, int, int, const char*)
+bool CRGBLampVisualization::Start(int channels, int samplesPerSec,
+                             int bitsPerSample, std::string songName)
 {
+    return initialized;
 }
 
-extern "C" void AudioData (const float *pAudioData, int iAudioDataLength, float *pFreqData, int iFreqDataLength)
+void CRGBLampVisualization::AudioData(const float* pAudioData, int iAudioDataLength,                                 float* pFreqData, int iFreqDataLength)
 {
     if (initialized) {
         rgbm_render(pFreqData);
@@ -77,7 +79,7 @@ extern "C" void AudioData (const float *pAudioData, int iAudioDataLength, float 
 #endif
 }
 
-extern "C" void Render()
+void CRGBLampVisualization::Render()
 {
     /*for (unsigned long i = 0; i < 512; i++)
     {
@@ -89,77 +91,18 @@ extern "C" void Render()
     }*/
 }
 
-extern "C" void GetInfo (VIS_INFO* pInfo)
+void CRGBLampVisualization::GetInfo (bool &wantsFreq, int &syncDelay)
 {
-    pInfo->bWantsFreq = true;
-    pInfo->iSyncDelay = 0;
+    wantsFreq = true;
+    syncDelay = 0;
 }
 
-extern "C" bool OnAction (long flags, const void *param)
-{
-    return false;
-}
-
-extern "C" unsigned int GetPresets (char ***presets)
-{
-    return 0;
-}
-
-extern "C" unsigned GetPreset()
-{
-    return 0;
-}
-
-extern "C" bool IsLocked()
-{
-    return false;
-}
-
-extern "C" unsigned int GetSubModules (char ***names)
-{
-    return 0;
-}
-
-extern "C" void ADDON_Stop()
-{
-    return;
-}
-
-extern "C" void ADDON_Destroy()
+void CRGBLampVisualization::Stop(void)
 {
     if (initialized) {
         rgbm_shutdown();
         initialized = false;
     }
-    return;
 }
 
-extern "C" bool ADDON_HasSettings()
-{
-    return false;
-}
-
-extern "C" ADDON_STATUS ADDON_GetStatus()
-{
-    //    return ADDON_STATUS_UNKNOWN;
-
-    return ADDON_STATUS_OK;
-}
-
-extern "C" unsigned int ADDON_GetSettings (ADDON_StructSetting ***sSet)
-{
-    return 0;
-}
-
-extern "C" void ADDON_FreeSettings()
-{
-}
-
-extern "C" ADDON_STATUS ADDON_SetSetting (const char *strSetting, const void* value)
-{
-    return ADDON_STATUS_OK;
-}
-
-extern "C" void ADDON_Announce(const char *flag, const char *sender, const char *message, const void *data)
-{
-}
+ADDONCREATOR(CRGBLampVisualization);
