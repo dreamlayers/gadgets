@@ -33,30 +33,37 @@ static int get_unsigned_int(const struct json_mapping *m) {
     return n;
 }
 
-void get_color(int *r, int *g, int *b)
+void get_color(int *rgb)
 {
-    *r = get_unsigned_int(&json_color[0]);
-    *g = get_unsigned_int(&json_color[1]);
-    *b = get_unsigned_int(&json_color[2]);
+    int i, t;
+    for (i = 0; i < 3; i++) {
+        t = get_unsigned_int(&json_color[i]);
+        if (t >= 0) rgb[i] = t;
+    }
 }
 
 static struct json_mapping json_toplevel[] = {
     { "state", 5, JSMN_STRING, NULL, 0, NULL},
+    { "brightness", 10, JSMN_PRIMITIVE, NULL, 0, NULL},
     { "color", 5, JSMN_OBJECT, NULL, 0, json_color},
     { NULL, 0, JSMN_STRING, NULL, 0, NULL }
 };
 
-int get_state(void)
+void get_state(int *state)
 {
     if (json_toplevel[0].datalen == 3 &&
         !memcmp(json_toplevel[0].data, "OFF", 3)) {
-        return 0;
+        *state = 0;
     } else if (json_toplevel[0].datalen == 2 &&
                !memcmp(json_toplevel[0].data, "ON", 2)) {
-        return 1;
-    } else {
-        return -1;
+        *state = 1;
     }
+}
+
+void get_brightness(int *brightness)
+{
+    int newbright = get_unsigned_int(&json_toplevel[1]);
+    if (newbright >= 0) *brightness = newbright;
 }
 
 static void json_mapping_clear(struct json_mapping *m) {

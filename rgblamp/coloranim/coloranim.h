@@ -47,6 +47,7 @@ void fx_transition(const pixel oldclr, keyword kw, double arg,
 /* MQTT interface routines */
 
 int json_parse(const char *msg, int len);
-void get_color(int *r, int *g, int *b);
-int get_state(void);
 void mqtt_new_state(void);
+void get_state(int *state);
+void get_brightness(int *brightness);
+void get_color(int *rgb);

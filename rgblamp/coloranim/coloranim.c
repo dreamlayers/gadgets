@@ -189,27 +189,29 @@ int main(int argc, char **argv)
 }
 #else
 /* MQTT coloranim */
+#define MQTT_SCALE 255
 void mqtt_new_state(void)
 {
     static char col[3][20];
     static char *cmd[] = { "color", col[0], col[1], col[2] };
-    int r, g, b, state;
 
-    state = get_state();
+    static int state = 0;
+    static int rgb[3] = { MQTT_SCALE, MQTT_SCALE, MQTT_SCALE };
+    static int brightness = MQTT_SCALE;
 
-    if (state > 0) {
-        get_color(&r, &g, &b);
-        if (r < 0 || g < 0 || b < 0) {
-            r = 255;
-            g = 255;
-            b = 255;
+    get_state(&state);
+    get_brightness(&brightness);
+    get_color(rgb);
+
+    if (state) {
+        int i;
+        for (i = 0; i < 3; i++) {
+            snprintf(col[i], sizeof(col[0]), "%f",
+                     rgb[i] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0));
         }
-        snprintf(col[0], sizeof(col[0]), "%f", r / 255.0);
-        snprintf(col[1], sizeof(col[1]), "%f", g / 255.0);
-        snprintf(col[2], sizeof(col[2]), "%f", b / 255.0);
         parse_args(4, cmd);
     } else {
-        memcpy(col[0], "0", 1);
+        memcpy(col[0], "0", 2);
         parse_args(2, cmd);
     }
 }

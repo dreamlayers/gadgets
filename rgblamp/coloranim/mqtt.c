@@ -10,6 +10,7 @@ const char discovery[] = "{\
 \"schema\": \"json\", \
 \"command_topic\": \"homeassistant/light/" OBJECT_ID "/set\", \
 \"state_topic\": \"homeassistant/light/" OBJECT_ID "/state\", \
+\"brightness\": \"true\", \
 \"rgb\": \"true\"\
 }";
 
