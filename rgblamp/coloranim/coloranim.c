@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
 #include <sys/time.h>
 #include "coloranim.h"
 
@@ -174,6 +175,8 @@ void fx_transition(const pixel oldclr, keyword kw, double arg,
     }
 }
 
+#if 0
+/* Standalone command line coloranim */
 int main(int argc, char **argv)
 {
     render_open();
@@ -184,3 +187,31 @@ int main(int argc, char **argv)
 
     return 0;
 }
+#else
+/* MQTT coloranim */
+void mqtt_new_state(void)
+{
+    static char col[3][20];
+    static char *cmd[] = { "color", col[0], col[1], col[2] };
+    int r, g, b, state;
+
+    state = get_state();
+
+    if (state > 0) {
+        get_color(&r, &g, &b);
+        if (r < 0 || g < 0 || b < 0) {
+            r = 255;
+            g = 255;
+            b = 255;
+        }
+        snprintf(col[0], sizeof(col[0]), "%f", r / 255.0);
+        snprintf(col[1], sizeof(col[1]), "%f", g / 255.0);
+        snprintf(col[2], sizeof(col[2]), "%f", b / 255.0);
+        parse_args(4, cmd);
+    } else {
+        memcpy(col[0], "0", 1);
+        parse_args(2, cmd);
+    }
+}
+
+#endif

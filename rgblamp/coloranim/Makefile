@@ -2,9 +2,9 @@ include ../../build/Makefile.config
 
 LIBRGBLAMP_DIR := ../librgblamp
 RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
-CFLAGS := $(CFLAGS)
+CFLAGS := $(CFLAGS) -g
 CC := gcc
-LIBS := -lm
+LIBS := -lm -lmosquitto -ljsmn
 EXTRA_DEPS :=
 
 ifeq ($(DRIVER),)
@@ -34,7 +34,7 @@ endif
 
 #.PHONY : install uninstall all dummy
 
-SRCS := coloranim.c parser.c drv_$(DRIVER).c
+SRCS := coloranim.c parser.c drv_$(DRIVER).c mqtt.c json.c
 TARGET := coloranim$(EXESUFFIX)
 OBJS := $(SRCS:%.c=%.o)
 
@@ -50,3 +50,5 @@ parser.o: parser.c coloranim.h Makefile
 drv_rgblamp.o: $(LIBRGBLAMP_DIR)/librgblamp.h \
                coloranim.h Makefile
 drv_$(DRIVER).o: drv_$(DRIVER).c coloranim.h Makefile
+mqtt.o: mqtt.c coloranim.h Makefile
+json.o: json.c coloranim.h Makefile

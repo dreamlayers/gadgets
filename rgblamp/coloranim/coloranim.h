@@ -43,3 +43,10 @@ void fx_makestate(const pixel colorspec, const keyword *colorkw,
                   pixel dest);
 void fx_transition(const pixel oldclr, keyword kw, double arg,
                    const pixel newclr);
+
+/* MQTT interface routines */
+
+int json_parse(const char *msg, int len);
+void get_color(int *r, int *g, int *b);
+int get_state(void);
+void mqtt_new_state(void);
