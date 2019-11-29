@@ -142,7 +142,7 @@ int parse_main(void)
         AFTER_COLOR,
     };
 
-    while (1) {
+    while (!cmd_cb_pollquit()) {
         keyword looping;
 
         DEBUG_PRINT("PARSE\n");

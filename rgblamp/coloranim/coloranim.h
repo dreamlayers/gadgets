@@ -1,3 +1,12 @@
+/* FIXME parts of signd.h are here so the socket stuff doesn't need to be
+ * included when only these parts are needed
+ */
+
+void cmd_enq_string(int cmd, char *data, unsigned int len);
+int cmd_cb_pollquit(void);
+
+/* For debugging */
+
 #ifdef DEBUG
 #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else

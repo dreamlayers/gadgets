@@ -6,9 +6,6 @@
 #include <sys/time.h>
 #include "coloranim.h"
 
-/* FIXME */
-void cmd_enq_string(int cmd, char *data, unsigned int len);
-
 void fatal(const char *s) __attribute__ ((noreturn));
 void fatal(const char *s)
 {
@@ -149,7 +146,7 @@ static void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
     pixel cross = pix_alloc();
 
     stopwatch_start();
-    while (1) {
+    while (!cmd_cb_pollquit()) {
         double t = stopwatch_elapsed();
         if (t > seconds) break;
         interp_fade(oldclr, newclr, t / seconds, cross);
