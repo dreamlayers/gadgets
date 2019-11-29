@@ -85,7 +85,7 @@ static int parse_signd_fetch(char *buf)
 {
     int l;
 
-    if (curanim_p == NULL) parse_fatal("parse past end of string");
+    if (curanim_p == NULL) return -1; /* parse past end of string */
     l = xsc_bfrtoken(buf, sizeof(curanim_buf) - 1,
                      &curanim_bp, &curanim_p, &curanim_remain);
     buf[l] = 0;
@@ -98,7 +98,7 @@ static const char *parse_signd_peeknext(void)
         curanim_peeklen = parse_signd_fetch(curanim_peekbuf);
     }
     /* printf("PEEK: <%s>\n", curanim_peekbuf); */
-    return curanim_peekbuf;
+    return (curanim_peeklen >= 0) ? curanim_peekbuf : NULL;
 }
 
 static const char *parse_signd_getnext(void)
@@ -106,11 +106,11 @@ static const char *parse_signd_getnext(void)
     if (curanim_peeklen >= 0) {
         memcpy(curanim_buf, curanim_peekbuf, curanim_peeklen + 1);
         curanim_peeklen = -1;
+        return curanim_buf;
     } else {
-        parse_signd_fetch(curanim_buf);
+        int l = parse_signd_fetch(curanim_buf);
+        return (l >= 0) ? curanim_buf : NULL;
     }
-    /* printf("GET: <%s>\n", curanim_buf); */
-    return curanim_buf;
 }
 
 static int parse_signd_eof(void)
@@ -141,9 +141,7 @@ static int sc_coloranim(scmdblk *scb)
     parse_rewind = parse_signd_rewind;
 
     /* FIXME notify after one loop */
-    parse_main();
-
-    return 0;
+    return parse_main() ? -1 : 0;
 }
 
 int cmd_init(const char *device) {

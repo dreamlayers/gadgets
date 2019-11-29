@@ -116,16 +116,16 @@ static void fx_fill(const pixel clr, pixel dest)
     }
 }
 
-void fx_makestate(const pixel colorspec, const keyword *colorkw,
-                  unsigned int numspec,
-                  pixel dest)
+int fx_makestate(const pixel colorspec, const keyword *colorkw,
+                 unsigned int numspec,
+                 pixel dest)
 {
     switch (colorkw[0]) {
     case KW_NONE:
         if (numspec == 1) {
             fx_fill(&colorspec[0], dest);
         } else {
-            parse_fatal("color keyword expected");
+            return -1; /* color keyword expected */
         }
         break;
 #if PIXCNT > 1
@@ -133,14 +133,15 @@ void fx_makestate(const pixel colorspec, const keyword *colorkw,
         if (numspec == 2) {
             interp_gradient(&colorspec[0], &colorspec[COLORCNT], dest);
         } else {
-            parse_fatal("multiple point gradient unimplemented");
+            return -1; /* multiple point gradient unimplemented */
         }
         break;
 #endif
     default:
-        parse_fatal("bad color keyword");
+        return -1; /* bad color keyword */
         break;
     }
+    return 0;
 }
 
 static void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
@@ -159,8 +160,8 @@ static void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
     free(cross);
 }
 
-void fx_transition(const pixel oldclr, keyword kw, double arg,
-                   const pixel newclr)
+int fx_transition(const pixel oldclr, keyword kw, double arg,
+                  const pixel newclr)
 {
     switch (kw) {
     case KW_NONE:
@@ -173,9 +174,10 @@ void fx_transition(const pixel oldclr, keyword kw, double arg,
         fx_crossfade(oldclr, newclr, arg);
         break;
     default:
-        parse_fatal("bad transition keyword");
+        return -1; /* bad transition keyword" */
         break;
     }
+    return 0;
 }
 
 #if 0

@@ -32,6 +32,7 @@ void (*parse_rewind)(void);
 /* Parser routines */
 
 typedef enum {
+    KW_ERROR = -1,
     KW_NONE = 0,
     EXPECT_COLOR,
     KW_GRADIENT,
@@ -40,17 +41,16 @@ typedef enum {
     KW_REPEAT
 } keyword;
 
-void parse_fatal(const char *s);
 void parse_args(int argc, char **argv);
-void parse_main(void);
+int parse_main(void);
 
 /* Effect routines */
 
-void fx_makestate(const pixel colorspec, const keyword *colorkw,
-                  unsigned int numspec,
-                  pixel dest);
-void fx_transition(const pixel oldclr, keyword kw, double arg,
-                   const pixel newclr);
+int fx_makestate(const pixel colorspec, const keyword *colorkw,
+                 unsigned int numspec,
+                 pixel dest);
+int fx_transition(const pixel oldclr, keyword kw, double arg,
+                  const pixel newclr);
 
 /* MQTT interface routines */
 

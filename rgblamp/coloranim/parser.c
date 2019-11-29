@@ -11,35 +11,23 @@ const char *(*parse_peeknext)(void) = NULL;
 int (*parse_eof)(void) = NULL;
 void (*parse_rewind)(void) = NULL;
 
-void parse_fatal(const char *s) __attribute__ ((noreturn));
-void parse_fatal(const char *s)
+static int parse_double(double *d)
 {
-    fprintf(stderr, "Fatal parse error: %s\n", s);
-    exit(-1);
-}
-
-static double parse_double(void)
-{
-    double d;
     const char *s = parse_getnext();
     char *endptr;
-    d = strtod(s, &endptr);
-    DEBUG_PRINT("D: %f\n", d);
-    if (*endptr == 0) {
-        return d;
-    } else {
-        parse_fatal("bad floating point value");
-    }
+    if (s == NULL) return -1;
+    *d = strtod(s, &endptr);
+    DEBUG_PRINT("D: %f\n", *d);
+    return (*endptr == 0) ? 0 : -1;
 }
 
 static double parse_zerotoone(void)
 {
-    double d = parse_double();
-    if (d >= 0 && d <= 1.0) {
-        return d;
-    } else {
-        parse_fatal("value should be between 0 and 1 inclusive");
-    }
+    double d;
+    int r;
+
+    r = parse_double(&d);
+    return (r == 0 && d >= 0 && d <= 1.0) ? d : -1.0;
 }
 
 static int parse_isnum(void)
@@ -52,29 +40,26 @@ static int parse_isnum(void)
     }
 }
 
-static pixel parse_colorname(void)
-{
-    parse_fatal("color names not implemented");
-}
-
-static pixel parse_rgb(pixel res)
+static int parse_rgb(pixel res)
 {
     DEBUG_PRINT("RGB\n");
     if (parse_isnum()) {
         int i;
         res[0] = parse_zerotoone();
+        if (res[0] < 0) return -1;
         if (parse_isnum()) {
             for (i = 1; i < components; i++) {
                 res[i] = parse_zerotoone();
+                if (res[i] < 0) return -1;
             }
         } else {
             for (i = 1; i < components; i++) {
                 res[i] = res[0];
             }
         }
-        return res;
+        return 0;
     } else {
-        return parse_colorname();
+        return -1; /* Color names not supported */
     }
 }
 
@@ -87,6 +72,7 @@ static keyword parse_keyword(const keywordmap *keywords)
 {
     const char *s = parse_peeknext();
     const keywordmap *tok = &keywords[0];
+    if (s == NULL) return KW_ERROR;
     while (tok->name != NULL) {
         if (strcmp(tok->name, s) == 0) {
             (void)parse_getnext();
@@ -117,13 +103,17 @@ static keyword parse_transition_keyword(void)
 }
 
 static double parse_transarg(keyword kw) {
+    double t = 0.0;
     switch (kw) {
     case KW_CROSSFADE:
-        return parse_double();
+        if (parse_double(&t) != 0) {
+            return -1.0;
+        }
+        break;
     default:
-        return 0.0;
         break;
     }
+    return t;
 }
 
 static keyword parse_looping_keyword(void)
@@ -135,7 +125,7 @@ static keyword parse_looping_keyword(void)
     return parse_keyword(kw_looping);
 }
 
-void parse_main(void)
+int parse_main(void)
 {
     keyword kw = EXPECT_COLOR;
     keyword trans = KW_NONE, newtrans;
@@ -156,25 +146,27 @@ void parse_main(void)
         keyword looping;
 
         DEBUG_PRINT("PARSE\n");
-        parse_rgb(&colorspec[specidx * COLORCNT]);
+        if (parse_rgb(&colorspec[specidx * COLORCNT]) != 0) return -1;
         colorkw[specidx++] = KW_NONE;
         if (parse_eof()) {
             newtrans = KW_NONE;
         } else {
             kw = parse_color_keyword();
-            if (kw != KW_NONE) {
+            if (kw == KW_ERROR) {
+                return -1;
+            } else if (kw != KW_NONE) {
                 colorkw[specidx - 1] = kw;
                 continue;
             }
 
             newtrans = parse_transition_keyword();
             DEBUG_PRINT("%i\n", newtrans);
-            if (newtrans == KW_NONE) parse_fatal("unknown keyword");
+            if (newtrans == KW_ERROR || newtrans == KW_NONE) return -1;
         }
 
         /* This actually does the previous transition, not the one just read */
-        fx_makestate(colorspec, colorkw, specidx, newclr);
-        fx_transition(oldclr, trans, transarg, newclr);
+        if (fx_makestate(colorspec, colorkw, specidx, newclr) != 0) return -1;
+        if (fx_transition(oldclr, trans, transarg, newclr) != 0) return -1;
 
         if (parse_eof()) break;
 
@@ -186,6 +178,7 @@ void parse_main(void)
         newclr = tempclr;
 
         transarg = parse_transarg(trans);
+        if (transarg < 0) return -1;
 
         looping = parse_looping_keyword();
         switch (looping) {
@@ -195,11 +188,13 @@ void parse_main(void)
         case KW_NONE:
             break;
         default:
-            parse_fatal("unknown looping keyword");
+            return -1;
         }
     }
+    return 0;
 }
 
+#if 0
 /* --- command line argument parser --- */
 
 static const char **sargv;
@@ -238,3 +233,4 @@ void parse_args(int argc, char **argv)
     parse_rewind = parse_args_rewind;
     parse_main();
 }
+#endif /* 0 */
