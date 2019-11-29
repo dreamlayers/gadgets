@@ -97,6 +97,7 @@ static const char *parse_signd_peeknext(void)
     if (curanim_peeklen < 0) {
         curanim_peeklen = parse_signd_fetch(curanim_peekbuf);
     }
+    /* printf("PEEK: <%s>\n", curanim_peekbuf); */
     return curanim_peekbuf;
 }
 
@@ -108,6 +109,7 @@ static const char *parse_signd_getnext(void)
     } else {
         parse_signd_fetch(curanim_buf);
     }
+    /* printf("GET: <%s>\n", curanim_buf); */
     return curanim_buf;
 }
 
@@ -146,6 +148,7 @@ static int sc_coloranim(scmdblk *scb)
 
 int cmd_init(const char *device) {
     render_open();
+    mqtt_init();
     /* FIXME coloranim_setabortpoll(cmd_cb_pollquit); */
     return 0;
 }
@@ -156,6 +159,7 @@ int cmd_clear(void) {
 }
 
 void cmd_cleanup(void) {
+    mqtt_quit();
     render_close();
 }
 

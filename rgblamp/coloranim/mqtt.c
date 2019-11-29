@@ -76,15 +76,15 @@ static void my_log_callback(struct mosquitto *mosq, void *userdata,
 }
 #endif
 
-#if 0
+static struct mosquitto *mosq = NULL;
+
 /* FIXME MQTT needs initializing */
-int main(int argc, char *argv[])
+int mqtt_init(void)
 {
     char *host = "localhost";
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
-    struct mosquitto *mosq = NULL;
 
     mosquitto_lib_init();
     mosq = mosquitto_new(NULL, clean_session, NULL);
@@ -106,13 +106,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    render_open();
+    return mosquitto_loop_start(mosq);
+}
 
-    mosquitto_loop_forever(mosq, -1, 1);
+void mqtt_quit()
+{
+    mosquitto_loop_stop(mosq, true);
 
     render_close();
     mosquitto_destroy(mosq);
     mosquitto_lib_cleanup();
-    return 0;
 }
-#endif

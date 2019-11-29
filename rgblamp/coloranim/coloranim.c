@@ -6,6 +6,9 @@
 #include <sys/time.h>
 #include "coloranim.h"
 
+/* FIXME */
+void cmd_enq_string(int cmd, char *data, unsigned int len);
+
 void fatal(const char *s) __attribute__ ((noreturn));
 void fatal(const char *s)
 {
@@ -192,8 +195,8 @@ int main(int argc, char **argv)
 #define MQTT_SCALE 255
 void mqtt_new_state(void)
 {
-    static char col[3][20];
-    static char *cmd[] = { "color", col[0], col[1], col[2] };
+    //static char col[3][20];
+    //static char *cmd[] = { "color", col[0], col[1], col[2] };
 
     static int state = 0;
     static int rgb[3] = { MQTT_SCALE, MQTT_SCALE, MQTT_SCALE };
@@ -204,15 +207,15 @@ void mqtt_new_state(void)
     get_color(rgb);
 
     if (state) {
-        int i;
-        for (i = 0; i < 3; i++) {
-            snprintf(col[i], sizeof(col[0]), "%f",
-                     rgb[i] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0));
-        }
-        parse_args(4, cmd);
-    } else {
-        memcpy(col[0], "0", 2);
-        parse_args(2, cmd);
+        static char buf[100];
+        int l;
+        l = snprintf(buf, sizeof(buf), "%f %f %f",
+                     rgb[0] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
+                     rgb[1] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
+                     rgb[2] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0));
+        cmd_enq_string(2, buf, l);
+                         } else {
+        cmd_enq_string(2, "0", 1);
     }
 }
 

@@ -44,7 +44,7 @@ typedef struct scmdblk_s {
   unsigned int flags;
   struct scmdblk_s *prev, *next;
   unsigned char *data;
-  volatile void (*freedata)(unsigned char *);
+  /* volatile void (*freedata)(unsigned char *); unneeded, always chainhdr */
   volatile unsigned char *response;
   volatile int result;
 #ifdef WIN32
@@ -177,6 +177,9 @@ int sc_r_help(scmdblk *scb, SOCKET sock);
 /* Keepalive handling for TCP connections */
 int cmd_need_keepalive(void);
 int cmd_call_keepalive(void);
+
+/* Interface for sending commands to daemon from same process */
+void cmd_enq_string(int cmd, char *data, unsigned int len);
 
 #ifdef __cplusplus
 }

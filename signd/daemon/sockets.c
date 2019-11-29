@@ -168,6 +168,26 @@ static void freescb(scmdblk *scb) {
   }
 }
 
+static scmdblk *scb_alloc_init(void) {
+    scmdblk *scb;
+    
+    scb = (scmdblk *)malloc(sizeof(scmdblk));
+    scb->flags = 0;
+#ifndef WIN32
+    scb->done = false;
+#endif
+    scb->data = NULL;
+    scb->response = NULL;
+#ifdef WIN32
+    scb->event = NULL;
+#endif
+    scb->refcnt = 1;
+#ifndef WIN32
+    pthread_mutex_init(&scb->refcnt_mtx, NULL);
+#endif
+    return scb;
+}
+
 #ifdef WIN32
 static DWORD WINAPI client(LPVOID lpParameter) {
   SOCKET sock;
@@ -210,21 +230,8 @@ static void *client(void *lpParameter) {
   }
 
   while (1) {
-    /* Allocate command block */
-    scb = (scmdblk *)malloc(sizeof(scmdblk));
-    scb->flags = 0;
-#ifndef WIN32
-    scb->done = false;
-#endif
-    scb->data = NULL;
-    scb->response = NULL;
-#ifdef WIN32
-    scb->event = NULL;
-#endif
-    scb->refcnt = 1;
-#ifndef WIN32
-    pthread_mutex_init(&scb->refcnt_mtx, NULL);
-#endif
+    scb = scb_alloc_init();
+
     /* Skip to command */
     while (1) {
       if (recv(sock, &c, 1, 0) != 1) goto clifault;
@@ -779,3 +786,30 @@ int main(int argc, char **argv) {
     // FIXME? cleanup_socket();
 }
 #endif
+
+void cmd_enq_string(int cmd, char *data, unsigned int len) {
+    scmdblk *scb;
+    chainhdr *ch;
+
+    scb = scb_alloc_init();
+    scb->flags |= SFLAG_QUEUE;
+    scb->cmd = cmd;
+
+    /* TODO: Support flags */
+    
+    /* Copy data */
+    if (len > 0) {
+        ch = (chainhdr *)malloc(sizeof(chainhdr) + len);
+        ch->next = NULL;
+        ch->size = len;
+        memcpy(((char *)ch) + sizeof(chainhdr), data, len);
+        scb->data = (unsigned char *)ch;
+    }
+
+    /* Enqueue command */
+    scb->refcnt++;  /* Still only known from this end, so no need for mutex */
+    enqcmd(scb);
+
+    /* free the scb from this end */
+    freescb(scb);
+}
