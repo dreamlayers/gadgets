@@ -1,11 +1,18 @@
 include ../../build/Makefile.config
 
+SIGND_DIR := ../../signd
 LIBRGBLAMP_DIR := ../librgblamp
 RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
-CFLAGS := $(CFLAGS) -g
+CFLAGS := $(CFLAGS) -g -I$(SIGND_DIR)/daemon
 CC := gcc
 LIBS := -lm -lmosquitto -ljsmn
 EXTRA_DEPS :=
+
+ifeq ($(PLATFORM),Windows)
+FIXME
+else
+LIBS := $(LIBS) -lpthread
+endif
 
 ifeq ($(DRIVER),)
 ifeq ($(PLATFORM),Windows)
@@ -34,11 +41,11 @@ endif
 
 #.PHONY : install uninstall all dummy
 
-SRCS := coloranim.c parser.c drv_$(DRIVER).c mqtt.c json.c
+SRCS := coloranim.c parser.c drv_$(DRIVER).c mqtt.c json.c rgbcmds.c
 TARGET := coloranim$(EXESUFFIX)
 OBJS := $(SRCS:%.c=%.o)
 
-$(TARGET): $(OBJS) $(EXTRA_DEPS)
+$(TARGET): $(OBJS) $(EXTRA_DEPS) $(SIGND_DIR)/daemon/signd.a
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
 .PHONY : clean
@@ -52,3 +59,5 @@ drv_rgblamp.o: $(LIBRGBLAMP_DIR)/librgblamp.h \
 drv_$(DRIVER).o: drv_$(DRIVER).c coloranim.h Makefile
 mqtt.o: mqtt.c coloranim.h Makefile
 json.o: json.c coloranim.h Makefile
+rgbcmds.o: rgbcmds.c coloranim.h \
+           $(SIGND_DIR)/daemon/signd.h $(SIGND_DIR)/sdprotocol.h Makefile

@@ -76,6 +76,8 @@ static void my_log_callback(struct mosquitto *mosq, void *userdata,
 }
 #endif
 
+#if 0
+/* FIXME MQTT needs initializing */
 int main(int argc, char *argv[])
 {
     char *host = "localhost";
@@ -113,3 +115,4 @@ int main(int argc, char *argv[])
     mosquitto_lib_cleanup();
     return 0;
 }
+#endif

@@ -6,10 +6,10 @@
 
 const unsigned int components = 3;
 
-static const char *(*parse_getnext)(void) = NULL;
-static const char *(*parse_peeknext)(void) = NULL;
-static int (*parse_eof)(void) = NULL;
-static void (*parse_rewind)(void) = NULL;
+const char *(*parse_getnext)(void) = NULL;
+const char *(*parse_peeknext)(void) = NULL;
+int (*parse_eof)(void) = NULL;
+void (*parse_rewind)(void) = NULL;
 
 void parse_fatal(const char *s) __attribute__ ((noreturn));
 void parse_fatal(const char *s)
@@ -135,7 +135,7 @@ static keyword parse_looping_keyword(void)
     return parse_keyword(kw_looping);
 }
 
-static void parse_main(void)
+void parse_main(void)
 {
     keyword kw = EXPECT_COLOR;
     keyword trans = KW_NONE, newtrans;

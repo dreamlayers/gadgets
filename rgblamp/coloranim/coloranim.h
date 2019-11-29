@@ -22,6 +22,13 @@ void render_open(void);
 void render(const pixel pixr);
 void render_close(void);
 
+/* Passing data to the parser */
+
+const char *(*parse_getnext)(void);
+const char *(*parse_peeknext)(void);
+int (*parse_eof)(void);
+void (*parse_rewind)(void);
+
 /* Parser routines */
 
 typedef enum {
@@ -35,6 +42,7 @@ typedef enum {
 
 void parse_fatal(const char *s);
 void parse_args(int argc, char **argv);
+void parse_main(void);
 
 /* Effect routines */
 
