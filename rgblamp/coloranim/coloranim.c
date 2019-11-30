@@ -6,6 +6,11 @@
 #include <sys/time.h>
 #include "coloranim.h"
 
+#ifdef WIN32
+/* FIXME Unused SOCKS part of libmosquitto needs this. */
+void inet_pton(void) { exit(-1); }
+#endif
+
 void fatal(const char *s) __attribute__ ((noreturn));
 void fatal(const char *s)
 {

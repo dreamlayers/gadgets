@@ -1,4 +1,7 @@
 #include <stdio.h>
+#ifdef WIN32
+#define LIBMOSQUITTO_STATIC
+#endif
 #include <mosquitto.h>
 #include "coloranim.h"
 

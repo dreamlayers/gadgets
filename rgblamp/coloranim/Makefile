@@ -4,12 +4,22 @@ SIGND_DIR := ../../signd
 LIBRGBLAMP_DIR := ../librgblamp
 RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
 CFLAGS := $(CFLAGS) -g -I$(SIGND_DIR)/daemon
-CC := gcc
 LIBS := -lm -lmosquitto -ljsmn
 EXTRA_DEPS :=
 
+.PHONY: all
+all: coloranim$(EXESUFFIX)
+
 ifeq ($(PLATFORM),Windows)
-FIXME
+
+LIBS := -L/usr/local/cross-tools/i686-w64-mingw32/lib $(LIBS) -lws2_32
+CFLAGS := -I/usr/local/cross-tools/i686-w64-mingw32/include $(CFLAGS) -mwindows
+
+# FIXME Add Windows files for this program in particular
+lsd-res.o: ../../ledsign/lsd/lsd.rc ../../ledsign/lsd/LEDsign.ico
+	windres -I$(SIGND_DIR)/daemon $< $@
+OBJS := $(OBJS) lsd-res.o
+
 else
 LIBS := $(LIBS) -lpthread
 endif
