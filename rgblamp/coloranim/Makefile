@@ -51,7 +51,8 @@ endif
 
 #.PHONY : install uninstall all dummy
 
-SRCS := coloranim.c parser.c drv_$(DRIVER).c mqtt.c json.c rgbcmds.c
+SRCS := coloranim.c parser.c drv_$(DRIVER).c mqtt.c json.c rgbcmds.c \
+        presets.c
 TARGET := coloranim$(EXESUFFIX)
 OBJS := $(SRCS:%.c=%.o)
 

@@ -46,6 +46,7 @@ static struct json_mapping json_toplevel[] = {
     { "state", 5, JSMN_STRING, NULL, 0, NULL},
     { "brightness", 10, JSMN_PRIMITIVE, NULL, 0, NULL},
     { "color", 5, JSMN_OBJECT, NULL, 0, json_color},
+    { "effect", 6, JSMN_STRING, NULL, 0, NULL},
     { NULL, 0, JSMN_STRING, NULL, 0, NULL }
 };
 
@@ -64,6 +65,18 @@ void get_brightness(int *brightness)
 {
     int newbright = get_unsigned_int(&json_toplevel[1]);
     if (newbright >= 0) *brightness = newbright;
+}
+
+void get_effect(char *effect, int l)
+{
+    if (json_toplevel[3].data == NULL
+        || json_toplevel[3].datalen > (l - 1)) {
+        effect[0] = 0;
+    } else {
+        memcpy(effect, json_toplevel[3].data,
+               json_toplevel[3].datalen);
+        effect[json_toplevel[3].datalen] = 0;
+    }
 }
 
 static void json_mapping_clear(struct json_mapping *m) {

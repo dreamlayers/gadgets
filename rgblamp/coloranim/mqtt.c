@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #ifdef WIN32
 #define LIBMOSQUITTO_STATIC
@@ -8,14 +10,42 @@
 #define NAME "Behind TV"
 #define OBJECT_ID "ws281x"
 
-const char discovery[] = "{\
+static const char discovery_1[] = "{\
 \"name\": \"" NAME "\", \
 \"schema\": \"json\", \
 \"command_topic\": \"homeassistant/light/" OBJECT_ID "/set\", \
 \"state_topic\": \"homeassistant/light/" OBJECT_ID "/state\", \
 \"brightness\": \"true\", \
-\"rgb\": \"true\"\
-}";
+\"rgb\": \"true\", \
+\"effect\": \"true\", \
+\"effect_list\": ";
+
+static const char discovery_3[] = " }";
+
+static const char *discovery = NULL;
+int discovery_len = 0;
+
+static void build_discovery(void)
+{
+    char *d, *p;
+    int l_1, l_2, l_3;
+
+    l_1 = strlen(discovery_1);
+    l_2 = effect_list_len();
+    l_3 = strlen(discovery_3);
+    d = malloc(l_1 + l_2 + l_3 + 1);
+    if (d == NULL) fatal("Out of memory.");
+
+    memcpy(d, discovery_1, l_1);
+    p = d + l_1;
+    effect_list_fill(p);
+    p += l_2;
+    memcpy(p, discovery_3, l_3);
+    p += l_3;
+    *p = 0;
+    discovery_len = p - d;
+    discovery = d;
+}
 
 static void my_message_callback(struct mosquitto *mosq, void *userdata,
                                 const struct mosquitto_message *message)
@@ -47,10 +77,13 @@ static void my_connect_callback(struct mosquitto *mosq, void *userdata,
         mosquitto_subscribe(mosq, NULL,
                             "homeassistant/light/" OBJECT_ID "/set", 2);
         /* Publish Home Assistant discovery message */
+        if (discovery == NULL) {
+            build_discovery();
+        }
         mosquitto_publish(mosq, NULL,
                           "homeassistant/light/" OBJECT_ID "/config",
                           /* Don't send the null terminator! */
-                          sizeof(discovery)-1, discovery,
+                          discovery_len, discovery,
                           1, 1);
     } else {
         fprintf(stderr, "Connect failed\n");
@@ -84,7 +117,7 @@ static struct mosquitto *mosq = NULL;
 /* FIXME MQTT needs initializing */
 int mqtt_init(void)
 {
-    char *host = "localhost";
+    char *host = "192.168.1.24";
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;

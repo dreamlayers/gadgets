@@ -71,3 +71,10 @@ void mqtt_new_state(void);
 void get_state(int *state);
 void get_brightness(int *brightness);
 void get_color(int *rgb);
+void get_effect(char *effect, int len);
+
+/* Effect routines */
+
+int effect_list_len(void);
+void effect_list_fill(char *p);
+const char *preset_get(const char *name);

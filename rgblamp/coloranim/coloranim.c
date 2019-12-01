@@ -205,20 +205,26 @@ void mqtt_new_state(void)
     static int state = 0;
     static int rgb[3] = { MQTT_SCALE, MQTT_SCALE, MQTT_SCALE };
     static int brightness = MQTT_SCALE;
+    static char effect[40];
 
     get_state(&state);
     get_brightness(&brightness);
     get_color(rgb);
+    get_effect(effect, sizeof(effect));
 
     if (state) {
-        static char buf[100];
-        int l;
-        l = snprintf(buf, sizeof(buf), "%f %f %f",
-                     rgb[0] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
-                     rgb[1] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
-                     rgb[2] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0));
-        cmd_enq_string(2, buf, l);
-                         } else {
+        if (effect[0] == 0) {
+            static char buf[100];
+            int l;
+            l = snprintf(buf, sizeof(buf), "%f %f %f",
+                         rgb[0] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
+                         rgb[1] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
+                         rgb[2] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0));
+            cmd_enq_string(2, buf, l);
+        } else {
+            cmd_enq_string(3, effect, strlen(effect));
+        }
+    } else {
         cmd_enq_string(2, "0", 1);
     }
 }
