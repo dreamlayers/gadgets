@@ -9,6 +9,10 @@ struct preset {
 };
 
 const struct preset builtin_presets[] = {
+    { "HSV_hue_rotation", "1 0 0 in 5 1 1 0 in 5 0 1 0 in 5 0 1 1 in 5 0 0 1 in 5 1 0 1 in 5 repeat" },
+#if PIXCNT > 1
+    { "red_and_green_sides_exchange", "1 0 0 to 0 1 0 in 10 0 1 0 to 1 0 0 in 10 repeat" },
+#endif
     { "pulsate", "0.5 in 2 1 in 2 repeat" },
     { "red_green", "1 0 0 in 2 0 1 0 in 2 repeat" },
     { NULL, NULL }
