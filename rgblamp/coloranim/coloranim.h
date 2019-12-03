@@ -46,6 +46,7 @@ typedef enum {
     KW_NONE = 0,
     EXPECT_COLOR,
     KW_GRADIENT,
+    KW_SOLID,
     KW_CROSSFADE,
     KW_FOR,
     KW_REPEAT

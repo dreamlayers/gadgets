@@ -87,6 +87,7 @@ static keyword parse_color_keyword(void)
 {
     const keywordmap kw_color[] = {
         { "to", KW_GRADIENT },
+        { ":", KW_SOLID },
         { NULL, KW_NONE }
     };
     return parse_keyword(kw_color);
@@ -147,13 +148,14 @@ int parse_main(void)
     double transarg = 0.0;
 
     unsigned int specidx = 0;
-    keyword colorkw[60];
+    keyword colorkw[PIXCNT];
     pixel tempclr;
 
     while (!cmd_cb_pollquit()) {
         keyword kw;
 
         DEBUG_PRINT("PARSE\n");
+        if (specidx >= PIXCNT) return -1;
         if (parse_rgb(&colorspec[specidx * COLORCNT]) != 0) return -1;
         colorkw[specidx++] = KW_NONE;
         if (!parse_eof()) {

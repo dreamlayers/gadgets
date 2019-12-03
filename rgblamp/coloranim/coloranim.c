@@ -115,10 +115,10 @@ static void interp_gradient(const pixel a, const pixel b, pixel r)
 }
 #endif
 
-static void fx_fill(const pixel clr, pixel dest)
+static void fx_fill(const pixel clr, pixel dest, int count)
 {
-    unsigned int i, j;
-    for (i = 0; i < (PIXCNT * 3); i += 3) {
+    unsigned int i, j, end = count * 3;
+    for (i = 0; i < end; i += 3) {
         for (j = 0; j < COLORCNT; j++) {
             dest[i + j] = clr[j];
         }
@@ -132,7 +132,7 @@ int fx_makestate(const pixel colorspec, const keyword *colorkw,
     switch (colorkw[0]) {
     case KW_NONE:
         if (numspec == 1) {
-            fx_fill(&colorspec[0], dest);
+            fx_fill(&colorspec[0], dest, PIXCNT);
         } else {
             return -1; /* color keyword expected */
         }
@@ -141,6 +141,15 @@ int fx_makestate(const pixel colorspec, const keyword *colorkw,
     case KW_GRADIENT:
         if (numspec == 2) {
             interp_gradient(&colorspec[0], &colorspec[COLORCNT], dest);
+        } else {
+            return -1; /* multiple point gradient unimplemented */
+        }
+        break;
+    case KW_SOLID:
+        if (numspec == 2) {
+            fx_fill(&colorspec[0], &dest[0], PIXCNT / 2);
+            fx_fill(&colorspec[COLORCNT], &dest[(PIXCNT / 2) * COLORCNT],
+                    PIXCNT - PIXCNT / 2);
         } else {
             return -1; /* multiple point gradient unimplemented */
         }
