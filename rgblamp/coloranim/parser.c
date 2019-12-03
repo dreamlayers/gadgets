@@ -143,29 +143,20 @@ void parse_quit(void)
 
 int parse_main(void)
 {
-    keyword kw = EXPECT_COLOR;
-    keyword trans = KW_NONE, newtrans;
+    keyword trans = KW_NONE;
     double transarg = 0.0;
 
     unsigned int specidx = 0;
     keyword colorkw[60];
-
     pixel tempclr;
 
-    enum parser_state {
-        EXPECT_COLOR,
-        AFTER_COLOR,
-    };
-
     while (!cmd_cb_pollquit()) {
-        keyword looping;
+        keyword kw;
 
         DEBUG_PRINT("PARSE\n");
         if (parse_rgb(&colorspec[specidx * COLORCNT]) != 0) return -1;
         colorkw[specidx++] = KW_NONE;
-        if (parse_eof()) {
-            newtrans = KW_NONE;
-        } else {
+        if (!parse_eof()) {
             kw = parse_color_keyword();
             if (kw == KW_ERROR) {
                 return -1;
@@ -173,30 +164,27 @@ int parse_main(void)
                 colorkw[specidx - 1] = kw;
                 continue;
             }
-
-            newtrans = parse_transition_keyword();
-            DEBUG_PRINT("%i\n", newtrans);
-            if (newtrans == KW_ERROR || newtrans == KW_NONE) return -1;
         }
 
-        /* This actually does the previous transition, not the one just read */
         if (fx_makestate(colorspec, colorkw, specidx, newclr) != 0) return -1;
-        if (fx_transition(oldclr, trans, transarg, newclr) != 0) return -1;
-
-        if (parse_eof()) break;
-
-        trans = newtrans;
         specidx = 0;
 
+        if (fx_transition(oldclr, trans, transarg, newclr) != 0) return -1;
         tempclr  = oldclr;
         oldclr = newclr;
         newclr = tempclr;
 
+        if (parse_eof()) break;
+
+        trans = parse_transition_keyword();
+        DEBUG_PRINT("%i\n", trans);
+        if (trans == KW_ERROR || trans == KW_NONE) return -1;
+
         transarg = parse_transarg(trans);
         if (transarg < 0) return -1;
 
-        looping = parse_looping_keyword();
-        switch (looping) {
+        kw = parse_looping_keyword();
+        switch (kw) {
         case KW_REPEAT:
             parse_rewind();
             break;
