@@ -203,6 +203,7 @@ static int sc_preset(scmdblk *scb)
 
 int cmd_init(const char *device) {
     render_open();
+    parse_init();
     mqtt_init();
     /* FIXME coloranim_setabortpoll(cmd_cb_pollquit); */
     return 0;
@@ -215,6 +216,7 @@ int cmd_clear(void) {
 
 void cmd_cleanup(void) {
     mqtt_quit();
+    parse_quit();
     render_close();
 }
 

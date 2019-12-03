@@ -125,17 +125,32 @@ static keyword parse_looping_keyword(void)
     return parse_keyword(kw_looping);
 }
 
+static pixel colorspec = NULL, oldclr = NULL, newclr = NULL;
+
+void parse_init(void)
+{
+    colorspec = pix_alloc();
+    oldclr = pix_alloc();
+    newclr = pix_alloc();
+}
+
+void parse_quit(void)
+{
+    pix_free(&colorspec);
+    pix_free(&oldclr);
+    pix_free(&newclr);
+}
+
 int parse_main(void)
 {
     keyword kw = EXPECT_COLOR;
     keyword trans = KW_NONE, newtrans;
     double transarg = 0.0;
 
-    pixel colorspec = pix_alloc();
     unsigned int specidx = 0;
     keyword colorkw[60];
 
-    pixel tempclr, oldclr = pix_alloc(), newclr = pix_alloc();
+    pixel tempclr;
 
     enum parser_state {
         EXPECT_COLOR,

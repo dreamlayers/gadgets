@@ -19,6 +19,7 @@ typedef double *pixel;
 
 void fatal(const char *s);
 pixel pix_alloc(void);
+void pix_free(pixel *p);
 
 /* Driver routines for output */
 
@@ -50,7 +51,8 @@ typedef enum {
     KW_REPEAT
 } keyword;
 
-void parse_args(int argc, char **argv);
+void parse_init(void);
+void parse_quit(void);
 int parse_main(void);
 
 /* Effect routines */

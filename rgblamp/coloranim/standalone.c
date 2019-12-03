@@ -28,7 +28,7 @@ static void parse_args_rewind(void)
     argidx = 1;
 }
 
-void parse_args(int argc, char **argv)
+static void parse_args(int argc, char **argv)
 {
     sargc = argc;
     argidx = 1;
@@ -50,9 +50,11 @@ int cmd_cb_pollquit(void)
 int main(int argc, char **argv)
 {
     render_open();
+    parse_init();
 
     parse_args(argc, argv);
 
+    parse_quit();
     render_close();
 
     return 0;

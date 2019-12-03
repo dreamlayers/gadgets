@@ -68,6 +68,13 @@ pixel pix_alloc(void) {
     return res;
 }
 
+void pix_free(pixel *p) {
+    if (*p != NULL) {
+        free(*p);
+        *p = NULL;
+    }
+}
+
 #ifdef DEBUG
 static void pix_print(pixel pix) {
     unsigned int i, j;
