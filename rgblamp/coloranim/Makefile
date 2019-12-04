@@ -49,6 +49,7 @@ DAEMON_LIBS := $(COMMON_LIBS) -lmosquitto -ljsmn
 # Platform configuration for specific targets
 
 ifeq ($(PLATFORM),Windows)
+DAEMON_OBJS += coloranimd-res.o
 DAEMON_LIBS := -L/usr/local/cross-tools/i686-w64-mingw32/lib \
                $(DAEMON_LIBS) -lws2_32 -mwindows
 CFLAGS += -I/usr/local/cross-tools/i686-w64-mingw32/include
@@ -76,7 +77,7 @@ clean:
 
 ifeq ($(PLATFORM),Windows)
 # FIXME Add Windows files for this program in particular
-lsd-res.o: ../../ledsign/lsd/lsd.rc ../../ledsign/lsd/LEDsign.ico
+coloranimd-res.o: coloranimd.rc coloranimd.ico
 	windres -I$(SIGND_DIR)/daemon $< $@
 endif
 
