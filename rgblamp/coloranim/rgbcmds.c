@@ -134,6 +134,7 @@ static void parse_signd_rewind(void)
 static int sc_coloranim(scmdblk *scb)
 {
     curanim_start = (chainhdr *)scb->data;
+    if (curanim_start == NULL) return -1;
     parse_signd_rewind();
 
     parse_fetch = parse_signd_fetch;
@@ -184,6 +185,7 @@ static int sc_preset(scmdblk *scb)
     int l;
 
     curanim_start = (chainhdr *)scb->data;
+    if (curanim_start == NULL) return -1;
     parse_signd_rewind();
     l = parse_signd_fetch(curanim_buf);
     if (l <= 0) return -1;
