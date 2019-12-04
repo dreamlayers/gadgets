@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include "coloranim.h"
 
-pixel temp_pix = NULL, cur_pix = NULL;
+static pixel temp_pix = NULL, cur_pix = NULL;
 
 #ifdef WIN32
 /* FIXME Unused SOCKS part of libmosquitto needs this. */

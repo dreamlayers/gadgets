@@ -203,7 +203,7 @@ LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_LBUTTONDBLCLK:
           SetForegroundWindow(hwnd); // Our MessageBox pops up in front
-          MessageBox(hwnd, "You're cool.", "Hey", MB_TASKMODAL);
+          signd_icondblclick(hwnd); // MessageBox(hwnd, "You're cool.", "Hey", MB_TASKMODAL);
           break;
         // Other mouse messages: WM_MOUSEMOVE, WM_MBUTTONDOWN, etc.
       }

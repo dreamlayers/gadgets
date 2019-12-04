@@ -2,8 +2,13 @@
 /* Copyright 2013 Boris Gjenero. Released under the MIT license. */
 
 #include <windows.h>
-#include "librgblamp.h"
 #include <stdio.h>
+#ifdef STANDALONE_WRGBC
+#include "librgblamp.h"
+#endif
+#ifdef COLORANIMD_WRGBC
+#include "coloranim.h"
+#endif
 
 static struct {
     int r;
@@ -39,7 +44,16 @@ static UINT_PTR CALLBACK CCHookProc(HWND hdlg, UINT uiMsg,
         case 0x2c4:
             update_color(&rgb.b, val);
             if (rgb_changed) {
+#ifdef STANDALONE_WRGBC
                 rgb_pwm_srgb256(rgb.r, rgb.g, rgb.b);
+#endif
+#ifdef COLORANIMD_WRGBC
+                char buf[100];
+                int l;
+                l = snprintf(buf, sizeof(buf), "in 0.25 %f %f %f",
+                             rgb.r / 255.0, rgb.g / 255.0, rgb.b / 255.0);
+                cmd_enq_string(2, buf, l);
+#endif
             }
         }
     }
@@ -68,6 +82,7 @@ static BOOL wingetcolor(void) {
     return r;
 }
 
+#ifdef STANDALONE_WRGBC
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      LPSTR lpCmdLine, int nCmdShow) {
     const char *port = "COM8";
@@ -88,3 +103,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     return 0;
 }
+#endif
+
+#ifdef COLORANIMD_WRGBC
+void signd_icondblclick(HWND hwnd) {
+    rgb.r = 0;
+    rgb.g = 0;
+    rgb.b = 0;
+    wingetcolor();
+}
+#endif

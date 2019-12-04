@@ -181,6 +181,10 @@ int cmd_call_keepalive(void);
 /* Interface for sending commands to daemon from same process */
 void cmd_enq_string(int cmd, char *data, unsigned int len);
 
+#ifdef _WINDOWS_
+void signd_icondblclick(HWND hwnd);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

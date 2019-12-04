@@ -474,6 +474,10 @@ int cmd_call_keepalive(void) {
     return sign_call_keepalive();
 }
 
+void signd_icondblclick(HWND hwnd) {
+    (void)hwnd;
+}
+
 /*
  * Data about commands for use by generic daemon code.
  */

@@ -120,3 +120,7 @@ int cmd_need_keepalive(void) {
 int cmd_call_keepalive(void) {
     return vfd_call_keepalive();
 }
+
+void signd_icondblclick(HWND hwnd) {
+    (void)hwnd;
+}

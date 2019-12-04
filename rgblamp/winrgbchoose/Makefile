@@ -1,7 +1,7 @@
 include ../../build/Makefile.config
 
 LIBRGBLAMP_DIR := ../librgblamp
-CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
+CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR) -DSTANDALONE_WRGBC
 SRCS := winrgbchoose.c
 
 TARGET := winrgbchoose.exe
