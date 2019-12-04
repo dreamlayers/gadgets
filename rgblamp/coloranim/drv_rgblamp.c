@@ -19,6 +19,11 @@ void render(const pixel pixr)
     rgb_flush();
 }
 
+void render_get(pixel pix)
+{
+    rgb_getout_srgb(pix);
+}
+
 void render_close(void)
 {
     rgb_close();

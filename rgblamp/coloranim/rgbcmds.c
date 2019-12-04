@@ -143,7 +143,7 @@ static int sc_coloranim(scmdblk *scb)
     parse_rewind = parse_signd_rewind;
 
     /* FIXME notify after one loop */
-    return parse_main() ? -1 : 0;
+    return parse_and_run();
 }
 
 static const char *parse_str_start, *parse_str_p;
@@ -198,11 +198,12 @@ static int sc_preset(scmdblk *scb)
     parse_rewind = parse_str_rewind;
 
     parse_str_rewind();
-    return parse_main() ? -1 : 0;
+    return parse_and_run();
 }
 
 int cmd_init(const char *device) {
     render_open();
+    coloranim_init();
     parse_init();
     mqtt_init();
     /* FIXME coloranim_setabortpoll(cmd_cb_pollquit); */
@@ -217,6 +218,7 @@ int cmd_clear(void) {
 void cmd_cleanup(void) {
     mqtt_quit();
     parse_quit();
+    coloranim_quit();
     render_close();
 }
 

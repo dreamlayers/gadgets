@@ -4,7 +4,10 @@
 #include <math.h>
 #include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include "coloranim.h"
+
+pixel temp_pix = NULL, cur_pix = NULL;
 
 #ifdef WIN32
 /* FIXME Unused SOCKS part of libmosquitto needs this. */
@@ -16,6 +19,13 @@ void fatal(const char *s)
 {
     fprintf(stderr, "Fatal error: %s\n", s);
     exit(-1);
+}
+
+void *safe_malloc(unsigned int l)
+{
+    void *p = malloc(l);
+    if (p == NULL) fatal("out of memory");
+    return p;
 }
 
 /* --- Timing section --- */
@@ -63,9 +73,15 @@ static double stopwatch_elapsed(void) {
 }
 
 pixel pix_alloc(void) {
-    pixel res = malloc(sizeof(double) * COLORCNT * PIXCNT);
-    if (res == NULL) fatal ("allocating pixel data");
+    pixel res = safe_malloc(sizeof(double) * COLORCNT * PIXCNT);
     return res;
+}
+
+void pix_clear(pixel pix) {
+    int i;
+    for (i = 0; i < COLORCNT * PIXCNT; i++) {
+        pix[i] = 0.0;
+    }
 }
 
 void pix_free(pixel *p) {
@@ -73,6 +89,10 @@ void pix_free(pixel *p) {
         free(*p);
         *p = NULL;
     }
+}
+
+static void pix_copy(pixel dst, pixel src) {
+    memcpy(dst, src, sizeof(double) * COLORCNT * PIXCNT);
 }
 
 #ifdef DEBUG
@@ -162,38 +182,121 @@ int fx_makestate(const pixel colorspec, const keyword *colorkw,
     return 0;
 }
 
-static void fx_crossfade(const pixel oldclr, const pixel newclr, double seconds)
+static int fx_crossfade(const pixel oldclr, const pixel newclr,
+                        double seconds)
 {
-    pixel cross = pix_alloc();
-
     stopwatch_start();
-    while (!cmd_cb_pollquit()) {
-        double t = stopwatch_elapsed();
-        if (t > seconds) break;
-        interp_fade(oldclr, newclr, t / seconds, cross);
-        /* pix_print(cross); */
-        render(cross);
-    }
+    while (1) {
+        double t;
 
-    free(cross);
+        t = stopwatch_elapsed();
+        if (t >= seconds) {
+            render(newclr);
+            return 1;
+        } else {
+            interp_fade(oldclr, newclr, t / seconds, temp_pix);
+            /* pix_print(cross); */
+            render(temp_pix);
+        }
+
+        if (cmd_cb_pollquit()) {
+            return 0;
+        }
+    }
 }
 
-int fx_transition(const pixel oldclr, keyword kw, double arg,
-                  const pixel newclr)
+static int fx_wait(double seconds)
 {
-    switch (kw) {
-    case KW_NONE:
-#ifdef DEBUG
-        pix_print(newclr);
-#endif /* DEBUG */
-        render(newclr);
-        break;
-    case KW_CROSSFADE:
-        fx_crossfade(oldclr, newclr, arg);
-        break;
-    default:
-        return -1; /* bad transition keyword" */
-        break;
+    stopwatch_start();
+    while (1) {
+        double t;
+
+        t = seconds - stopwatch_elapsed();
+        if (t <= 0) {
+            /* Wait completed */
+            return 1;
+        } else {
+#define MAX_SLEEP 10000
+            if (t > MAX_SLEEP / 1000000) {
+                usleep(MAX_SLEEP);
+            } else {
+                usleep(t * 1000000);
+            }
+        }
+
+        if (cmd_cb_pollquit()) {
+            /* Wait interrupted */
+            return 0;
+        }
     }
+}
+
+void coloranim_init(void)
+{
+    temp_pix = pix_alloc();
+    cur_pix = pix_alloc();
+    render_get(cur_pix);
+}
+
+void coloranim_quit(void)
+{
+    pix_free(&temp_pix);
+    pix_free(&cur_pix);
+}
+
+void coloranim_exec(struct coloranim *ca)
+{
+    pixel last_pix = cur_pix;
+    struct coloranim_state *state = ca->states;
+    double fade = ca->first_fade;
+    pixel save_pix = NULL;
+
+    if (state == NULL) fatal("no states in animation");
+
+    while(!cmd_cb_pollquit()) {
+        if (fade > 0.0) {
+            /* TODO: Fading between solid colours could be optimized */
+            if (fx_crossfade(last_pix, state->pix, fade) == 0) {
+                /* Fade interrupted */
+                save_pix = temp_pix;
+                break;
+            } else {
+                /* Fade completed */
+                save_pix = state->pix;
+            }
+        } else if (fade == 0.0) {
+            render(state->pix);
+            save_pix = state->pix;
+        } else {
+            fatal("negative fade duration");
+        }
+
+        if (state->hold_for > 0) {
+            if (fx_wait(state->hold_for) == 0) break;
+        }
+
+        last_pix = state->pix;
+        state = state->next;
+        if (state == NULL) {
+            if (ca->repeat) {
+                state = ca->states;
+            } else {
+                break;
+            }
+        }
+        fade = state->fade_to;
+    }
+    if (save_pix != NULL) {
+        pix_copy(cur_pix, save_pix);
+    }
+}
+
+int parse_and_run(void) {
+    struct coloranim *ca;
+
+    ca = coloranim_parse();
+    if (ca == NULL) return -1;
+    coloranim_exec(ca);
+    coloranim_free(&ca);
     return 0;
 }

@@ -93,108 +93,148 @@ static keyword parse_color_keyword(void)
     return parse_keyword(kw_color);
 }
 
-static keyword parse_transition_keyword(void)
+static int get_kw_if_match(const char *name)
 {
-    const keywordmap kw_transition[] = {
-        { "in", KW_CROSSFADE },
-        { "for", KW_FOR },
-        { NULL, KW_NONE }
-    };
-    return parse_keyword(kw_transition);
+    const char *s = parse_peeknext();
+    if (s == NULL) {
+        return -1; /* Input error */
+    } else if (strcmp(name, s) == 0 && parse_getnext() != NULL) {
+        return 1;  /* Keyword found and removed */
+    } else {
+        return 0;  /* No error, but keyword not found */
+    }
 }
 
-static double parse_transarg(keyword kw) {
-    double t = 0.0;
-    switch (kw) {
-    case KW_CROSSFADE:
-        if (parse_double(&t) != 0) {
+static double parse_kw_posdbl(const char *name)
+{
+    int match = get_kw_if_match(name);
+
+    if (match > 0) {
+        double d;
+        if (parse_double(&d) == 0) {
+            return d;
+        } else {
             return -1.0;
         }
-        break;
-    default:
-        break;
+    } else if (match == 0) {
+        return 0.0;
+    } else {
+        return -1.0;
     }
-    return t;
 }
 
-static keyword parse_looping_keyword(void)
-{
-    const keywordmap kw_looping[] = {
-        { "repeat", KW_REPEAT },
-        { NULL, KW_NONE }
-    };
-    return parse_keyword(kw_looping);
-}
-
-static pixel colorspec = NULL, oldclr = NULL, newclr = NULL;
+static pixel colorspec = NULL;
 
 void parse_init(void)
 {
     colorspec = pix_alloc();
-    oldclr = pix_alloc();
-    newclr = pix_alloc();
 }
 
 void parse_quit(void)
 {
     pix_free(&colorspec);
-    pix_free(&oldclr);
-    pix_free(&newclr);
 }
 
-int parse_main(void)
+void coloranim_free(struct coloranim **p)
 {
-    keyword trans = KW_NONE;
-    double transarg = 0.0;
+    if (*p != NULL) {
+        struct coloranim_state *state, *next_state;
+        for (state = (*p)->states; state != NULL; state = next_state) {
+            next_state = state->next;
+            free(state);
+        }
+        free(*p);
+        *p = NULL;
+    }
+}
+
+struct coloranim *coloranim_parse(void)
+{
+    struct coloranim *ca;
+    struct coloranim_state *cur_state, **next_p;
 
     unsigned int specidx = 0;
     keyword colorkw[PIXCNT];
-    pixel tempclr;
 
-    while (!cmd_cb_pollquit()) {
+    double fade_time = 0.0;
+
+    ca = safe_malloc(sizeof(*ca));
+    ca->repeat = 0;
+    ca->states = NULL;
+    next_p = &(ca->states);
+
+    if (parse_eof()) goto parse_fail;
+    ca->first_fade = parse_kw_posdbl("in");
+    if (ca->first_fade < 0.0) goto parse_fail;
+
+    while (1) {
         keyword kw;
+        int repeat;
 
         DEBUG_PRINT("PARSE\n");
-        if (specidx >= PIXCNT) return -1;
-        if (parse_rgb(&colorspec[specidx * COLORCNT]) != 0) return -1;
+        if (specidx >= PIXCNT) goto parse_fail;
+        if (parse_rgb(&colorspec[specidx * COLORCNT]) != 0) {
+            goto parse_fail;
+        }
         colorkw[specidx++] = KW_NONE;
         if (!parse_eof()) {
             kw = parse_color_keyword();
             if (kw == KW_ERROR) {
-                return -1;
+                goto parse_fail;
             } else if (kw != KW_NONE) {
                 colorkw[specidx - 1] = kw;
                 continue;
             }
         }
 
-        if (fx_makestate(colorspec, colorkw, specidx, newclr) != 0) return -1;
+        cur_state = safe_malloc(sizeof(*cur_state));
+        *next_p = cur_state;
+        next_p = &(cur_state->next);
+
+        cur_state->fade_to = fade_time;
+        fade_time = 0.0;
+
+        cur_state->pix = pix_alloc();
+        if (fx_makestate(colorspec, colorkw, specidx,
+                         cur_state->pix) != 0) goto parse_fail;
         specidx = 0;
 
-        if (fx_transition(oldclr, trans, transarg, newclr) != 0) return -1;
-        tempclr  = oldclr;
-        oldclr = newclr;
-        newclr = tempclr;
+        if (parse_eof()) {
+            cur_state->hold_for = 0;
+            break;
+        }
+        cur_state->hold_for = parse_kw_posdbl("for");
+        if (cur_state->hold_for < 0.0) goto parse_fail;
 
         if (parse_eof()) break;
+        fade_time = parse_kw_posdbl("in");
+        if (fade_time < 0.0) goto parse_fail;
 
-        trans = parse_transition_keyword();
-        DEBUG_PRINT("%i\n", trans);
-        if (trans == KW_ERROR || trans == KW_NONE) return -1;
-
-        transarg = parse_transarg(trans);
-        if (transarg < 0) return -1;
-
-        kw = parse_looping_keyword();
-        switch (kw) {
-        case KW_REPEAT:
-            parse_rewind();
-            break;
-        case KW_NONE:
-            break;
-        default:
-            return -1;
+        if (parse_eof()) break;
+        repeat = get_kw_if_match("repeat");
+        if (repeat < 0) {
+            goto parse_fail;
+        } else if (repeat > 0) {
+            if (!parse_eof() ||
+                (cur_state->hold_for == 0.0 && fade_time == 0)) {
+                goto parse_fail;
+            } else {
+                ca->repeat = 1;
+                break;
+            }
         }
     }
-    return 0;
+
+    *next_p = NULL;
+    if (ca->repeat) {
+        ca->states->fade_to = fade_time;
+    } else if (fade_time != 0.0) {
+        goto parse_fail;
+    }
+    return ca;
+
+parse_fail:
+    *next_p = NULL;
+    coloranim_free(&ca);
+    return NULL;
 }

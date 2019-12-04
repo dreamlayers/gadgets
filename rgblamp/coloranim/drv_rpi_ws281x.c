@@ -94,6 +94,11 @@ void render(const pixel pix)
     ws2811_render(&ledstring);
 }
 
+void render_get(pixel pix)
+{
+    pix_clear(pix);
+}
+
 void render_close(void)
 {
     int i, allblack = 1;

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "coloranim.h"
 
 /* --- command line argument parser --- */
@@ -28,7 +29,7 @@ static void parse_args_rewind(void)
     argidx = 1;
 }
 
-static void parse_args(int argc, char **argv)
+static int parse_args(int argc, char **argv)
 {
     sargc = argc;
     argidx = 1;
@@ -37,7 +38,8 @@ static void parse_args(int argc, char **argv)
     parse_peeknext = parse_args_peeknext;
     parse_eof = parse_args_eof;
     parse_rewind = parse_args_rewind;
-    parse_main();
+
+    return parse_and_run();
 }
 
 /* TODO catch signals and quit in response */
@@ -50,11 +52,15 @@ int cmd_cb_pollquit(void)
 int main(int argc, char **argv)
 {
     render_open();
+    coloranim_init();
     parse_init();
 
-    parse_args(argc, argv);
+    if (parse_args(argc, argv) != 0) {
+        fprintf(stderr, "Parse error!\n");
+    }
 
     parse_quit();
+    coloranim_quit();
     render_close();
 
     return 0;

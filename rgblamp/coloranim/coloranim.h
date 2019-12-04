@@ -18,7 +18,10 @@ typedef double *pixel;
 /* Common routines */
 
 void fatal(const char *s);
+void *safe_malloc(unsigned int l);
 pixel pix_alloc(void);
+void pix_clear(pixel pix);
+
 void pix_free(pixel *p);
 
 /* Driver routines for output */
@@ -30,7 +33,23 @@ void pix_free(pixel *p);
 
 void render_open(void);
 void render(const pixel pixr);
+void render_get(pixel pix);
 void render_close(void);
+
+/* Data structure for holding results of parsing */
+
+struct coloranim_state {
+    double fade_to;  /* Time in seconds for fading to this state */
+    double hold_for; /* Time in seconds for staying at this state */
+    pixel pix;
+    struct coloranim_state *next;
+};
+
+struct coloranim {
+    int repeat;
+    double first_fade;
+    struct coloranim_state *states;
+};
 
 /* Passing data to the parser */
 
@@ -44,25 +63,25 @@ void (*parse_rewind)(void);
 typedef enum {
     KW_ERROR = -1,
     KW_NONE = 0,
-    EXPECT_COLOR,
     KW_GRADIENT,
     KW_SOLID,
-    KW_CROSSFADE,
-    KW_FOR,
-    KW_REPEAT
 } keyword;
 
 void parse_init(void);
 void parse_quit(void);
-int parse_main(void);
+void coloranim_free(struct coloranim **p);
+struct coloranim *coloranim_parse(void);
 
-/* Effect routines */
-
+/* Used by parser to create state */
 int fx_makestate(const pixel colorspec, const keyword *colorkw,
                  unsigned int numspec,
                  pixel dest);
-int fx_transition(const pixel oldclr, keyword kw, double arg,
-                  const pixel newclr);
+
+void coloranim_init(void);
+void coloranim_quit(void);
+void coloranim_exec(struct coloranim *ca);
+
+int parse_and_run(void);
 
 /* MQTT interface routines */
 
