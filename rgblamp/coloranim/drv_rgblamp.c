@@ -1,3 +1,4 @@
+#include <string.h>
 #include "coloranim.h"
 #include <librgblamp.h>
 
@@ -26,5 +27,9 @@ void render_get(pixel pix)
 
 void render_close(void)
 {
+    double rgb[3];
+    if (rgb_getout_srgb(rgb)) {
+        rgb_matchpwm_srgb(rgb[0], rgb[1], rgb[2]);
+    }
     rgb_close();
 }
