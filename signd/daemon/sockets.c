@@ -1,5 +1,5 @@
 /* TCP server for sign gadgets. */
-/* Copyright 2013 Boris Gjenero. Released under the MIT license. */
+/* Copyright 2019 Boris Gjenero. Released under the MIT license. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,11 +18,12 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <signal.h>
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 #define LPSOCKADDR (struct sockaddr *)
 #define SOCKET int
-#endif
+#endif /* !WIN32 */
 
 #include "signd.h"
 
@@ -38,6 +39,7 @@ static HANDLE gnteetmr = NULL, transtmr[2];
 #else
 static struct timespec transtmr;
 static struct timeval gnteetmr;
+static int quit = 0; /* For quitting via signals */
 #endif
 static int wastrans = 0;
 
@@ -484,6 +486,9 @@ int accept_client(void) {
                  NULL,    /* Address of a sockaddr structure (see below) */
                  NULL);    /* Address of a variable containing the size of sockaddr */
   if (csock == INVALID_SOCKET) {
+#ifndef WIN32
+    if (quit && errno == EINTR) return 0;
+#endif
     fatalerr("Error at accept()");
   }
 
@@ -530,6 +535,9 @@ int sock_sendeol(SOCKET sock) {
  * Main thread
  */
 int cmd_cb_pollquit(void) {
+#ifndef WIN32
+  if (quit) return 1;
+#endif
   if (curscb == NULL) return 0;
 
   if ((curscb->flags & SFLAG_GNTEE) && (curscb->gnteetime > 0)) {
@@ -777,15 +785,34 @@ void cmd_cb_notify(scmdblk *scb) {
 }
 
 #ifndef WIN32
+static void sig_quit(int sig) {
+    quit = 1;
+}
+
+static void sig_setup(void) {
+    struct sigaction sa;
+
+    memset (&sa, 0, sizeof(sa));
+    sa.sa_handler = sig_quit;
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+}
+
 int main(int argc, char **argv) {
+
     if (argc != 1 && argc != 2) {
         fprintf(stderr, "USAGE: %s [DEVICE]\n", argv[0]);
     }
+    sig_setup();
+    /* FIXME Don't treat EINTR errors as fatal */
     init_socket((argc == 2) ? argv[1] : NULL);
-    while (1) {       accept_client(); }
-    // FIXME? cleanup_socket();
+    while (!quit) { accept_client(); }
+    cleanup_socket();
 }
-#endif
+#endif /* !WIN32 */
 
 void cmd_enq_string(int cmd, char *data, unsigned int len) {
     scmdblk *scb;
