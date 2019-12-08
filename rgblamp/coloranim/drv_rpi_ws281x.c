@@ -7,20 +7,22 @@
 #include "coloranim.h"
 #include "ws2811.h"
 
+/* Place where pixels are saved */
+#define SAVED_PIX  "/dev/shm/coloranim_state"
 /* GPIO for switching power to LED strip power supply */
 #define POWER_GPIO 24
-
-//#define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
 
 // defaults for cmdline options
 #define TARGET_FREQ             WS2811_TARGET_FREQ
 #define GPIO_PIN                10
-#define DMA                     5
+// Using DMA channel 5 will cause]() filesystem corruption on the RPi 3 B
+// https://github.com/jgarff/rpi_ws281x/issues/224
+#define DMA                     10
 //#define STRIP_TYPE            WS2811_STRIP_RGB		// WS2812/SK6812RGB integrated chip+leds
 #define STRIP_TYPE              WS2811_STRIP_GBR		// WS2812/SK6812RGB integrated chip+leds
 //#define STRIP_TYPE            SK6812_STRIP_RGBW		// SK6812RGBW (NOT SK6812RGB)
 
-#define WIDTH                   60
+#define WIDTH                   PIXCNT
 #define HEIGHT                  1
 #define LED_COUNT               (WIDTH * HEIGHT)
 
@@ -48,6 +50,27 @@ static ws2811_t ledstring =
     },
 };
 
+static void render_load(void)
+{
+    FILE *f;
+    unsigned char buf[LED_COUNT * 3], *p;
+    unsigned int i;
+
+    f = fopen(SAVED_PIX, "rb");
+    if (f != NULL && fread(buf, 1, sizeof(buf), f) == sizeof(buf)) {
+        p = buf;
+        for (i = 0; i < LED_COUNT; i++) {
+            ledstring.channel[0].leds[i] = *p | (*(p+1) << 8) | (*(p+2) << 16);
+            p += 3;
+        }
+    } else {
+        for (i = 0; i < LED_COUNT; i++) {
+           ledstring.channel[0].leds[i] = 0;
+        }
+    }
+    if (f != NULL) fclose(f);
+}
+
 void render_open()
 {
     ws2811_return_t ret;
@@ -56,6 +79,8 @@ void render_open()
         fprintf(stderr, "ws2811_init failed: %s\n", ws2811_get_return_t_str(ret));
         fatal("failed to open device");
     }
+
+    render_load();
 
     /* Power supply switching via GPIO */
     wiringPiSetupGpio();
@@ -76,10 +101,21 @@ static unsigned short srgb2pwm(double n) {
     }
     ir = (int)lrint(r * 255.0);
     if (ir < 0) ir = 0;
-    if (ir > 4095) ir = 255;
+    if (ir > 255) ir = 255;
     return (unsigned short)ir;
 }
 
+static double pwm2srgb(unsigned short n) {
+    double r = n / 255.0;
+    if (r <= 0.0031308) {
+        r = 12.92 * r;
+    } else {
+        r = 1.055 * pow(r, 1/2.4) - 0.055;
+    }
+    if (r > 1.0) r = 1.0;
+    if (r < 0.0) r = 0.0;
+    return r;
+}
 
 void render(const pixel pix)
 {
@@ -94,9 +130,25 @@ void render(const pixel pix)
     ws2811_render(&ledstring);
 }
 
-void render_get(pixel pix)
+static void render_save(void)
 {
-    pix_clear(pix);
+    FILE *f;
+    unsigned char buf[LED_COUNT * 3], *p;
+    unsigned int i;
+
+    f = fopen(SAVED_PIX, "wb");
+    if (f == NULL) return;
+
+    p = buf;
+    for (i = 0; i < LED_COUNT; i++) {
+        ws2811_led_t led = ledstring.channel[0].leds[i];
+        *(p++) = led & 0xFF;
+        *(p++) = (led >> 8) & 0xFF;
+        *(p++) = (led >> 16) & 0xFF;
+    }
+
+    fwrite(buf, 1, sizeof(buf), f);
+    fclose(f);
 }
 
 void render_close(void)
@@ -109,9 +161,30 @@ void render_close(void)
         }
     }
 
+    if (!allblack) {
+        render_save();
+    } else {
+        unlink(SAVED_PIX);
+    }
+
     ws2811_fini(&ledstring);
 
     if (allblack) {
         digitalWrite(POWER_GPIO, 0);
     }
+}
+
+void render_get(pixel pix)
+{
+    unsigned int i;
+    pixel pp = pix;;
+
+    pp = pix;
+    for (i = 0; i < LED_COUNT; i++) {
+        ws2811_led_t led = ledstring.channel[0].leds[i];
+        *(pp++) = pwm2srgb(led & 0xFF);
+        *(pp++) = pwm2srgb((led >> 8) & 0xFF);
+        *(pp++) = pwm2srgb((led >> 16) & 0xFF);
+    }
+
 }
