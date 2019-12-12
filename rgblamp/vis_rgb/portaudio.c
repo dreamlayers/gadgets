@@ -11,7 +11,12 @@
 #include <pthread.h>
 #include "rgbm.h"
 
-#define inputsize (RGBM_NUMSAMP * 2 / 3)
+/*
+ * Visualizer waits until this many new samples have been collected.
+ * Of course if it's running slow many more new may have arrived.
+ * Visualizer will always get the latest RGBM_NUMSAMP samples.
+ */
+#define MIN_NEW_SAMPLES (RGBM_NUMSAMP * 2 / 3)
 
 /* Default sound device, for visualizing playback from other programs */
 #ifndef MONITOR_NAME
@@ -24,46 +29,89 @@
 
 static PaStream *stream = NULL;
 static double *samp = NULL;
-/* Each ring contains enough samples for one output block. Input block
- * size must be smaller or equal to output block size. Input samples
- * are added at ring_write, wrapping around the rings. They are copied
- * from there to the output buffers, forming un-wrapped output blocks.
+
+/*
+ * Incoming samples go into a ring buffer protected by a mutex.
+ * Next incoming sample goes to ring[ring_write], and ring_write wraps.
+ * When enough samples have arrived sound_retrieve() copies from the ring
+ * buffer, protected by that mutex, which prevents new samples from
+ * overwriting. It uses ring_write to know how data is wrapped in the
+ * ring buffer.
  */
 static double ring[RGBM_NUMSAMP];
-static int ring_write = 0;
+static unsigned int ring_write = 0;
 static pthread_mutex_t mutex;
 static pthread_cond_t cond;
-static unsigned long frames_available = 0;
+static int signalled = 0;
+
+/* Number of samples put into ring buffer since last sound_retrieve() call is
+ * counted by ring_has. If visualizer is slower than input, ring_has could be
+ * more than RGBM_NUMSAMP, which is useful for timing.
+ */
+static unsigned int ring_has = 0;
 
 static void error(const char *s) {
     fprintf(stderr, "Error: %s\n", s);
     exit(-1);
 }
 
-static void sound_store(const int16_t *input) {
-    int i, outidx;
+static void sound_store(const int16_t *input, unsigned int len) {
+    int i;
+    const int16_t *ip;
+    double *op;
+    unsigned int remain;
 
-    outidx = ring_write;
-    for (i = 0; i < inputsize; i++) {
-        ring[outidx] = input[i] / 32768.0;
-        outidx++;
-        if (outidx >= RGBM_NUMSAMP) outidx = 0;
+    if (len >= RGBM_NUMSAMP) {
+        /* If there are too many samples, fill buffer with latest ones */
+        ip = input + len - RGBM_NUMSAMP;
+        op = &(ring[0]);
+        remain = RGBM_NUMSAMP;
+
+        ring_write = 0;
+    } else {
+        remain = RGBM_NUMSAMP - ring_write;
+        if (remain >= len) {
+            remain = len;
+        } else {
+            /* Do part of store after wrapping around ring */
+            int remain2 = len - remain;
+            ip = input + remain;
+            op = &(ring[0]);
+            for (i = 0; i < remain2; i++) {
+                *(op++) = *(ip++) / 32768.0;
+            }
+        }
+
+        ip = input;
+        op = &(ring[ring_write]);
+
+        /* Advance write pointer */
+        ring_write += len;
+        if (ring_write >= RGBM_NUMSAMP) {
+            ring_write = 0;
+        }
     }
-    ring_write = outidx;
+
+    /* Do part of store before wrapping point, maybe whole store */
+    for (i = 0; i < remain; i++) {
+        *(op++) = *(ip++) / 32768.0;
+    }
+
+    /* This could theoretically overflow, but is needed for timing */
+    ring_has += len;
 }
 
 static int pa_callback(const void *input, void *output,
                        unsigned long frameCount,
                        const PaStreamCallbackTimeInfo *timeInfo,
                        PaStreamCallbackFlags statusFlags, void *userData) {
-    if (frameCount != inputsize) {
-        error("callback got unexpected number of samples.");
-    }
-
     pthread_mutex_lock(&mutex);
-    sound_store((int16_t *)input);
-    frames_available += frameCount;
-    pthread_cond_signal(&cond);
+    sound_store((int16_t *)input, frameCount);
+    if (ring_has >= MIN_NEW_SAMPLES && !signalled) {
+        /* Next buffer is full */
+        signalled = 1;
+        pthread_cond_signal(&cond);
+    }
     pthread_mutex_unlock(&mutex);
 
     return paContinue;
@@ -128,7 +176,7 @@ static void sound_open(const char *devname) {
                       &inputParameters,
                       NULL, //&outputParameters,
                       44100,
-                      inputsize,
+                      0,
                       paClipOff,
                       pa_callback,
                       NULL); /* no callback userData */
@@ -158,28 +206,34 @@ static void sound_close(void) {
 }
 
 static unsigned long sound_retrieve(void) {
-    unsigned long res;
+    unsigned int chunk1, ring_had;
 
     pthread_mutex_lock(&mutex);
 
-    while (frames_available == 0) {
+    /* Wait for next buffer to be full */
+    while (!signalled) {
         pthread_cond_wait(&cond, &mutex);
     }
+    signalled = 0;
 
-    memcpy(&samp[0], &ring[ring_write],
-           sizeof(double) * (RGBM_NUMSAMP - ring_write));
+    /* Copy first part, up to wrapping point */
+    chunk1 = RGBM_NUMSAMP - ring_write;
+    memcpy(&samp[0], &ring[ring_write], sizeof(double) * chunk1);
     if (ring_write > 0) {
         /* Samples are wrapped around the ring. Copy the second part. */
-        memcpy(&samp[RGBM_NUMSAMP - ring_write], &ring[0],
-               sizeof(double) * ring_write);
+        memcpy(&samp[chunk1], &ring[0], sizeof(double) * ring_write);
     }
 
-    res = frames_available;
-    frames_available = 0;
+    /* Unnecessary but optimal if visualization is faster than input. */
+    ring_write = 0;
 
+    ring_had = ring_has;
+    ring_has = 0;
+
+    /* After swap the buffer shouldn't be touched anymore by interrupts */
     pthread_mutex_unlock(&mutex);
 
-    return res;
+    return ring_had;
 }
 
 
