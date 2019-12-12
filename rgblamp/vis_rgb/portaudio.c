@@ -14,10 +14,12 @@
 #define inputsize (RGBM_NUMSAMP * 2 / 3)
 
 /* Default sound device, for visualizing playback from other programs */
+#ifndef MONITOR_NAME
 #ifdef WIN32
 #define MONITOR_NAME "Stereo Mix"
 #else
 #define MONITOR_NAME "pulse_monitor"
+#endif
 #endif
 
 static PaStream *stream = NULL;

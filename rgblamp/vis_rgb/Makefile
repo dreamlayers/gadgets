@@ -5,6 +5,7 @@ CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
 SRCS := rgbm.c
 
 LIBRGBLAMP_DIR := ../librgblamp
+RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
 
 ifeq ($(PLATFORM),Windows)
 
@@ -35,11 +36,21 @@ $(warning WARNING: Not building RGB lamp standalone visualizer due to lack of pr
 else
 STANDALONE := visrgb
 STANDALONE_CFLAGS := $(CFLAGS) -DRGBM_FFTW -pthread $(shell $(PKG_CONFIG) --cflags $(STANDALONE_PREREQ))
-ifeq ($(PLATFORM),Windows)
-STANDALONE_CFLAGS := $(STANDALONE_CFLAGS) -static
-endif
-STANDALONE_LIBS := $(LIBRGBLAMP_DIR)/librgblamp.a $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ)) -lm
 STANDALONE_OBJS := rgbm-standalone.o portaudio.o
+STANDALONE_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ)) -lm
+ifeq ($(PLATFORM),Windows)
+STANDALONE_CFLAGS += -static
+STANDALONE_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
+else
+ifneq ("$(wildcard $(RPI_WS281X_DIR)/ws2811.h)","")
+STANDALONE_OBJS += rpi_ws281x_rgb.o
+STANDALONE_CFLAGS += -I$(RPI_WS281X_DIR) '-DMONITOR_NAME="Loopback: PCM (hw:1,1)"'
+STANDALONE_LIBS += -L$(RPI_WS281X_DIR) -lws2811
+else
+STANDALONE_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
+endif
+endif
+
 all: $(STANDALONE)
 
 $(STANDALONE): $(STANDALONE_OBJS)
@@ -117,6 +128,9 @@ veryclean: clean
 aud_rgb.o: aud_rgb.cc rgbm.h Makefile
 
 rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
+
+rpi_ws281x_rgb.o: rpi_ws281x_rgb.c $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
+	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
 
 freqadj_audacious.h: makefreqadj.m
 	octave -q $^
