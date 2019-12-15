@@ -123,36 +123,43 @@ static void interp_fade(const pixel a, const pixel b, double p, pixel r)
 }
 
 #if PIXCNT > 1
-static void interp_gradient(const pixel a, const pixel b, pixel r)
+static int interp_gradient(const pixel a, const pixel b, pixel r)
 {
     unsigned int i, j;
+    for (i = 0; i < COLORCNT; i++) {
+        if (a[i] < 0 || b[i] < 0) {
+            return -1;
+        }
+    }
     for (i = 0; i < (PIXCNT * 3); i += 3) {
         for (j = 0; j < COLORCNT; j++) {
             r[i + j] = interp_one(a[j], b[j],
                        (double)i / (PIXCNT * 3 - 3));
         }
     }
+    return 0;
 }
 #endif
 
-static void fx_fill(const pixel clr, pixel dest, int count)
+static void fx_fill(const pixel last_pix, const pixel clr,
+                    pixel dest, int count)
 {
     unsigned int i, j, end = count * 3;
     for (i = 0; i < end; i += 3) {
         for (j = 0; j < COLORCNT; j++) {
-            dest[i + j] = clr[j];
+            dest[i + j] = (clr[j] >= 0.0) ? clr[j] : last_pix[i + j];
         }
     }
 }
 
 int fx_makestate(const pixel colorspec, const keyword *colorkw,
                  unsigned int numspec,
-                 pixel dest)
+                 const pixel last_pix, pixel dest)
 {
     switch (colorkw[0]) {
     case KW_NONE:
         if (numspec == 1) {
-            fx_fill(&colorspec[0], dest, PIXCNT);
+            fx_fill(&last_pix[0], &colorspec[0], dest, PIXCNT);
         } else {
             return -1; /* color keyword expected */
         }
@@ -160,16 +167,16 @@ int fx_makestate(const pixel colorspec, const keyword *colorkw,
 #if PIXCNT > 1
     case KW_GRADIENT:
         if (numspec == 2) {
-            interp_gradient(&colorspec[0], &colorspec[COLORCNT], dest);
+            return interp_gradient(&colorspec[0], &colorspec[COLORCNT], dest);
         } else {
             return -1; /* multiple point gradient unimplemented */
         }
         break;
     case KW_SOLID:
         if (numspec == 2) {
-            fx_fill(&colorspec[0], &dest[0], PIXCNT / 2);
-            fx_fill(&colorspec[COLORCNT], &dest[(PIXCNT / 2) * COLORCNT],
-                    PIXCNT - PIXCNT / 2);
+            fx_fill(&last_pix[0], &colorspec[0], &dest[0], PIXCNT / 2);
+            fx_fill(&last_pix[COLORCNT], &colorspec[COLORCNT],
+                    &dest[(PIXCNT / 2) * COLORCNT], PIXCNT - PIXCNT / 2);
         } else {
             return -1; /* multiple point gradient unimplemented */
         }

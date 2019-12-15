@@ -21,36 +21,42 @@ static int parse_double(double *d)
     return (*endptr == 0) ? 0 : -1;
 }
 
-static double parse_zerotoone(void)
+static double parse_brightness(void)
 {
     double d;
     int r;
+    const char *s = parse_peeknext();
 
-    r = parse_double(&d);
-    return (r == 0 && d >= 0 && d <= 1.0) ? d : -1.0;
+    if (s[0] == '-'  && s[1] == 0) {
+        (void)parse_getnext();
+        return -1.0;
+    } else {
+        r = parse_double(&d);
+        return (r == 0 && d >= 0 && d <= 1.0) ? d : -2.0;
+    }
 }
 
-static int parse_isnum(void)
+static int parse_isbrightness(void)
 {
     if (parse_eof()) {
         return 0;
     } else {
         const char *s = parse_peeknext();
-        return (*s >= '0' && *s <= '9') || *s == '.';
+        return (*s >= '0' && *s <= '9') || *s == '.' || *s == '-';
     }
 }
 
 static int parse_rgb(pixel res)
 {
     DEBUG_PRINT("RGB\n");
-    if (parse_isnum()) {
+    if (parse_isbrightness()) {
         int i;
-        res[0] = parse_zerotoone();
-        if (res[0] < 0) return -1;
-        if (parse_isnum()) {
+        res[0] = parse_brightness();
+        if (res[0] < -1.5) return -1;
+        if (parse_isbrightness()) {
             for (i = 1; i < components; i++) {
-                res[i] = parse_zerotoone();
-                if (res[i] < 0) return -1;
+                res[i] = parse_brightness();
+                if (res[i] < -1.5) return -1;
             }
         } else {
             for (i = 1; i < components; i++) {
@@ -158,6 +164,9 @@ struct coloranim *coloranim_parse(void)
 
     double fade_time = 0.0;
 
+    pixel start_pix = pix_alloc(), prev_pix = start_pix;
+    render_get(start_pix);
+
     ca = safe_malloc(sizeof(*ca));
     ca->repeat = 0;
     ca->states = NULL;
@@ -196,7 +205,8 @@ struct coloranim *coloranim_parse(void)
 
         cur_state->pix = pix_alloc();
         if (fx_makestate(colorspec, colorkw, specidx,
-                         cur_state->pix) != 0) goto parse_fail;
+                         prev_pix, cur_state->pix) != 0) goto parse_fail;
+        prev_pix = cur_state->pix;
         specidx = 0;
 
         if (parse_eof()) {
@@ -231,10 +241,12 @@ struct coloranim *coloranim_parse(void)
     } else if (fade_time != 0.0) {
         goto parse_fail;
     }
+    pix_free(&start_pix);
     return ca;
 
 parse_fail:
     *next_p = NULL;
     coloranim_free(&ca);
+    pix_free(&start_pix);
     return NULL;
 }

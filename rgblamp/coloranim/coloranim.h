@@ -75,7 +75,7 @@ struct coloranim *coloranim_parse(void);
 /* Used by parser to create state */
 int fx_makestate(const pixel colorspec, const keyword *colorkw,
                  unsigned int numspec,
-                 pixel dest);
+                 const pixel last_pix, pixel dest);
 
 void coloranim_init(void);
 void coloranim_quit(void);
