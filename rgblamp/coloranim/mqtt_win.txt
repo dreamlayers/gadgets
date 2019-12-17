@@ -1,0 +1,2 @@
+Compile mosquitto-1.6.7 to get static library by running this in lib directory:
+make CROSS_COMPILE=i686-w64-mingw32- CC=gcc WITH_SHARED_LIBRARIES=no WITH_TLS=no WITH_STATIC_LIBRARIES=yes LIB_CFLAGS="-DLIBMOSQUITTO_STATIC -D_WIN32_WINNT=_WIN32_WINNT_VISTA -Wall -ggdb -O2"

@@ -9,11 +9,6 @@
 
 static pixel temp_pix = NULL, cur_pix = NULL;
 
-#ifdef WIN32
-/* FIXME Unused SOCKS part of libmosquitto needs this. */
-void inet_pton(void) { exit(-1); }
-#endif
-
 void fatal(const char *s) __attribute__ ((noreturn));
 void fatal(const char *s)
 {
