@@ -181,9 +181,8 @@ int mqtt_init(void)
 
 void mqtt_quit()
 {
-    mosquitto_loop_stop(mosq, true);
-
-    render_close();
+    mosquitto_disconnect(mosq);
+    mosquitto_loop_stop(mosq, false);
     mosquitto_destroy(mosq);
     mosquitto_lib_cleanup();
 }
