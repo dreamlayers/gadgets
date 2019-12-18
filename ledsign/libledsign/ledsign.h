@@ -86,7 +86,7 @@ LEDAPI int sign_ul_bmap(const unsigned char *s);
 LEDAPI int sign_dl_bmap(unsigned char *s);
 LEDAPI int sign_dl_represent(FILE *f);
 
-LEDAPI int sign_need_keepalive(void);
+LEDAPI int sign_secskalive(void);
 LEDAPI int sign_call_keepalive(void);
 
 #ifdef IN_LIBLEDSIGN

@@ -113,14 +113,16 @@ void cmd_cleanup(void) {
     vfd_disconnect();
 }
 
-int cmd_need_keepalive(void) {
-    return vfd_need_keepalive();
+int cmd_cb_secskalive(void) {
+    return vfd_secskalive();
 }
 
 int cmd_call_keepalive(void) {
     return vfd_call_keepalive();
 }
 
+#ifdef WIN32
 void signd_icondblclick(HWND hwnd) {
     (void)hwnd;
 }
+#endif /* WIN32 */

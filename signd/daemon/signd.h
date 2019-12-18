@@ -175,7 +175,7 @@ int sc_d_msg(scmdblk *cmd, SOCKET sock);
 int sc_r_help(scmdblk *scb, SOCKET sock);
 
 /* Keepalive handling for TCP connections */
-int cmd_need_keepalive(void);
+int cmd_cb_secskalive(void);
 int cmd_call_keepalive(void);
 
 /* Interface for sending commands to daemon from same process */

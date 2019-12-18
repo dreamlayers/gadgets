@@ -300,6 +300,5 @@ int parse_and_run(void) {
     if (ca == NULL) return -1;
     coloranim_exec(ca);
     coloranim_free(&ca);
-    if (!cmd_cb_pollquit() && render_iswastingpower()) render_power(0);
     return 0;
 }

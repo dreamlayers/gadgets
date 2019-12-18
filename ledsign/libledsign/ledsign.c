@@ -812,8 +812,8 @@ int sign_swprint(const char *s,
     return sign_nswprint(s, strlen(s), font, fs, flags);
 }
 
-int sign_need_keepalive(void) {
-    return serio_is_tcp();
+int sign_secskalive(void) {
+    return serio_secskalive();
 }
 
 int sign_call_keepalive(void) {

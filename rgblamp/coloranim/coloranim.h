@@ -35,7 +35,7 @@ void render_open(void);
 void render(const pixel pixr);
 void render_get(pixel pix);
 void render_close(void);
-#ifdef RENDER_POWER
+#ifdef PWR_TMOUT
 int render_iswastingpower(void);
 void render_power(int on);
 #endif

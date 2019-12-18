@@ -93,6 +93,6 @@ void serio_disconnect(void) {
 }
 #endif
 
-int serio_is_tcp(void) {
-    return serio_tcp;
+int serio_secskalive(void) {
+    return serio_tcp ? 60 : 0;
 }

@@ -720,8 +720,8 @@ VFD_RETURN vfd_flush(void) {
     }
 }
 
-int vfd_need_keepalive(void) {
-    return serio_is_tcp();
+int vfd_secskalive(void) {
+    return serio_secskalive();
 }
 
 int vfd_call_keepalive(void) {

@@ -224,11 +224,18 @@ void cmd_cleanup(void) {
     render_close();
 }
 
-int cmd_need_keepalive(void) {
+int cmd_cb_secskalive(void) {
+#ifdef PWR_TMOUT
+    return render_iswastingpower() ? PWR_TMOUT : 0;
+#else
     return 0;
+#endif
 }
 
 int cmd_call_keepalive(void) {
+#ifdef PWR_TMOUT
+    render_power(0);
+#endif
     return 0;
 }
 

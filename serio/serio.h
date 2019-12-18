@@ -79,7 +79,7 @@ void serio_disconnect(void);
 
 void serio_setabortpoll(int (*func)(void));
 
-int serio_is_tcp(void);
+int serio_secskalive(void);
 
 #ifdef IN_SERIO
 /* Definitions only visble to other parts of serio. */
