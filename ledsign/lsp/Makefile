@@ -23,4 +23,4 @@ clean:
 	rm -f $(OBJS) $(TARGET) $(CLEAN_EXTRA) *~ *.bak
 
 lsp.o: lsp.c $(LIBSIGNTCP_DIR)/libsigntcp.h Makefile
-	-$(CC) $(CFLAGS) -o $@ $<
+	-$(CC) -c $(CFLAGS) -o $@ $<

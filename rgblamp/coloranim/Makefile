@@ -44,7 +44,7 @@ STANDALONE_LIBS := $(COMMON_LIBS)
 DAEMON_TARGET := coloranimd$(EXESUFFIX)
 DAEMON_SRCS := $(COMMON_SRCS) mqtt.c json.c rgbcmds.c presets.c
 DAEMON_OBJS := $(DAEMON_SRCS:%.c=%.o)
-DAEMON_LIBS := $(COMMON_LIBS) -lmosquitto -ljsmn
+DAEMON_LIBS := $(COMMON_LIBS) -lmosquitto
 
 # Platform configuration for specific targets
 
