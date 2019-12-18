@@ -76,6 +76,26 @@ static int xsc_bfrtoken(char *b, int l, chainhdr **bp, char **p, int *remain) {
   return l;
 }
 
+static int xsc_bfrall(char *b, int l, scmdblk *scb) {
+  chainhdr *bp = (chainhdr *)(scb->data);
+  char *p;
+  int i, remain;
+
+  if (bp == NULL) return 0;
+
+  p = (char *)bp + sizeof(chainhdr);
+  remain = bp->size;
+  for (i = 0; i < l; i++) {
+    if (p == NULL) {
+        return i;
+    }
+    b[i] = *p;
+    xsc_nextchar(&bp, &p, &remain);
+  }
+
+  return l;
+}
+
 static scmdblk *curscb;
 static chainhdr *curanim_bp;
 static char *curanim_p;
@@ -185,10 +205,9 @@ static int sc_preset(scmdblk *scb)
     int l;
     curscb = scb;
 
-    if (scb->data == NULL) return -1;
-    parse_signd_rewind();
-    l = parse_signd_fetch(curanim_buf);
+    l = xsc_bfrall(curanim_buf, sizeof(curanim_buf) - 1, scb);
     if (l <= 0) return -1;
+    curanim_buf[l] = 0;
 
     parse_str_start = preset_get(curanim_buf);
     if (parse_str_start == NULL) return -1;
