@@ -50,6 +50,8 @@ static ws2811_t ledstring =
     },
 };
 
+static int allblack = 1, power = 0;
+
 static void render_load(void)
 {
     FILE *f;
@@ -57,10 +59,13 @@ static void render_load(void)
     unsigned int i;
 
     f = fopen(SAVED_PIX, "rb");
+    allblack = 1;
     if (f != NULL && fread(buf, 1, sizeof(buf), f) == sizeof(buf)) {
         p = buf;
         for (i = 0; i < LED_COUNT; i++) {
-            ledstring.channel[0].leds[i] = *p | (*(p+1) << 8) | (*(p+2) << 16);
+            ws2811_led_t led = *p | (*(p+1) << 8) | (*(p+2) << 16);
+            if (led != 0) allblack = 0;
+            ledstring.channel[0].leds[i] = led;
             p += 3;
         }
     } else {
@@ -85,10 +90,7 @@ void render_open()
     /* Power supply switching via GPIO */
     wiringPiSetupGpio();
     pinMode(POWER_GPIO, OUTPUT);
-    if (digitalRead(POWER_GPIO) == 0) {
-        digitalWrite(POWER_GPIO, 1);
-        usleep(1000000);
-    }
+    power = digitalRead(POWER_GPIO) != 0;
 }
 
 static unsigned short srgb2pwm(double n) {
@@ -117,16 +119,48 @@ static double pwm2srgb(unsigned short n) {
     return r;
 }
 
+int render_iswastingpower(void)
+{
+    return allblack && power;
+}
+
+void render_power(int on)
+{
+    if (on) {
+        digitalWrite(POWER_GPIO, 1);
+        usleep(1000000);
+        power = 1;
+    } else {
+        int i;
+        digitalWrite(POWER_GPIO, 0);
+        power = 0;
+        for (i = 0; i < LED_COUNT; i++) {
+           ledstring.channel[0].leds[i] = 0;
+        }
+        allblack = 1;
+    }
+}
+
 void render(const pixel pix)
 {
-    unsigned int i;
-    for (i = 0; i < LED_COUNT; i++) {
-        unsigned int pixidx = i * 3;
-        ledstring.channel[0].leds[i] =
+    unsigned int i, pixidx;
+
+    allblack = 1;
+    for (i = 0, pixidx = 0; i < LED_COUNT; i++, pixidx += 3) {
+        ws2811_led_t led =
             srgb2pwm(pix[pixidx]) |
             (srgb2pwm(pix[pixidx + 1]) << 8) |
             (srgb2pwm(pix[pixidx + 2]) << 16);
+        if (led != 0) allblack = 0;
+        ledstring.channel[0].leds[i] = led;
     }
+
+    if (allblack) {
+        if (!power) return;
+    } else if (!power) {
+        render_power(1);
+    }
+
     ws2811_render(&ledstring);
 }
 
@@ -153,14 +187,6 @@ static void render_save(void)
 
 void render_close(void)
 {
-    int i, allblack = 1;
-    for (i = 0; i < LED_COUNT; i++) {
-        if (ledstring.channel[0].leds[i] != 0) {
-            allblack = 0;
-            break;
-        }
-    }
-
     if (!allblack) {
         render_save();
     } else {
@@ -169,8 +195,8 @@ void render_close(void)
 
     ws2811_fini(&ledstring);
 
-    if (allblack) {
-        digitalWrite(POWER_GPIO, 0);
+    if (allblack && power) {
+        render_power(0);
     }
 }
 

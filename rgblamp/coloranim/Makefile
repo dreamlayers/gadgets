@@ -22,7 +22,7 @@ PIXCNT := 1
 EXTRA_DEPS += $(LIBRGBLAMP_DIR)/librgblamp.a
 COMMON_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
 else ifeq ($(DRIVER),rpi_ws281x)
-CFLAGS += -I$(RPI_WS281X_DIR)
+CFLAGS += -I$(RPI_WS281X_DIR) -DRENDER_POWER
 PIXCNT ?= 60
 COMMON_LIBS += -L$(RPI_WS281X_DIR) -lws2811 -lwiringPi
 endif
