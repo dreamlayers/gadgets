@@ -84,6 +84,7 @@ int fx_makestate(const pixel colorspec, const keyword *colorkw,
 void coloranim_init(void);
 void coloranim_quit(void);
 void coloranim_exec(struct coloranim *ca);
+void coloranim_notify(void);
 
 int parse_and_run(void);
 

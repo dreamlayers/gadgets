@@ -76,7 +76,8 @@ static int xsc_bfrtoken(char *b, int l, chainhdr **bp, char **p, int *remain) {
   return l;
 }
 
-static chainhdr *curanim_start, *curanim_bp;
+static scmdblk *curscb;
+static chainhdr *curanim_bp;
 static char *curanim_p;
 static int curanim_remain, curanim_peeklen;
 static char curanim_peekbuf[100], curanim_buf[100];
@@ -121,7 +122,7 @@ static int parse_signd_eof(void)
 
 static void parse_signd_rewind(void)
 {
-    curanim_bp = curanim_start;
+    curanim_bp = (chainhdr *)curscb->data;
     curanim_p = (char *)curanim_bp + sizeof(chainhdr);
     curanim_remain = curanim_bp->size;
     curanim_peeklen = -1;
@@ -133,8 +134,8 @@ static void parse_signd_rewind(void)
 
 static int sc_coloranim(scmdblk *scb)
 {
-    curanim_start = (chainhdr *)scb->data;
-    if (curanim_start == NULL) return -1;
+    curscb = scb;
+    if (scb->data == NULL) return -1;
     parse_signd_rewind();
 
     parse_fetch = parse_signd_fetch;
@@ -143,7 +144,6 @@ static int sc_coloranim(scmdblk *scb)
     parse_eof = parse_signd_eof;
     parse_rewind = parse_signd_rewind;
 
-    /* FIXME notify after one loop */
     return parse_and_run();
 }
 
@@ -183,9 +183,9 @@ static void parse_str_rewind(void)
 static int sc_preset(scmdblk *scb)
 {
     int l;
+    curscb = scb;
 
-    curanim_start = (chainhdr *)scb->data;
-    if (curanim_start == NULL) return -1;
+    if (scb->data == NULL) return -1;
     parse_signd_rewind();
     l = parse_signd_fetch(curanim_buf);
     if (l <= 0) return -1;
@@ -208,7 +208,6 @@ int cmd_init(const char *device) {
     coloranim_init();
     parse_init();
     mqtt_init();
-    /* FIXME coloranim_setabortpoll(cmd_cb_pollquit); */
     return 0;
 }
 
@@ -237,6 +236,10 @@ int cmd_call_keepalive(void) {
     render_power(0);
 #endif
     return 0;
+}
+
+void coloranim_notify(void) {
+    cmd_cb_notify(curscb);
 }
 
 /*

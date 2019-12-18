@@ -252,6 +252,7 @@ void coloranim_exec(struct coloranim *ca)
     struct coloranim_state *state = ca->states;
     double fade = ca->first_fade;
     pixel save_pix = NULL;
+    int ntfy = 1;
 
     if (state == NULL) fatal("no states in animation");
 
@@ -281,6 +282,10 @@ void coloranim_exec(struct coloranim *ca)
         state = state->next;
         if (state == NULL) {
             if (ca->repeat) {
+                if (ntfy) {
+                    coloranim_notify();
+                    ntfy = 0;
+                }
                 state = ca->states;
             } else {
                 break;

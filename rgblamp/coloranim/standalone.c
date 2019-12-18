@@ -48,6 +48,10 @@ int cmd_cb_pollquit(void)
     return 0;
 }
 
+void coloranim_notify(void)
+{
+}
+
 /* Standalone command line coloranim */
 int main(int argc, char **argv)
 {

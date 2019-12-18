@@ -76,7 +76,6 @@ clean:
 # Dependencies
 
 ifeq ($(PLATFORM),Windows)
-# FIXME Add Windows files for this program in particular
 coloranimd-res.o: coloranimd.rc coloranimd.ico
 	windres -I$(SIGND_DIR)/daemon $< $@
 winrgbchoose.o: ../winrgbchoose/winrgbchoose.c

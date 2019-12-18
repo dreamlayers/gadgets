@@ -148,7 +148,6 @@ static void my_log_callback(struct mosquitto *mosq, void *userdata,
 
 static struct mosquitto *mosq = NULL;
 
-/* FIXME MQTT needs initializing */
 int mqtt_init(void)
 {
     char *host = "192.168.1.24";
