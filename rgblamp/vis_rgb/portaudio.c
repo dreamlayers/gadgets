@@ -10,6 +10,7 @@
 #include <portaudio.h>
 #include <pthread.h>
 #include "rgbm.h"
+#include "soundbuf.h"
 
 /*
  * Visualizer waits until this many new samples have been collected.
@@ -30,90 +31,16 @@
 static PaStream *stream = NULL;
 static double *samp = NULL;
 
-/*
- * Incoming samples go into a ring buffer protected by a mutex.
- * Next incoming sample goes to ring[ring_write], and ring_write wraps.
- * When enough samples have arrived sound_retrieve() copies from the ring
- * buffer, protected by that mutex, which prevents new samples from
- * overwriting. It uses ring_write to know how data is wrapped in the
- * ring buffer.
- */
-static double ring[RGBM_NUMSAMP];
-static unsigned int ring_write = 0;
-static pthread_mutex_t mutex;
-static pthread_cond_t cond;
-static int signalled = 0;
-
-/* Number of samples put into ring buffer since last sound_retrieve() call is
- * counted by ring_has. If visualizer is slower than input, ring_has could be
- * more than RGBM_NUMSAMP, which is useful for timing.
- */
-static unsigned int ring_has = 0;
-
 static void error(const char *s) {
     fprintf(stderr, "Error: %s\n", s);
     exit(-1);
-}
-
-static void sound_store(const int16_t *input, unsigned int len) {
-    int i;
-    const int16_t *ip;
-    double *op;
-    unsigned int remain;
-
-    if (len >= RGBM_NUMSAMP) {
-        /* If there are too many samples, fill buffer with latest ones */
-        ip = input + len - RGBM_NUMSAMP;
-        op = &(ring[0]);
-        remain = RGBM_NUMSAMP;
-
-        ring_write = 0;
-    } else {
-        remain = RGBM_NUMSAMP - ring_write;
-        if (remain >= len) {
-            remain = len;
-        } else {
-            /* Do part of store after wrapping around ring */
-            int remain2 = len - remain;
-            ip = input + remain;
-            op = &(ring[0]);
-            for (i = 0; i < remain2; i++) {
-                *(op++) = *(ip++) / 32768.0;
-            }
-        }
-
-        ip = input;
-        op = &(ring[ring_write]);
-
-        /* Advance write pointer */
-        ring_write += len;
-        if (ring_write >= RGBM_NUMSAMP) {
-            ring_write = 0;
-        }
-    }
-
-    /* Do part of store before wrapping point, maybe whole store */
-    for (i = 0; i < remain; i++) {
-        *(op++) = *(ip++) / 32768.0;
-    }
-
-    /* This could theoretically overflow, but is needed for timing */
-    ring_has += len;
 }
 
 static int pa_callback(const void *input, void *output,
                        unsigned long frameCount,
                        const PaStreamCallbackTimeInfo *timeInfo,
                        PaStreamCallbackFlags statusFlags, void *userData) {
-    pthread_mutex_lock(&mutex);
-    sound_store((int16_t *)input, frameCount);
-    if (ring_has >= MIN_NEW_SAMPLES && !signalled) {
-        /* Next buffer is full */
-        signalled = 1;
-        pthread_cond_signal(&cond);
-    }
-    pthread_mutex_unlock(&mutex);
-
+    sndbuf_store((int16_t *)input, frameCount);
     return paContinue;
 }
 
@@ -127,6 +54,8 @@ static void sound_open(const char *devname) {
 
     err = Pa_Initialize();
     if(err != paNoError) error("initializing PortAudio.");
+
+    sndbuf_init();
 
     if ((devname == NULL) ?
 #ifdef WIN32
@@ -184,9 +113,6 @@ static void sound_open(const char *devname) {
 
     err = Pa_StartStream( stream );
     if(err != paNoError) error("starting PortAudio stream");
-
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&cond, NULL);
 }
 
 static void sound_close(void) {
@@ -201,41 +127,8 @@ static void sound_close(void) {
     err = Pa_Terminate();
     if (err != paNoError) error("terminating PortAudio");
 
-    pthread_cond_destroy(&cond);
-    pthread_mutex_destroy(&mutex);
+    sndbuf_quit();
 }
-
-static unsigned long sound_retrieve(void) {
-    unsigned int chunk1, ring_had;
-
-    pthread_mutex_lock(&mutex);
-
-    /* Wait for next buffer to be full */
-    while (!signalled) {
-        pthread_cond_wait(&cond, &mutex);
-    }
-    signalled = 0;
-
-    /* Copy first part, up to wrapping point */
-    chunk1 = RGBM_NUMSAMP - ring_write;
-    memcpy(&samp[0], &ring[ring_write], sizeof(double) * chunk1);
-    if (ring_write > 0) {
-        /* Samples are wrapped around the ring. Copy the second part. */
-        memcpy(&samp[chunk1], &ring[0], sizeof(double) * ring_write);
-    }
-
-    /* Unnecessary but optimal if visualization is faster than input. */
-    ring_write = 0;
-
-    ring_had = ring_has;
-    ring_has = 0;
-
-    /* After swap the buffer shouldn't be touched anymore by interrupts */
-    pthread_mutex_unlock(&mutex);
-
-    return ring_had;
-}
-
 
 /* Do clean shutdown of sound and lamp connection on ^C */
 static int quit;
@@ -250,7 +143,7 @@ static void sound_visualize(void) {
     double deltat;
     do {
         if (quit) break;
-        deltat = (double)sound_retrieve() / 44100.0;
+        deltat = (double)sndbuf_retrieve(samp) / 44100.0;
     } while (rgbm_render_wave(deltat));
 }
 
