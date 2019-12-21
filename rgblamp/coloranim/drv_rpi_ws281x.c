@@ -127,10 +127,12 @@ int render_iswastingpower(void)
 void render_power(int on)
 {
     if (on) {
-        digitalWrite(POWER_GPIO, 1);
-        usleep(1000000);
-        power = 1;
-    } else {
+        if (!power) {
+            digitalWrite(POWER_GPIO, 1);
+            usleep(1000000);
+            power = 1;
+        }
+    } else if (power) {
         int i;
         digitalWrite(POWER_GPIO, 0);
         power = 0;
@@ -193,11 +195,11 @@ void render_close(void)
         unlink(SAVED_PIX);
     }
 
-    ws2811_fini(&ledstring);
-
     if (allblack && power) {
         render_power(0);
     }
+
+    ws2811_fini(&ledstring);
 }
 
 void render_get(pixel pix)

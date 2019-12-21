@@ -187,6 +187,10 @@ int fx_makestate(const pixel colorspec, const keyword *colorkw,
 static int fx_crossfade(const pixel oldclr, const pixel newclr,
                         double seconds)
 {
+#ifdef PWR_TMOUT
+    /* Make sure power is on because turning it on takes some time */
+    render_power(1);
+#endif
     stopwatch_start();
     while (1) {
         double t;
