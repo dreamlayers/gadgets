@@ -60,7 +60,7 @@ endif
 # Target rules
 
 .PHONY: all
-all: $(STANDALONE_TARGET) $(DAEMON_TARGET) coloranim.lircrc
+all: $(STANDALONE_TARGET) $(DAEMON_TARGET)
 
 $(DAEMON_TARGET): $(DAEMON_OBJS) $(EXTRA_DEPS) $(SIGND_DIR)/daemon/signd.a
 	$(CC) $(CFLAGS) $^ $(DAEMON_LIBS) -o $@
@@ -92,6 +92,3 @@ json.o: json.c coloranim.h Makefile
 rgbcmds.o: rgbcmds.c coloranim.h \
            $(SIGND_DIR)/daemon/signd.h $(SIGND_DIR)/sdprotocol.h Makefile
 standalone.o: standalone.c coloranim.h Makefile
-
-coloranim.lircrc: mklircrc.py
-	python3 $< > $@ || rm -f $@

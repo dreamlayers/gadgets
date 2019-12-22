@@ -16,4 +16,4 @@ rgblamp/vis_rgb/visrgb
 rgblamp/vis_rgb/visrgbsdl
 rgblamp/coloranim/coloranim
 rgblamp/coloranim/coloranimd
-rgblamp/coloranim/coloranim.lircrc
+lirc/gadgets.lircrc
