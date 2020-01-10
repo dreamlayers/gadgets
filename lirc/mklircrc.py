@@ -66,7 +66,7 @@ MODES = [
     ( 'coloranim_white', 'KEY_YELLOW',
        CANIM_TEMPLATE, lambda x: canim_str([1, .94, .85], x) ),
     ( 'mopidy_radio', 'KEY_CLEAR', MOPIDY_TEMPLATE,
-      m3u_list('/var/lib/mopidy/playlists/Radio.m3u8', 10)),
+      m3u_list('/var/lib/mopidy/m3u/Radio.m3u8', 10)),
     ( 'mopidy_dir', 'KEY_ENTER', MOPIDY_TEMPLATE,
       dir_list('/home/kodi/Music/', '*-*', 10))
 ]
