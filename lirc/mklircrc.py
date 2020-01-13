@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+# Main remote
+
 REMOTE = 'DC550D_H300'
 
 KEY = '''    begin
@@ -18,9 +20,43 @@ MODE = '''begin
     mode = %%s
 end''' % REMOTE
 
-KEYSINMODE = list(map(lambda x: 'KEY_' + str(x), range(0,10)))
+def key_range(prefix, r):
+    return list(map(lambda x: prefix + str(x), r))
+
+KEYSINMODE = key_range('KEY_', range(0,10))
 
 CANIM_TEMPLATE = '/usr/local/bin/canim in .5 %s'
+
+# RGB bulb remote
+
+BULB_KEY = '''begin
+    prog   = irexec
+    remote = RGBbulb
+    button = %s
+    config = %s
+end'''
+
+BULB_KEYS = [ 'KEY_RED', 'KEY_GREEN', 'KEY_BLUE', 'KEY_BRIGHTNESS_MAX' ] + \
+    key_range('KEY_F', range(1,13))
+
+BULB_COLORS = [
+    '1 0 0',
+    '0 1 0',
+    '0 0 1',
+    '1 .75 .35',
+    '1 .35 0',
+    '0 1 .6',
+    '.12 .18 1',
+    '1 .6 0',
+    '0 1 .8',
+    '.9 0 1',
+    '1 .72 0',
+    '0 1 1',
+    '1 0 1',
+    '1 .85 0',
+    '.20 .45 1',
+    '1 0 .85'
+]
 
 def canim_float(f):
     s = '%.5g' % f
@@ -81,3 +117,6 @@ for mode in MODES:
             print(KEY % (KEYSINMODE[idx], mode[2] % s))
     print('end ' + mode[0])
     print(MODE % (mode[1], mode[0]))
+
+for k, c in zip(BULB_KEYS, BULB_COLORS):
+    print(BULB_KEY % (k, CANIM_TEMPLATE % c))
