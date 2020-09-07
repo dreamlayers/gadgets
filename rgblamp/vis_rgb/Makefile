@@ -34,9 +34,13 @@ STANDALONE_PREREQ := fftw3 portaudio-2.0
 ifeq ($(shell $(PKG_CONFIG) --exists $(STANDALONE_PREREQ) || echo no),no)
 $(warning WARNING: Not building RGB lamp standalone visualizer due to lack of prerequisites.)
 else
-STANDALONE := visrgb
 STANDALONE_CFLAGS := $(CFLAGS) -DRGBM_FFTW -pthread $(shell $(PKG_CONFIG) --cflags $(STANDALONE_PREREQ))
-STANDALONE_OBJS := rgbm-standalone.o portaudio.o soundbuf.o main.o
+
+STANDALONE_LIB := libvisrgb.a
+STANDALONE_LIB_OBJS := rgbm-standalone.o portaudio.o soundbuf.o
+
+STANDALONE := visrgb
+STANDALONE_OBJS := main.o
 STANDALONE_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ)) -lm
 ifeq ($(PLATFORM),Windows)
 STANDALONE_CFLAGS += -static
@@ -53,7 +57,10 @@ endif
 
 all: $(STANDALONE)
 
-$(STANDALONE): $(STANDALONE_OBJS)
+$(STANDALONE_LIB): $(STANDALONE_LIB_OBJS)
+	ar rcs $@ $^
+
+$(STANDALONE): $(STANDALONE_OBJS) $(STANDALONE_LIB)
 	$(CC) $(STANDALONE_CFLAGS) $^ -o $@ $(STANDALONE_LIBS)
 
 rgbm-standalone.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h  \
@@ -77,10 +84,10 @@ else
 SDLVIS := visrgbsdl
 SDLVIS_CFLAGS := $(STANDALONE_CFLAGS) $(shell $(PKG_CONFIG) --cflags $(SDLVIS_PREREQ))
 SDLVIS_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ) $(SDLVIS_PREREQ)) -lm
-SDLVIS_OBJS := rgbm-standalone.o portaudio.o soundbuf.o sdl_rgb.o main.o
+SDLVIS_OBJS := sdl_rgb.o main.o
 all: $(SDLVIS)
 
-$(SDLVIS): $(SDLVIS_OBJS)
+$(SDLVIS): $(SDLVIS_OBJS) $(STANDALONE_LIB)
 	$(CC) $(SDLVIS_CFLAGS) $^ -o $@ $(SDLVIS_LIBS)
 
 sdl_rgb.o: sdl_rgb.c $(LIBRGBLAMP_DIR)/librgblamp.h
