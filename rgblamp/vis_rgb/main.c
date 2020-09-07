@@ -13,11 +13,19 @@
 #include "soundbuf.h"
 
 /* Do clean shutdown of sound and lamp connection on ^C */
+
+static int rgbm_quit = 0;
+
 static void sig_handler(int signo)
 {
     if (signo == SIGINT) {
         rgbm_quit = 1;
     }
+}
+
+int rgbm_pollquit(void)
+{
+    return rgbm_quit;
 }
 
 int main(int argc, char **argv) {

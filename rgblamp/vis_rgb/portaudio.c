@@ -28,8 +28,6 @@
 #endif
 #endif
 
-int rgbm_quit = 0;
-
 static PaStream *stream = NULL;
 static double *samp = NULL;
 
@@ -144,7 +142,7 @@ void rgbm_run(const char *snddev) {
     sound_open(snddev);
 
     do {
-        if (rgbm_quit) break;
+        if (rgbm_pollquit()) break;
         deltat = (double)sndbuf_retrieve(samp) / 44100.0;
     } while (rgbm_render_wave(deltat));
 

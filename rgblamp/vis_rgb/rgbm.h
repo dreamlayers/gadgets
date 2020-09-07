@@ -41,7 +41,7 @@ int rgbm_render_wave(double deltat);
 #endif
 
 /* Standalone functions */
-int rgbm_quit;
+int rgbm_pollquit(void);
 void rgbm_run(const char *snddev);
 
 #ifdef __cplusplus

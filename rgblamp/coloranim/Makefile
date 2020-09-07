@@ -43,8 +43,18 @@ STANDALONE_LIBS := $(COMMON_LIBS)
 
 DAEMON_TARGET := coloranimd$(EXESUFFIX)
 DAEMON_SRCS := $(COMMON_SRCS) mqtt.c json.c rgbcmds.c presets.c
-DAEMON_OBJS := $(DAEMON_SRCS:%.c=%.o)
 DAEMON_LIBS := $(COMMON_LIBS) -lmosquitto
+
+RGBM_PREREQ := fftw3 portaudio-2.0
+ifeq ($(shell $(PKG_CONFIG) --exists $(RGBM_PREREQ) || echo no),no)
+$(warning WARNING: Not building RGB lamp visualizer due to lack of prerequisites.)
+else
+DAEMON_LIBS := $(DAEMON_LIBS) ../vis_rgb/libvisrgb.a -pthread $(shell $(PKG_CONFIG) --libs $(RGBM_PREREQ))
+DAEMON_SRCS := $(DAEMON_SRCS) rgbm_glue.c
+CFLAGS += -I../../rgblamp/librgblamp -I../vis_rgb
+endif
+
+DAEMON_OBJS := $(DAEMON_SRCS:%.c=%.o)
 
 # Platform configuration for specific targets
 

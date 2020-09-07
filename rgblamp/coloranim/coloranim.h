@@ -103,4 +103,7 @@ void get_effect(char *effect, int len);
 
 int effect_list_len(void);
 void effect_list_fill(char *p);
-const char *preset_get(const char *name);
+typedef int (*effect_func)(const char *);
+const void effect_get(const char *name,
+                      effect_func *func, const char **data);
+int effect_rgbm(const char *data);
