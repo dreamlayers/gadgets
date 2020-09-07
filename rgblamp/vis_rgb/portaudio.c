@@ -28,6 +28,8 @@
 #endif
 #endif
 
+int rgbm_quit = 0;
+
 static PaStream *stream = NULL;
 static double *samp = NULL;
 
@@ -130,47 +132,22 @@ static void sound_close(void) {
     sndbuf_quit();
 }
 
-/* Do clean shutdown of sound and lamp connection on ^C */
-static int quit;
-static void sig_handler(int signo)
-{
-    if (signo == SIGINT) {
-        quit = 1;
-    }
-}
-
-static void sound_visualize(void) {
+void rgbm_run(const char *snddev) {
     double deltat;
-    do {
-        if (quit) break;
-        deltat = (double)sndbuf_retrieve(samp) / 44100.0;
-    } while (rgbm_render_wave(deltat));
-}
-
-int main(int argc, char **argv) {
-    char *snddev = NULL;
-    quit = 0;
-
-    if (argc == 2) {
-        snddev = argv[1];
-    } else if (argc != 1) {
-        fprintf(stderr, "Usage: %s [sound device]\n", argv[0]);
-        return -1;
-    }
-
-    signal(SIGINT, sig_handler);
 
     if (!rgbm_init()) {
         error("initializing visualization");
     }
+
     samp = rgbm_get_wave_buffer();
 
     sound_open(snddev);
 
-    sound_visualize();
+    do {
+        if (rgbm_quit) break;
+        deltat = (double)sndbuf_retrieve(samp) / 44100.0;
+    } while (rgbm_render_wave(deltat));
 
     sound_close();
     rgbm_shutdown();
-
-    return 0;
 }

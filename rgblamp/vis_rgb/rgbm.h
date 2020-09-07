@@ -40,6 +40,10 @@ RGBM_BINTYPE *rgbm_get_wave_buffer(void);
 int rgbm_render_wave(double deltat);
 #endif
 
+/* Standalone functions */
+int rgbm_quit;
+void rgbm_run(const char *snddev);
+
 #ifdef __cplusplus
 }
 #endif
