@@ -7,14 +7,18 @@
 #include <mosquitto.h>
 #include "coloranim.h"
 
-#define NAME "Behind TV"
-#define OBJECT_ID "ws281x"
+#ifndef MQTT_NAME
+#define MQTT_NAME "Behind TV"
+#endif
+#ifndef MQTT_ID
+#define MQTT_ID "ws281x"
+#endif
 
 static const char discovery_1[] = "{\
-\"name\": \"" NAME "\", \
+\"name\": \"" MQTT_NAME "\", \
 \"schema\": \"json\", \
-\"command_topic\": \"homeassistant/light/" OBJECT_ID "/set\", \
-\"state_topic\": \"homeassistant/light/" OBJECT_ID "/state\", \
+\"command_topic\": \"homeassistant/light/" MQTT_ID "/set\", \
+\"state_topic\": \"homeassistant/light/" MQTT_ID "/state\", \
 \"brightness\": \"true\", \
 \"rgb\": \"true\", \
 \"effect\": \"true\", \
@@ -93,7 +97,7 @@ static void my_message_callback(struct mosquitto *mosq, void *userdata,
         }
         /* TODO Maybe echoing everything back isn't best */
         mosquitto_publish(mosq, NULL,
-                          "homeassistant/light/" OBJECT_ID "/state",
+                          "homeassistant/light/" MQTT_ID "/state",
                           message->payloadlen, message->payload,
                           1, 1);
 
@@ -109,13 +113,13 @@ static void my_connect_callback(struct mosquitto *mosq, void *userdata,
     if (!result) {
         /* Subscribe to broker information topics on successful connect. */
         mosquitto_subscribe(mosq, NULL,
-                            "homeassistant/light/" OBJECT_ID "/set", 2);
+                            "homeassistant/light/" MQTT_ID "/set", 2);
         /* Publish Home Assistant discovery message */
         if (discovery == NULL) {
             build_discovery();
         }
         mosquitto_publish(mosq, NULL,
-                          "homeassistant/light/" OBJECT_ID "/config",
+                          "homeassistant/light/" MQTT_ID "/config",
                           /* Don't send the null terminator! */
                           discovery_len, discovery,
                           1, 1);
@@ -167,7 +171,7 @@ int mqtt_init(void)
 #endif
     mosquitto_connect_callback_set(mosq, my_connect_callback);
     mosquitto_message_callback_set(mosq, my_message_callback);
-    mosquitto_will_set(mosq, "homeassistant/light/" OBJECT_ID "/config",
+    mosquitto_will_set(mosq, "homeassistant/light/" MQTT_ID "/config",
                        0, NULL, 1, 1);
 
     if (mosquitto_connect(mosq, host, port, keepalive)) {
