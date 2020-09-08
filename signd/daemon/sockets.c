@@ -441,7 +441,7 @@ int init_socket(const char *device) {
   memset(&saServer, 0, sizeof(saServer));
   saServer.sin_family = AF_INET;
   /* Since this is a server, any address will do */
-  saServer.sin_addr.s_addr = INADDR_ANY;
+  saServer.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   saServer.sin_port = htons(PORT);
 
   /* Bind the socket to our local server address */
