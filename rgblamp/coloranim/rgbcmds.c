@@ -200,6 +200,19 @@ static void parse_str_rewind(void)
     }
 }
 
+int effect_canim(const char *data)
+{
+    parse_str_start = data;
+    parse_fetch = parse_str_fetch;
+    parse_getnext = parse_signd_getnext;
+    parse_peeknext = parse_signd_peeknext;
+    parse_eof = parse_str_eof;
+    parse_rewind = parse_str_rewind;
+
+    parse_str_rewind();
+    return parse_and_run();
+}
+
 static int sc_preset(scmdblk *scb)
 {
     int l;
@@ -213,19 +226,10 @@ static int sc_preset(scmdblk *scb)
 
     effect_get(curanim_buf, &func, &parse_str_start);
 
-    if (func == NULL) {
-        if (parse_str_start == NULL) return -1;
-
-        parse_fetch = parse_str_fetch;
-        parse_getnext = parse_signd_getnext;
-        parse_peeknext = parse_signd_peeknext;
-        parse_eof = parse_str_eof;
-        parse_rewind = parse_str_rewind;
-
-        parse_str_rewind();
-        return parse_and_run();
-    } else {
+    if (func != NULL) {
         return func(parse_str_start);
+    } else {
+        return -1;
     }
 }
 

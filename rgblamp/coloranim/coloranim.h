@@ -106,4 +106,6 @@ void effect_list_fill(char *p);
 typedef int (*effect_func)(const char *);
 const void effect_get(const char *name,
                       effect_func *func, const char **data);
+
+int effect_canim(const char *data);
 int effect_rgbm(const char *data);

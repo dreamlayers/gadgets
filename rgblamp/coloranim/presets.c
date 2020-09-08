@@ -11,12 +11,14 @@ struct effect {
 
 extern int foo(const char *); //FIXME
 const struct effect builtin_presets[] = {
-    { "HSV hue rotation", NULL, "1 0 0 in 5 1 1 0 in 5 0 1 0 in 5 0 1 1 in 5 0 0 1 in 5 1 0 1 in 5 repeat" },
+    { "HSV hue rotation", effect_canim,
+      "1 0 0 in 5 1 1 0 in 5 0 1 0 in 5 0 1 1 in 5 0 0 1 in 5 1 0 1 in 5 repeat" },
 #if PIXCNT > 1
-    { "red and green sides exchange", NULL, "1 0 0 to 0 1 0 in 10 0 1 0 to 1 0 0 in 10 repeat" },
+    { "red and green sides exchange", effect_canim,
+      "1 0 0 to 0 1 0 in 10 0 1 0 to 1 0 0 in 10 repeat" },
 #endif
-    { "pulsate", NULL, "0.5 in 2 1 in 2 repeat" },
-    { "red green", NULL, "1 0 0 in 2 0 1 0 in 2 repeat" },
+    { "pulsate", effect_canim, "0.5 in 2 1 in 2 repeat" },
+    { "red green", effect_canim, "1 0 0 in 2 0 1 0 in 2 repeat" },
     { "music visualizer", effect_rgbm, NULL },
     { NULL, NULL, NULL }
 };
