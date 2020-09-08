@@ -14,17 +14,11 @@
 #ifdef RGBM_FFTW
 #include <fftw3.h>
 #endif
-#include "librgblamp.h"
+#include <stdbool.h>
 
 /*
  * Configuration you can tweak
  */
-
-#ifdef WIN32
-#define RGBPORT "COM8"
-#else
-#define RGBPORT "/dev/ttyUSB0"
-#endif
 
 /* These exponential moving average coefficients are for 1 FPS.
  * Divide by time in seconds since last frame to get coefficient for
@@ -136,8 +130,6 @@ static double binavg[3];
 #ifdef RGBM_AGCUP
 static double pwm[3];
 #endif
-/* Set after successful PWM write, and enables rgb_matchpwm afterwards */
-static int wrotepwm;
 
 #ifdef RGBM_LOGGING
 static double testsum[RGBM_USEBINS];
@@ -343,7 +335,7 @@ static void rgbm_testsum(const RGBM_BINTYPE bins[RGBM_NUMBINS]) {
 
 int rgbm_init(void) {
     int i;
-    if (!rgb_open(RGBPORT))
+    if (!rgbm_hw_open())
         return false;
 
 #ifdef RGBM_FFTW
@@ -365,19 +357,11 @@ int rgbm_init(void) {
     testlog = fopen("rgbm.log", "w");
     testctr = 0;
 #endif
-    wrotepwm = 0;
     return true;
 }
 
 void rgbm_shutdown(void) {
-    if (wrotepwm) {
-#ifdef RGBM_AGCUP
-        rgb_matchpwm_srgb(pwm[0], pwm[1], pwm[2]);
-#else
-        rgb_matchpwm(binavg[0], binavg[1], binavg[2]);
-#endif
-    }
-    rgb_close();
+    rgbm_hw_close();
 #ifdef RGBM_FFTW
     fftw_destroy_plan(fft_plan);
     fftw_free(fft_in);
@@ -405,7 +389,6 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]
     sums[2] *= RGBM_BLUESCALE;
     rgbm_avgsums(sums, binavg, RGBM_SCALE, RGBM_LIMIT IF_STANDALONE(, deltat));
 
-    rgb_flush();
 #ifdef RGBM_LOGGING
     for (res = 0; res < 3; res++) {
         avgavg[res] = (avgavg[res] * (RGBM_TESTAVGSIZE-1) + binavg[res])
@@ -423,11 +406,10 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]
     rgbm_agc(binavg, pwm);
     /* AGC washes out the colours if the output is used as raw PWM,
        so sRGB coversion is used for gamma correction. */
-    res = rgb_pwm_srgb(pwm[0], pwm[1], pwm[2]);
+    res = rgbm_hw_srgb(pwm);
 #else
-    res = rgb_pwm(binavg[0], binavg[1], binavg[2]);
+    res = rgbm_hw_pwm(binavg);
 #endif
-    if (res) wrotepwm = 1;
     return res;
 } /* rgbm_render */
 

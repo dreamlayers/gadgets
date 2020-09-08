@@ -2,9 +2,7 @@
 #define RGBM_FFTW
 #include "rgbm.h"
 #include "coloranim.h"
-#include "librgblamp.h"
 
-//extern void rgbm_run(const char *snddev);
 int effect_rgbm(const char *data)
 {
     rgbm_run(data);
@@ -12,8 +10,8 @@ int effect_rgbm(const char *data)
 }
 
 
-RGBAPI bool rgb_open(const char *fn) {
-    return true;
+int rgbm_hw_open(void) {
+    return 1;
 }
 
 static double pwm2srgb(unsigned short n) {
@@ -32,36 +30,25 @@ static double pwm2srgb(unsigned short n) {
     return r;
 }
 
-
-RGBAPI bool rgb_pwm(unsigned short r, unsigned short g, unsigned short b) {
+int rgbm_hw_pwm(const double *rgb) {
     static double ledstring[PIXCNT * COLORCNT];
     unsigned int i;
     double sr, sg, sb;
 
-    sr = pwm2srgb(r);
-    sg = pwm2srgb(g);
-    sb = pwm2srgb(b);
+    sr = pwm2srgb(rgb[0]);
+    sg = pwm2srgb(rgb[1]);
+    sb = pwm2srgb(rgb[2]);
     for (i = 0; i < PIXCNT * COLORCNT; i += 3) {
         ledstring[i] = sr;
         ledstring[i+1] = sg;
         ledstring[i+2] = sb;
     }
     render((pixel)&ledstring);
-    return true;
+    return 1;
 }
 
-RGBAPI bool rgb_flush(void) {
-    return true;
-}
 
-RGBAPI bool rgb_matchpwm(unsigned short r, unsigned short g, unsigned short b) {
-    (void)r;
-    (void)g;
-    (void)b;
-    return true;
-}
-
-RGBAPI void rgb_close(void) {
+void rgbm_hw_close(void) {
 }
 
 int rgbm_pollquit(void)

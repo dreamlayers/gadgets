@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <SDL.h>
-#include "librgblamp.h"
+#include "rgbm.h"
 
 #define TITLE "RGB lamp visualizer"
 #define DEFAULT_WIDTH (640)
@@ -92,11 +92,10 @@ static bool screen_init(unsigned int newwidth, unsigned int newheight) {
     }
 }
 
-RGBAPI bool rgb_open(const char *fn) {
+int rgbm_hw_open(void) {
 #if !SDL_VERSION_ATLEAST(2,0,0)
     const SDL_VideoInfo *vi;
 #endif
-    (void)fn;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         sdlError("initializing SDL");
@@ -114,6 +113,7 @@ RGBAPI bool rgb_open(const char *fn) {
     return screen_init(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
+#ifndef RGBM_AGCUP
 static unsigned int pwm2srgb256(unsigned short n) {
     double r = n / 4095.0;
 
@@ -129,13 +129,14 @@ static unsigned int pwm2srgb256(unsigned short n) {
     if (r < 0.0) r = 0.0;
     return r * 255.0;
 }
-
+#else /* RGBM_AGCUP */
 static unsigned int srgb2srgb256(double r) {
     if (r < 0.0) r = 0.0;
     if (r > 1.0) r = 1.0;
 
     return r * 255.0;
 }
+#endif
 
 static bool pollevents(void) {
     SDL_Event event;
@@ -199,38 +200,22 @@ static bool pollevents(void) {
     return true;
 }
 
-RGBAPI bool rgb_pwm(unsigned short r, unsigned short g, unsigned short b) {
-    savedr = pwm2srgb256(r);
-    savedg = pwm2srgb256(g);
-    savedb = pwm2srgb256(b);
+#ifndef RGBM_AGCUP
+int rgbm_hw_pwm(const double *rgb) {
+    savedr = pwm2srgb256(rgb[0]);
+    savedg = pwm2srgb256(rgb[1]);
+    savedb = pwm2srgb256(rgb[2]);
     return redraw() && pollevents();
 }
-
-RGBAPI bool rgb_pwm_srgb(double r, double g, double b) {
-    savedr = srgb2srgb256(r);
-    savedg = srgb2srgb256(g);
-    savedb = srgb2srgb256(b);
+#else /* RGBM_AGCUP */
+int rgbm_hw_srgb(const double *rgb) {
+    savedr = srgb2srgb256(rgb[0]);
+    savedg = srgb2srgb256(rgb[1]);
+    savedb = srgb2srgb256(rgb[2]);
     return redraw() && pollevents();
 }
+#endif
 
-RGBAPI void rgb_close(void) {
+void rgbm_hw_close(void) {
     SDL_Quit();
-}
-
-/* Functions which do nothing and exist to satisfy rgbm.c */
-RGBAPI bool rgb_matchpwm(unsigned short r, unsigned short g, unsigned short b) {
-    (void)r;
-    (void)g;
-    (void)b;
-    return true;
-}
-
-RGBAPI bool rgb_matchpwm_srgb(double r, double g, double b) {
-    (void)r;
-    (void)g;
-    (void)b;
-    return true;
-}
-RGBAPI bool rgb_flush(void) {
-    return true;
 }

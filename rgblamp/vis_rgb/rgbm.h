@@ -44,6 +44,15 @@ int rgbm_render_wave(double deltat);
 int rgbm_pollquit(void);
 void rgbm_run(const char *snddev);
 
+/* Hardware driver functions */
+int rgbm_hw_open(void);
+#ifdef RGBM_AGCUP
+int rgbm_hw_srgb(const double *rgb);
+#else
+int rgbm_hw_pwm(const double *rgb);
+#endif
+void rgbm_hw_close(void);
+
 #ifdef __cplusplus
 }
 #endif

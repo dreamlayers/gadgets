@@ -1,13 +1,12 @@
 /* Standalone visualization plugin code, using screen instead of RGB lamp. */
 /* Copyright 2017 Boris Gjenero. Released under the MIT license. */
 
-#include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
 /* stdint.h required for ws2811.h */
 #include <stdint.h>
 #include "ws2811.h"
-#include "librgblamp.h"
+#include "rgbm.h"
 
 //#define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
 
@@ -47,45 +46,28 @@ static ws2811_t ledstring =
     },
 };
 
-RGBAPI bool rgb_open(const char *fn) {
+int rgbm_hw_open(void) {
     ws2811_return_t ret;
-    (void)fn;
     if ((ret = ws2811_init(&ledstring)) != WS2811_SUCCESS) {
         fprintf(stderr, "ws2811_init failed: %s\n", ws2811_get_return_t_str(ret));
-        return false;
+        return 0;
     } else {
-        return true;
+        return 1;
     }
 }
 
-RGBAPI bool rgb_pwm(unsigned short r, unsigned short g, unsigned short b) {
+int rgbm_hw_pwm(const double *rgb) {
     unsigned int i;
-    uint32_t pix = (r >> 4) | ((g >> 4) << 8) | ((b >> 4) << 16);
+    uint32_t pix = (lrint(rgb[0]) >> 4) | 
+                   ((lrint(rgb[1]) >> 4) << 8) |
+                   ((lrint(rgb[2]) >> 4) << 16);
     for (i = 0; i < LED_COUNT; i++) {
         ledstring.channel[0].leds[i] = pix;
     }
     ws2811_render(&ledstring);
-    return true;
+    return 1;
 }
 
-RGBAPI void rgb_close(void) {
+void rgbm_hw_close(void) {
     ws2811_fini(&ledstring);
-}
-
-/* Functions which do nothing and exist to satisfy rgbm.c */
-RGBAPI bool rgb_matchpwm(unsigned short r, unsigned short g, unsigned short b) {
-    (void)r;
-    (void)g;
-    (void)b;
-    return true;
-}
-
-RGBAPI bool rgb_matchpwm_srgb(double r, double g, double b) {
-    (void)r;
-    (void)g;
-    (void)b;
-    return true;
-}
-RGBAPI bool rgb_flush(void) {
-    return true;
 }

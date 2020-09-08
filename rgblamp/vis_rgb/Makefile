@@ -42,17 +42,18 @@ STANDALONE_LIB_OBJS := rgbm-standalone.o portaudio.o soundbuf.o
 STANDALONE := visrgb
 STANDALONE_OBJS := main.o
 STANDALONE_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ)) -lm
+
 ifeq ($(PLATFORM),Windows)
 STANDALONE_CFLAGS += -static
-STANDALONE_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
-else
+endif
+
 ifneq ("$(wildcard $(RPI_WS281X_DIR)/ws2811.h)","")
 STANDALONE_OBJS += rpi_ws281x_rgb.o
 STANDALONE_CFLAGS += -I$(RPI_WS281X_DIR) '-DMONITOR_NAME="alsa_monitor"'
 STANDALONE_LIBS += -L$(RPI_WS281X_DIR) -lws2811
 else
+STANDALONE_OBJS += rgbm_rgblamp.o
 STANDALONE_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
-endif
 endif
 
 all: $(STANDALONE)
@@ -90,7 +91,7 @@ all: $(SDLVIS)
 $(SDLVIS): $(SDLVIS_OBJS) $(STANDALONE_LIB)
 	$(CC) $(SDLVIS_CFLAGS) $^ -o $@ $(SDLVIS_LIBS)
 
-sdl_rgb.o: sdl_rgb.c $(LIBRGBLAMP_DIR)/librgblamp.h
+sdl_rgb.o: sdl_rgb.c rgbm.h
 	$(CC) $(SDLVIS_CFLAGS) -c $< -o $@
 
 endif
@@ -106,7 +107,7 @@ else
 CFLAGS := $(CFLAGS) -DRGBM_AUDACIOUS \
 		  $(shell $(PKG_CONFIG) --cflags $(PKG_PREREQ)) $(PIC)
 LIBS = $(shell $(PKG_CONFIG) --libs $(PKG_PREREQ)) -lm
-SRCS := $(SRCS) aud_rgb.c
+SRCS := $(SRCS) aud_rgb.c rgbm_rgblamp.c
 TARGET := aud_rgb.so
 CXXFLAGS := $(filter-out -Wmissing-prototypes,$(CFLAGS)) -std=c++11
 OBJS := $(SRCS:%.c=%.o)
@@ -144,6 +145,8 @@ rgbm.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
 
 rpi_ws281x_rgb.o: rpi_ws281x_rgb.c $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
 	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
+
+rgbm_rgblamp.o: rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
 
 freqadj_audacious.h: makefreqadj.m
 	octave -q $^
