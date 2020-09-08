@@ -34,6 +34,7 @@ void pix_free(pixel *p);
 void render_open(void);
 void render(const pixel pixr);
 void render_get(pixel pix);
+void render_get_avg(pixel pix);
 void render_close(void);
 #ifdef PWR_TMOUT
 int render_iswastingpower(void);
@@ -98,6 +99,9 @@ void get_state(int *state);
 void get_brightness(int *brightness);
 void get_color(int *rgb);
 void get_effect(char *effect, int len);
+
+void mqtt_report_solid(const pixel pix);
+void mqtt_report_effect(const char *name);
 
 /* Effect routines */
 

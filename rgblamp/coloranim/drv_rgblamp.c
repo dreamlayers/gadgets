@@ -20,7 +20,13 @@ void render(const pixel pixr)
     rgb_flush();
 }
 
+/* TODO: Maybe remember last colour, to avoid querying lamp */
 void render_get(pixel pix)
+{
+    rgb_getout_srgb(pix);
+}
+
+void render_get_avg(pixel pix)
 {
     rgb_getout_srgb(pix);
 }

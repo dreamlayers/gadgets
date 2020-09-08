@@ -214,5 +214,21 @@ void render_get(pixel pix)
         *(pp++) = pwm2srgb((led >> 8) & 0xFF);
         *(pp++) = pwm2srgb((led >> 16) & 0xFF);
     }
+}
 
+void render_get_avg(pixel pix)
+{
+    double r = 0, g = 0, b = 0;
+    unsigned int i;
+
+    for (i = 0; i < LED_COUNT; i++) {
+        ws2811_led_t led = ledstring.channel[0].leds[i];
+        r += pwm2srgb(led & 0xFF);
+        g += pwm2srgb((led >> 8) & 0xFF);
+        b += pwm2srgb((led >> 16) & 0xFF);
+    }
+
+    pix[0] = r / LED_COUNT;
+    pix[1] = g / LED_COUNT;
+    pix[2] = b / LED_COUNT;
 }

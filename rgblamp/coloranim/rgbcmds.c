@@ -154,6 +154,9 @@ static void parse_signd_rewind(void)
 
 static int sc_coloranim(scmdblk *scb)
 {
+    int res;
+    double rgb[3];
+
     curscb = scb;
     if (scb->data == NULL) return -1;
     parse_signd_rewind();
@@ -164,7 +167,12 @@ static int sc_coloranim(scmdblk *scb)
     parse_eof = parse_signd_eof;
     parse_rewind = parse_signd_rewind;
 
-    return parse_and_run();
+    res = parse_and_run();
+
+    render_get_avg(rgb);
+    mqtt_report_solid(rgb);
+
+    return res;
 }
 
 static const char *parse_str_start, *parse_str_p;
@@ -227,6 +235,7 @@ static int sc_preset(scmdblk *scb)
     effect_get(curanim_buf, &func, &parse_str_start);
 
     if (func != NULL) {
+        mqtt_report_effect(curanim_buf);
         return func(parse_str_start);
     } else {
         return -1;

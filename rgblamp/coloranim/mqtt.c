@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #ifdef WIN32
 #define LIBMOSQUITTO_STATIC
 #endif
@@ -91,20 +92,18 @@ static void my_message_callback(struct mosquitto *mosq, void *userdata,
     if (message->payloadlen) {
 #ifdef DEBUG
         printf("%s %s\n", message->topic, message->payload);
+        fflush(stdout);
 #endif
         if (json_parse(message->payload, message->payloadlen)) {
             mqtt_new_state();
         }
-        /* TODO Maybe echoing everything back isn't best */
-        mosquitto_publish(mosq, NULL,
-                          "homeassistant/light/" MQTT_ID "/state",
-                          message->payloadlen, message->payload,
-                          1, 1);
-
-    } else {
-        printf("%s (null)\n", message->topic);
     }
-    fflush(stdout);
+#ifdef DEBUG
+    else {
+        printf("%s (null)\n", message->topic);
+        fflush(stdout);
+    }
+#endif
 }
 
 static void my_connect_callback(struct mosquitto *mosq, void *userdata,
@@ -188,4 +187,49 @@ void mqtt_quit()
     mosquitto_loop_stop(mosq, false);
     mosquitto_destroy(mosq);
     mosquitto_lib_cleanup();
+}
+
+void mqtt_report_solid(const pixel pix)
+{
+    static const char template_on[] = "{\"state\": \"ON\", \"brightness\": %li, \"color\":{\"r\": %i, \"g\": %i, \"b\": %i}, \"effect\": \"\"}";
+    static const char message_off[] = "{\"state\": \"OFF\" }";
+    int i, rgb[COLORCNT];
+    double max = 0;
+
+    for (i = 0; i < COLORCNT; i++) {
+        if (max < pix[i]) max = pix[i];
+    }
+
+    if (max == 0) {
+        mosquitto_publish(mosq, NULL,
+                          "homeassistant/light/" MQTT_ID "/state",
+                          sizeof(message_off) - 1, message_off, 1, 1);
+
+    } else {
+        char buf[255];
+        int len;
+        /* Home Assistant wants colour and brightness separately */
+        for (i = 0; i < COLORCNT; i++) {
+            rgb[i] = lrint(pix[i] * MQTT_SCALE / max);
+        }
+        len = snprintf(buf, sizeof(buf), template_on,
+                       lrint(max * MQTT_SCALE), rgb[0], rgb[1], rgb[2]);
+        mosquitto_publish(mosq, NULL,
+                          "homeassistant/light/" MQTT_ID "/state",
+                          len, buf, 1, 1);
+
+    }
+}
+
+void mqtt_report_effect(const char *name)
+{
+    static const char template[] = "{\"state\": \"ON\", \"brightness\": 255, \"effect\": \"%s\"}";
+    char buf[255];
+    int len;
+
+    len = snprintf(buf, sizeof(buf), template, name);
+
+    mosquitto_publish(mosq, NULL,
+                      "homeassistant/light/" MQTT_ID "/state",
+                      len, buf, 1, 1);
 }
