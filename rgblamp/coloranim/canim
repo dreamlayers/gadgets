@@ -1,2 +1,10 @@
 #!/bin/sh
-( echo -n "c/q:" ; echo "$@" ; echo q ) | nc localhost 9876 || /usr/local/bin/coloranim "$@"
+PREFIX="c/q:"
+if [ $# = 1 ]; then
+case "$1" in
+[^0-9]*)
+    PREFIX="p/q:"
+    ;;
+esac
+fi
+( echo -n "$PREFIX" ; echo "$@" ; echo q ) | nc localhost 9876 || /usr/local/bin/coloranim "$@"
