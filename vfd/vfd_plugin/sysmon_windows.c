@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <Tlhelp32.h>
+#include <tlhelp32.h>
 
 #include <powrprof.h>
 

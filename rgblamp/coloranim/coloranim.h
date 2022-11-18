@@ -58,10 +58,10 @@ struct coloranim {
 
 /* Passing data to the parser */
 
-const char *(*parse_getnext)(void);
-const char *(*parse_peeknext)(void);
-int (*parse_eof)(void);
-void (*parse_rewind)(void);
+extern const char *(*parse_getnext)(void);
+extern const char *(*parse_peeknext)(void);
+extern int (*parse_eof)(void);
+extern void (*parse_rewind)(void);
 
 /* Parser routines */
 

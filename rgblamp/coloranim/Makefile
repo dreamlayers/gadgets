@@ -87,7 +87,7 @@ clean:
 
 ifeq ($(PLATFORM),Windows)
 coloranimd-res.o: coloranimd.rc coloranimd.ico
-	windres -I$(SIGND_DIR)/daemon $< $@
+	$(WINDRES) -I$(SIGND_DIR)/daemon $< $@
 winrgbchoose.o: ../winrgbchoose/winrgbchoose.c
 	$(CC) -c $(CFLAGS) -I. -DCOLORANIMD_WRGBC -o $@ $<
 endif

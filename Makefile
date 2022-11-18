@@ -5,14 +5,14 @@ SUBDIRS := common \
            signd/client signd/daemon \
            ledsign/lsd ledsign/libledsign ledsign/lsp \
            vfd/libvfd vfd/vfd_plugin vfd/vfdd \
-           rgblamp/librgblamp rgblamp/coloranim
+           rgblamp/librgblamp
 
 ifeq ($(PLATFORM),Windows)
 SUBDIRS := $(SUBDIRS) ledsign/gen_led rgblamp/winrgbchoose
 endif
 
 ifneq ($(PLATFORM),Cygwin)
-SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb
+SUBDIRS := $(SUBDIRS) rgblamp/vis_rgb rgblamp/coloranim
 endif
 
 CLEANDIRS := $(SUBDIRS:%=clean-%)

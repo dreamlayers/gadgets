@@ -18,6 +18,12 @@ extern "C" {
 
 #elif defined(RGBM_AUDACIOUS)
 
+#ifdef WIN32
+/* Stereo Mix stupidly scales down based on playback volume.
+   AGC is needed to avoid dimness. */
+#define RGBM_AGCUP (500.0)
+#endif
+
 #define RGBM_NUMBINS 256
 #define RGBM_BINTYPE float
 

@@ -53,11 +53,6 @@
 #define RGBM_SCALE (12000.0)
 #else
 #define RGBM_SCALE (23500.0)
-#ifdef WIN32
-/* Stereo Mix stupidly scales down based on playback volume.
-   AGC is needed to avoid dimness. */
-#define RGBM_AGCUP (500.0)
-#endif
 #endif
 #define RGBM_LIMIT 4095
 

@@ -11,7 +11,7 @@ ifeq ($(PLATFORM),Windows)
 
 WINAMPAPI_DIR := ../../pluginapi/winamp
 WINAMP_CFLAGS := $(CFLAGS) -DRGBM_WINAMP -I$(WINAMPAPI_DIR)
-SRCS := $(SRCS) rgbvis.c
+SRCS := $(SRCS) rgbvis.c rgbm_rgblamp.c
 TARGET := vis_rgb.dll
 OBJS := $(SRCS:%.c=%.o)
 
@@ -22,6 +22,9 @@ $(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 rgbm.o: rgbm.c greentab_winamp.h
+	$(CC) $(WINAMP_CFLAGS) -c $< -o $@
+
+rgbm_rgblamp.o: rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
 	$(CC) $(WINAMP_CFLAGS) -c $< -o $@
 
 rgbvis.o: rgbvis.c $(WINAMPAPI_DIR)/vis.h rgbm.h Makefile
@@ -39,7 +42,7 @@ STANDALONE_CFLAGS := $(CFLAGS) -DRGBM_FFTW -pthread $(shell $(PKG_CONFIG) --cfla
 STANDALONE_LIB := libvisrgb.a
 STANDALONE_LIB_OBJS := rgbm-standalone.o portaudio.o soundbuf.o
 
-STANDALONE := visrgb
+STANDALONE := visrgb$(EXESUFFIX)
 STANDALONE_OBJS := main.o
 STANDALONE_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ)) -lm
 
@@ -52,11 +55,14 @@ STANDALONE_OBJS += rpi_ws281x_rgb.o
 STANDALONE_CFLAGS += -I$(RPI_WS281X_DIR) '-DMONITOR_NAME="alsa_monitor"'
 STANDALONE_LIBS += -L$(RPI_WS281X_DIR) -lws2811
 else
-STANDALONE_OBJS += rgbm_rgblamp.o
+STANDALONE_OBJS += rgbm_rgblamp-standalone.o
 STANDALONE_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
 endif
 
 all: $(STANDALONE)
+
+rgbm_rgblamp-standalone.o: rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
+	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
 
 $(STANDALONE_LIB): $(STANDALONE_LIB_OBJS)
 	ar rcs $@ $^
@@ -82,14 +88,14 @@ SDLVIS_PREREQ := sdl2
 ifeq ($(shell $(PKG_CONFIG) --exists $(SDLVIS_PREREQ) || echo no),no)
 $(warning WARNING: Not building SDL standalone visualizer due to lack of prerequisites.)
 else
-SDLVIS := visrgbsdl
+SDLVIS := visrgbsdl$(EXESUFFIX)
 SDLVIS_CFLAGS := $(STANDALONE_CFLAGS) $(shell $(PKG_CONFIG) --cflags $(SDLVIS_PREREQ))
 SDLVIS_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ) $(SDLVIS_PREREQ)) -lm
 SDLVIS_OBJS := sdl_rgb.o main.o
 all: $(SDLVIS)
 
-$(SDLVIS): $(SDLVIS_OBJS) $(STANDALONE_LIB)
-	$(CC) $(SDLVIS_CFLAGS) $^ -o $@ $(SDLVIS_LIBS)
+$(SDLVIS): $(STANDALONE_LIB) $(SDLVIS_OBJS)
+	$(CC) $(SDLVIS_CFLAGS) -Wl,--whole-archive $(STANDALONE_LIB) -Wl,--no-whole-archive $(SDLVIS_OBJS) -o $@ $(SDLVIS_LIBS)
 
 sdl_rgb.o: sdl_rgb.c rgbm.h
 	$(CC) $(SDLVIS_CFLAGS) -c $< -o $@
@@ -134,7 +140,7 @@ endif
 
 .PHONY : clean veryclean
 clean:
-	rm -f $(OBJS) $(STANDALONE_OBJS) sdl_rgb.o $(TARGET) visrgb visrgbsdl *~ *.bak
+	rm -f $(OBJS) $(STANDALONE_OBJS) $(STANDALONE_LIB) $(STANDALONE_LIB_OBJS) sdl_rgb.o $(TARGET) visrgb$(EXESUFFIX) visrgbsdl$(EXESUFFIX) *~ *.bak
 
 veryclean: clean
 	rm -f freqadj_audacious.h greentab_audacious.h greentab_winamp.h
@@ -152,7 +158,9 @@ freqadj_audacious.h: makefreqadj.m
 	octave -q $^
 
 greentab_audacious.h: makeramps.rb
-	ruby makeramps.rb 144 1 512 > $@
+	ruby makeramps.rb 144 1 512 > $@.tmp
+	mv -f $@.tmp $@
 
 greentab_winamp.h: makeramps.rb
-	ruby makeramps.rb 291 -1 1024 > $@
+	ruby makeramps.rb 291 -1 1024 > $@.tmp
+	mv -f $@.tmp $@

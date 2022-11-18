@@ -11,7 +11,7 @@ CFLAGS := $(CFLAGS) -Icgic205 -Lcgic205
 LIBS := $(LIBS) -lwsock32
 endif
 
-TARGET := lsp
+TARGET := lsp$(EXESUFFIX)
 
 OBJS := $(SRCS:%.c=%.o)
 
