@@ -31,7 +31,7 @@ CANIM_TEMPLATE = '/usr/local/bin/canim in .5 %s'
 
 BULB_KEY = '''begin
     prog   = irexec
-    remote = RGBbulb
+    remote = RGBbulb2
     button = %s
     config = %s
 end'''
@@ -44,18 +44,18 @@ BULB_COLORS = [
     '0 1 0',
     '0 0 1',
     '1 .75 .35',
-    '1 .35 0',
-    '0 1 .6',
-    '.12 .18 1',
-    '1 .6 0',
-    '0 1 .8',
+    '1 .4 0',
+    '0 1 .5',
+    '.2 .2 1',
+    '1 .6 .1',
+    '0 1 .7',
     '.9 0 1',
-    '1 .72 0',
+    '1 .7 .2',
     '0 1 1',
-    '1 0 1',
-    '1 .85 0',
-    '.20 .45 1',
-    '1 0 .85'
+    '1 0 .9',
+    '1 .8 .1',
+    '.2 .5 1',
+    '1 0 .75'
 ]
 
 def canim_float(f):
@@ -85,7 +85,7 @@ def dir_list(directory, glob, num):
     pathlist = Path(directory).glob(glob)
     for path in pathlist:
         if path.is_dir():
-            dirs.append('Files/' + path.name.replace('"', '\\"'))
+            dirs.append('Files/Music/' + path.name.replace('"', '\\"'))
             if len(dirs) == num:
                 break
     dirs.sort()
