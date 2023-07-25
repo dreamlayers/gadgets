@@ -411,15 +411,16 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]
 #ifdef RGBM_FFTW
 /* Convert FFTW halfcomplex format to real amplitudes.
  * bins[0] and bins[RGBM_NUMSAMP / 2] are real due to FFT symmetry. */
-static void fft_complex_to_real(RGBM_BINTYPE bins[RGBM_NUMSAMP]) {
+static void fft_complex_to_real(RGBM_BINTYPE bins[RGBM_NUMSAMP],
+                                RGBM_BINTYPE res[RGBM_NUMSAMP / 2]) {
     int i;
     for (i = 1; i < RGBM_NUMSAMP / 2; i++) {
         double t;
         t = bins[i] * bins[i];
         t += bins[RGBM_NUMSAMP - i] * bins[RGBM_NUMSAMP - i];
-        bins[i - 1] = sqrt(t) / RGBM_NUMSAMP;
+        res[i - 1] = sqrt(t) / RGBM_NUMSAMP;
     }
-    bins[RGBM_NUMSAMP / 2 - 1] = fabs(bins[RGBM_NUMSAMP / 2]) / RGBM_NUMSAMP;
+    res[RGBM_NUMSAMP / 2 - 1] = fabs(bins[RGBM_NUMSAMP / 2]) / RGBM_NUMSAMP;
 }
 
 /* It may seem more logical to pass data to rgbm_render_wave() using a
@@ -442,9 +443,23 @@ static void fft_apply_window(double *samp) {
  * and then this function is called.
  */
 int rgbm_render_wave(double deltat) {
+    static RGBM_BINTYPE res[3][RGBM_NUMSAMP / 2];
+    static int this = 0, last = 1;
+    int i;
+
     fft_apply_window(fft_in);
     fftw_execute(fft_plan);
-    fft_complex_to_real(fft_out);
-    return rgbm_render(fft_out, deltat);
+    fft_complex_to_real(fft_out, res[this]);
+    for (i = 0; i < RGBM_NUMSAMP / 2; i++) {
+        res[2][i] = res[this][i] * 2 - res[last][i];
+    }
+    if (this) {
+        this = 0;
+        last = 1;
+    } else {
+        this = 1;
+        last = 0;
+    }
+    return rgbm_render(res[2], deltat);
 }
 #endif
