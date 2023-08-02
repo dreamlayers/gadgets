@@ -122,30 +122,38 @@ static int json_object_parse(const char *msg, const jsmntok_t *tok,
     for (i = 0; i < tok[0].size; i++) {
         struct json_mapping *m;
         int l;
-        DEBUG_PRINT("TYPE: %i\n", tok[idx].type);
         if (tok[idx].type != JSMN_STRING) return -1;
 
+        /* Find token in mapping */
         l = tok[idx].end - tok[idx].start;
         m = mapping;
         while (1) {
-            if (m->name == NULL) return -1;
-            if (l == m->namelen && tok[idx+1].type == m->type &&
-                !memcmp(m->name, &msg[tok[idx].start], l)) {
-                DEBUG_PRINT("Parsed %s\n", m->name);
-                m->data = &msg[tok[idx+1].start];
-                m->datalen = tok[idx+1].end - tok[idx+1].start;
-                if (m->type == JSMN_OBJECT) {
-                    json_object_parse(msg, &tok[idx+1], m->map);
-                }
+            if (m->name == NULL) {
+                return -1;
+            } else if (l == m->namelen && tok[idx+1].type == m->type &&
+                       !memcmp(m->name, &msg[tok[idx].start], l)) {
                 break;
             }
             m++;
         }
+
+        /* Process value of token */
+        DEBUG_PRINT("Parsing %s\n", m->name);
         idx++;
-        /* FIXME This assumes only "name": value pairs, no nested objects */
-        idx += 1 + tok[idx].size * 2;
+        m->data = &msg[tok[idx].start];
+        m->datalen = tok[idx].end - tok[idx].start;
+        if (m->type == JSMN_OBJECT) {
+            int res = json_object_parse(msg, &tok[idx], m->map);
+            if (res < 1) return -1;
+            idx += res;
+        } else if (tok[idx].size == 0) {
+            idx++;
+        } else {
+            DEBUG_PRINT("Not JSON object but not zero size. What is it?");
+            return -1;
+        }
     }
-    return 0;
+    return idx;
 }
 
 int json_parse(const char *msg, int len)
