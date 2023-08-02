@@ -97,6 +97,7 @@ void mqtt_quit(void);
 int json_parse(const char *msg, int len);
 void get_state(int *state);
 void get_brightness(int *brightness);
+void get_transition(double *transition);
 void get_color(int *rgb);
 void get_effect(char *effect, int len);
 

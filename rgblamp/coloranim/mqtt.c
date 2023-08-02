@@ -21,6 +21,7 @@ static const char discovery_1[] = "{\
 \"command_topic\": \"homeassistant/light/" MQTT_ID "/set\", \
 \"state_topic\": \"homeassistant/light/" MQTT_ID "/state\", \
 \"brightness\": \"true\", \
+\"transition\": \"true\", \
 \"rgb\": \"true\", \
 \"effect\": \"true\", \
 \"effect_list\": ";
@@ -62,10 +63,12 @@ static void mqtt_new_state(void)
     static int state = 0;
     static int rgb[3] = { MQTT_SCALE, MQTT_SCALE, MQTT_SCALE };
     static int brightness = MQTT_SCALE;
+    static double transition = 1.0;
     static char effect[40];
 
     get_state(&state);
     get_brightness(&brightness);
+    get_transition(&transition);
     get_color(rgb);
     get_effect(effect, sizeof(effect));
 
@@ -73,10 +76,16 @@ static void mqtt_new_state(void)
         if (effect[0] == 0) {
             static char buf[100];
             int l;
-            l = snprintf(buf, sizeof(buf), "%f %f %f",
+            if (transition > 0.0) {
+                l = snprintf(buf, sizeof(buf), "in %f ", transition);
+            } else {
+                l = 0;
+            }
+            l += snprintf(&buf[l], sizeof(buf) - l, "%f %f %f",
                          rgb[0] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
                          rgb[1] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
                          rgb[2] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0));
+            DEBUG_PRINT("Coloranim RGB: %s\n", buf);
             cmd_enq_string(2, buf, l);
         } else {
             cmd_enq_string(3, effect, strlen(effect));

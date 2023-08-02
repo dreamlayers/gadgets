@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "jsmn.h"
@@ -42,11 +43,13 @@ void get_color(int *rgb)
     }
 }
 
+/* WARNING: Functions below hard-code indexes into this array */
 static struct json_mapping json_toplevel[] = {
     { "state", 5, JSMN_STRING, NULL, 0, NULL},
     { "brightness", 10, JSMN_PRIMITIVE, NULL, 0, NULL},
     { "color", 5, JSMN_OBJECT, NULL, 0, json_color},
     { "effect", 6, JSMN_STRING, NULL, 0, NULL},
+    { "transition", 10, JSMN_PRIMITIVE, NULL, 0, NULL},
     { NULL, 0, JSMN_STRING, NULL, 0, NULL }
 };
 
@@ -65,6 +68,28 @@ void get_brightness(int *brightness)
 {
     int newbright = get_unsigned_int(&json_toplevel[1]);
     if (newbright >= 0) *brightness = newbright;
+}
+
+static double get_unsigned_double(const struct json_mapping *m)
+{
+    char buf[30], *endptr;
+    double res;
+    if (m->datalen > strlen(buf)-1) return -1.0;
+    memcpy(buf, m->data, m->datalen);
+    buf[m->datalen] = 0;
+    res = strtod(buf, &endptr);
+    DEBUG_PRINT("len = %i, buf = %s, res = %f\n", m->datalen, buf, res);
+    if (endptr == buf + m->datalen) {
+        return res;
+    } else {
+        return -1.0;
+    }
+}
+
+void get_transition(double *transition)
+{
+    double newtrans = get_unsigned_double(&json_toplevel[4]);
+    if (newtrans >= 0) *transition = newtrans;
 }
 
 void get_effect(char *effect, int l)
@@ -97,7 +122,7 @@ static int json_object_parse(const char *msg, const jsmntok_t *tok,
     for (i = 0; i < tok[0].size; i++) {
         struct json_mapping *m;
         int l;
-
+        DEBUG_PRINT("TYPE: %i\n", tok[idx].type);
         if (tok[idx].type != JSMN_STRING) return -1;
 
         l = tok[idx].end - tok[idx].start;
@@ -106,6 +131,7 @@ static int json_object_parse(const char *msg, const jsmntok_t *tok,
             if (m->name == NULL) return -1;
             if (l == m->namelen && tok[idx+1].type == m->type &&
                 !memcmp(m->name, &msg[tok[idx].start], l)) {
+                DEBUG_PRINT("Parsed %s\n", m->name);
                 m->data = &msg[tok[idx+1].start];
                 m->datalen = tok[idx+1].end - tok[idx+1].start;
                 if (m->type == JSMN_OBJECT) {
@@ -116,7 +142,8 @@ static int json_object_parse(const char *msg, const jsmntok_t *tok,
             m++;
         }
         idx++;
-        idx += 1 + tok[idx].size;
+        /* FIXME This assumes only "name": value pairs, no nested objects */
+        idx += 1 + tok[idx].size * 2;
     }
     return 0;
 }
