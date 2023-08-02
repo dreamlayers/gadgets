@@ -65,6 +65,8 @@ static void mqtt_new_state(void)
     static int brightness = MQTT_SCALE;
     static double transition = 1.0;
     static char effect[40];
+    static char buf[100];
+    int l;
 
     get_state(&state);
     get_brightness(&brightness);
@@ -72,15 +74,14 @@ static void mqtt_new_state(void)
     get_color(rgb);
     get_effect(effect, sizeof(effect));
 
+    if (transition > 0.0) {
+        l = snprintf(buf, sizeof(buf), "in %f ", transition);
+    } else {
+        l = 0;
+    }
+
     if (state) {
         if (effect[0] == 0) {
-            static char buf[100];
-            int l;
-            if (transition > 0.0) {
-                l = snprintf(buf, sizeof(buf), "in %f ", transition);
-            } else {
-                l = 0;
-            }
             l += snprintf(&buf[l], sizeof(buf) - l, "%f %f %f",
                          rgb[0] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
                          rgb[1] * brightness / (MQTT_SCALE * MQTT_SCALE * 1.0),
@@ -90,8 +91,10 @@ static void mqtt_new_state(void)
         } else {
             cmd_enq_string(3, effect, strlen(effect));
         }
-    } else {
-        cmd_enq_string(2, "0", 1);
+    } else if (l + 2 < sizeof(buf)) {
+        buf[l] = '0';
+        buf[l+1] = 0;
+        cmd_enq_string(2, buf, l + 2);
     }
 }
 
