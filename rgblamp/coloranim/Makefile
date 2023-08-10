@@ -17,12 +17,12 @@ endif
 endif
 
 ifeq ($(DRIVER),rgblamp)
-CFLAGS += -I$(LIBRGBLAMP_DIR) '-DMQTT_ID="rgblamp"' '-DMQTT_NAME="Behind PC"'
+CFLAGS += -I$(LIBRGBLAMP_DIR) '-DMQTT_ID="behind_pc"' '-DMQTT_NAME="Behind PC"'
 PIXCNT := 1
 EXTRA_DEPS += $(LIBRGBLAMP_DIR)/librgblamp.a
 COMMON_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
 else ifeq ($(DRIVER),rpi_ws281x)
-CFLAGS += -I$(RPI_WS281X_DIR) -DPWR_TMOUT=5 '-DMQTT_ID="ws281x"' '-DMQTT_NAME="Behind TV"'
+CFLAGS += -I$(RPI_WS281X_DIR) -DPWR_TMOUT=5 '-DMQTT_ID="behind_tv"' '-DMQTT_NAME="Behind TV"'
 PIXCNT ?= 60
 COMMON_LIBS += -L$(RPI_WS281X_DIR) -lws2811 -lwiringPi
 endif
