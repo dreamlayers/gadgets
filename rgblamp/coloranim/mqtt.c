@@ -16,13 +16,13 @@
 #endif
 
 static const char discovery_1[] = "{\
-\"name\": \"" MQTT_NAME "\", \
+\"name\": \"LED strip\", \
 \"schema\": \"json\", \
 \"command_topic\": \"homeassistant/light/" MQTT_ID "/set\", \
 \"state_topic\": \"homeassistant/light/" MQTT_ID "/state\", \
 \"unique_id\": \"" MQTT_ID "\", \
 \"device\": {\"identifiers\": [\"" MQTT_ID "_dev\"], \
-\"name\": \"" MQTT_NAME " Device\" }, \
+\"name\": \"" MQTT_NAME "\"}, \
 \"brightness\": \"true\", \
 \"transition\": \"true\", \
 \"rgb\": \"true\", \
