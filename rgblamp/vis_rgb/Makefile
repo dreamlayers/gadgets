@@ -157,10 +157,10 @@ rgbm_rgblamp.o: rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
 freqadj_audacious.h: makefreqadj.m
 	octave -q $^
 
-greentab_audacious.h: makeramps.rb
-	ruby makeramps.rb 144 1 512 > $@.tmp
+greentab_audacious.h: makeramps.py
+	python3 makeramps.py 144 1 512 > $@.tmp
 	mv -f $@.tmp $@
 
-greentab_winamp.h: makeramps.rb
-	ruby makeramps.rb 291 -1 1024 > $@.tmp
+greentab_winamp.h: makeramps.py
+	python3 makeramps.py 291 -1 1024 > $@.tmp
 	mv -f $@.tmp $@
