@@ -7,7 +7,7 @@
 #ifdef WIN32
 #define RGBPORT "COM8"
 #else
-#define RGBPORT "/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0"
+#define RGBPORT "/usr/local/etc/rgblamp"
 #endif
 
 /* Set after successful PWM write, and enables rgb_matchpwm afterwards */
