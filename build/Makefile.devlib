@@ -25,6 +25,8 @@ all: $(SLFULLNAME) $(DLFULLNAME)
 .PHONY : install
 install: $(TARGET) $(LIBINCLUDE)
 	install $(DLFULLNAME) /usr/local/lib
+# dlopen() won't load from there without rebuilding of the cache by ldconfig
+	-ldconfig
 	install $(LIBINCLUDE) /usr/local/include
 	install $(LIBRUBY) /usr/local/lib/site_ruby
 
