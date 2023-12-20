@@ -15,6 +15,8 @@
 #define MQTT_ID "ws281x"
 #endif
 
+#define DISCOVERY_TOPIC "homeassistant/light/" MQTT_ID "/config"
+
 static const char discovery_1[] = "{\
 \"name\": \"" MQTT_NAME "\", \
 \"schema\": \"json\", \
@@ -133,7 +135,7 @@ static void my_connect_callback(struct mosquitto *mosq, void *userdata,
             build_discovery();
         }
         mosquitto_publish(mosq, NULL,
-                          "homeassistant/light/" MQTT_ID "/config",
+                          DISCOVERY_TOPIC,
                           /* Don't send the null terminator! */
                           discovery_len, discovery,
                           1, 1);
@@ -198,6 +200,9 @@ int mqtt_init(void)
 
 void mqtt_quit()
 {
+    /* Clear discovery topic to remove device from Home Assistant.
+      "Retain" to also clear even the retained publish from Mosquitto. */
+    mosquitto_publish(mosq, NULL, DISCOVERY_TOPIC, 0, NULL, 1, 1);
     mosquitto_disconnect(mosq);
     mosquitto_loop_stop(mosq, false);
     mosquitto_destroy(mosq);
