@@ -74,7 +74,7 @@ static double get_unsigned_double(const struct json_mapping *m)
 {
     char buf[30], *endptr;
     double res;
-    if (m->datalen > strlen(buf)-1) return -1.0;
+    if (m->datalen > sizeof(buf)-1) return -1.0;
     memcpy(buf, m->data, m->datalen);
     buf[m->datalen] = 0;
     res = strtod(buf, &endptr);
