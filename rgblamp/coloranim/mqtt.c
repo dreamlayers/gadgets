@@ -16,7 +16,7 @@
 #endif
 
 static const char discovery_1[] = "{\
-\"name\": \"LED strip\", \
+\"name\": \"" MQTT_NAME "\", \
 \"schema\": \"json\", \
 \"command_topic\": \"homeassistant/light/" MQTT_ID "/set\", \
 \"state_topic\": \"homeassistant/light/" MQTT_ID "/state\", \

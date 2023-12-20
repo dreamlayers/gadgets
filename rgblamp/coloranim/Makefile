@@ -6,6 +6,11 @@ SIGND_DIR := ../../signd
 LIBRGBLAMP_DIR := ../librgblamp
 RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
 
+COLORANIMDCONF = /usr/local/etc/coloranimd.conf
+ifneq ("$(wildcard $(COLORANIMDCONF))","")
+include $(COLORANIMDCONF)
+endif
+
 # Driver configuration
 
 ifeq ($(DRIVER),)
@@ -17,17 +22,20 @@ endif
 endif
 
 ifeq ($(DRIVER),rgblamp)
-CFLAGS += -I$(LIBRGBLAMP_DIR) '-DMQTT_ID="behind_pc"' '-DMQTT_NAME="Behind PC"'
+CFLAGS += -I$(LIBRGBLAMP_DIR)
+MQTT_ID ?= behind_pc
+MQTT_NAME ?= Behind PC
 PIXCNT := 1
 EXTRA_DEPS += $(LIBRGBLAMP_DIR)/librgblamp.a
 COMMON_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
 else ifeq ($(DRIVER),rpi_ws281x)
-CFLAGS += -I$(RPI_WS281X_DIR) -DPWR_TMOUT=5 '-DMQTT_ID="behind_tv"' '-DMQTT_NAME="Behind TV"'
+CFLAGS += -I$(RPI_WS281X_DIR) -DPWR_TMOUT=5
+MQTT_ID ?= behind_tv
+MQTT_NAME ?= Behind TV
 PIXCNT ?= 60
 COMMON_LIBS += -L$(RPI_WS281X_DIR) -lws2811 -lwiringPi
 endif
-
-CFLAGS += -DPIXCNT=$(PIXCNT)
+CFLAGS += '-DMQTT_ID="$(MQTT_ID)"' '-DMQTT_NAME="$(MQTT_NAME)"' -DPIXCNT=$(PIXCNT)
 
 # Defining that two targets
 
