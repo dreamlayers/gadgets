@@ -243,10 +243,15 @@ static int sc_preset(scmdblk *scb)
 }
 
 int cmd_init(const char *device) {
+    double rgb[3];
+
     render_open();
     coloranim_init();
     parse_init();
     mqtt_init();
+    render_get_avg(rgb);
+    mqtt_report_solid(rgb);
+
     return 0;
 }
 
