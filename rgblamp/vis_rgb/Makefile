@@ -1,6 +1,7 @@
 include ../../build/Makefile.config
 
 LIBRGBLAMP_DIR := ../librgblamp
+LIBRGBLAMP := $(LIBRGBLAMP_DIR)/librgblamp.a
 CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
 SRCS := rgbm.c
 
@@ -17,7 +18,7 @@ OBJS := $(SRCS:%.c=%.o)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
+$(TARGET): $(OBJS) $(LIBRGBLAMP)
 	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
@@ -56,7 +57,7 @@ STANDALONE_CFLAGS += -I$(RPI_WS281X_DIR) '-DMONITOR_NAME="alsa_monitor"'
 STANDALONE_LIBS += -L$(RPI_WS281X_DIR) -lws2811
 else
 STANDALONE_OBJS += rgbm_rgblamp-standalone.o
-STANDALONE_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
+STANDALONE_LIBS += $(LIBRGBLAMP)
 endif
 
 all: $(STANDALONE)
@@ -120,7 +121,7 @@ OBJS := $(SRCS:%.c=%.o)
 OBJS := $(OBJS:%.cc=%.o)
 all: $(TARGET)
 
-$(TARGET): $(OBJS) $(LIBRGBLAMP_DIR)/librgblamp.a
+$(TARGET): $(OBJS) $(LIBRGBLAMP)
 	$(CXX) $(CXXFLAGS) -shared -Wl,--no-undefined \
 	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
