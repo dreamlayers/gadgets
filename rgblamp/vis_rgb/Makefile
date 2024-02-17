@@ -19,8 +19,8 @@ OBJS := $(SRCS:%.c=%.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS) $(LIBRGBLAMP)
-	$(CC) $(CFLAGS) -shared -Wl,--no-undefined \
-	-Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
+	$(CC) $(CFLAGS) -mwindows -shared -static-libgcc \
+	-Wl,--no-undefined -Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
 rgbm.o: rgbm.c greentab_winamp.h
 	$(CC) $(WINAMP_CFLAGS) -c $< -o $@
