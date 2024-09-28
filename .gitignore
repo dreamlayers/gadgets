@@ -14,5 +14,6 @@ rgblamp/vis_rgb/greentab_audacious.h
 rgblamp/vis_rgb/greentab_winamp.h
 rgblamp/vis_rgb/visrgb
 rgblamp/vis_rgb/visrgbsdl
+rgblamp/vis_rgb/visrgbddp
 rgblamp/coloranim/coloranim
 rgblamp/coloranim/coloranimd

@@ -51,6 +51,17 @@ ifeq ($(PLATFORM),Windows)
 STANDALONE_CFLAGS += -static
 endif
 
+DDP := visrgbddp$(EXESUFFIX)
+DDP_CFLAGS := $(STANDALONE_CFLAGS)
+DDP_OBJS := $(STANDALONE_OBJS) rgbm_ddp.o
+DDP_LIBS := $(STANDALONE_LIBS)
+all: $(DDP)
+$(DDP): $(DDP_OBJS) $(STANDALONE_LIB)
+	$(CC) $(DDP_CFLAGS) $^ -o $@ $(DDP_LIBS)
+
+rgbm_ddp.o: rgbm_ddp.c rgbm.h
+	$(CC) $(DDP_CFLAGS) -c $< -o $@
+
 ifneq ("$(wildcard $(RPI_WS281X_DIR)/ws2811.h)","")
 STANDALONE_OBJS += rpi_ws281x_rgb.o
 STANDALONE_CFLAGS += -I$(RPI_WS281X_DIR) '-DMONITOR_NAME="alsa_monitor"'
