@@ -50,6 +50,15 @@ int rgbm_render_wave(double deltat);
 int rgbm_pollquit(void);
 void rgbm_run(const char *snddev);
 
+/* Parameter changing interface */
+typedef struct {
+    double *value;
+    const double def;
+    const char *name;
+    const char *description;
+} rgbm_param;
+extern const rgbm_param rgbm_params[];
+
 /* Hardware driver functions */
 int rgbm_hw_open(void);
 #ifdef RGBM_AGCUP

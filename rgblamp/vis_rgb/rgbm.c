@@ -135,6 +135,27 @@ static double avgavg[3];
 #endif
 
 /*
+ * Changeable parameters
+ */
+
+static double rgbm_scale = RGBM_SCALE;
+static double rgbm_redscale = RGBM_REDSCALE;
+static double rgbm_bluescale = RGBM_BLUESCALE;
+static double rgbm_avgup = RGBM_AVGUP;
+static double rgbm_avgdn = RGBM_AVGDN;
+
+const rgbm_param rgbm_params[] = {
+    { &rgbm_scale, RGBM_SCALE, "scale", "Brightness" },
+    { &rgbm_redscale, RGBM_REDSCALE, "redscale", "Red brightness" },
+    { &rgbm_bluescale, RGBM_BLUESCALE, "bluescale", "Blue brightness" },
+    { &rgbm_avgup, RGBM_AVGUP, "avgup",
+      "Moving average factor when increasing" },
+    { &rgbm_avgdn, RGBM_AVGDN, "avgdn",
+      "Moving average factor when decreasing" },
+    { NULL, 0.0, NULL, NULL }
+};
+
+/*
  * Internal routines
  */
 
@@ -241,13 +262,13 @@ static void rgbm_avgsums(const double sums[3],
      * based on time since last frame.
      */
 #ifdef RGBM_WINAMP
-    avgup = RGBM_AVGUP;
-    avgdn = RGBM_AVGDN;
+    avgup = rgbm_avgup;
+    avgdn = rgbm_avgdn;
 #else
     if (deltat == 0.0) return;
-    avgup = RGBM_AVGUP / deltat;
+    avgup = rgbm_avgup / deltat;
     if (avgup <= 1.0) avgup = 1.0;
-    avgdn = RGBM_AVGDN / deltat;
+    avgdn = rgbm_avgdn / deltat;
     if (avgdn <= 1.0) avgdn = 1.0;
 #endif
 
@@ -380,9 +401,9 @@ int rgbm_render(const RGBM_BINTYPE bins[RGBM_NUMBINS]
     int res;
 
     rgbm_sumbins(bins, sums);
-    sums[0] *= RGBM_REDSCALE;
-    sums[2] *= RGBM_BLUESCALE;
-    rgbm_avgsums(sums, binavg, RGBM_SCALE, RGBM_LIMIT IF_STANDALONE(, deltat));
+    sums[0] *= rgbm_redscale;
+    sums[2] *= rgbm_bluescale;
+    rgbm_avgsums(sums, binavg, rgbm_scale, RGBM_LIMIT IF_STANDALONE(, deltat));
 
 #ifdef RGBM_LOGGING
     for (res = 0; res < 3; res++) {
