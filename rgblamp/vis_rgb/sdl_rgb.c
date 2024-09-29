@@ -16,7 +16,7 @@ static unsigned int savedr = 0, savedg = 0, savedb = 0;
 static unsigned int winwidth = DEFAULT_WIDTH, winheight = DEFAULT_HEIGHT;
 static unsigned int nativewidth = 0, nativeheight = 0;
 #endif
-bool fullscreen = false;
+static bool fullscreen = false;
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 static SDL_Window *window = NULL;

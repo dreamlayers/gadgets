@@ -5,7 +5,6 @@ LIBRGBLAMP := $(LIBRGBLAMP_DIR)/librgblamp.a
 CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
 SRCS := rgbm.c
 
-LIBRGBLAMP_DIR := ../librgblamp
 RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
 
 ifeq ($(PLATFORM),Windows)
@@ -51,30 +50,42 @@ ifeq ($(PLATFORM),Windows)
 STANDALONE_CFLAGS += -static
 endif
 
-DDP := visrgbddp$(EXESUFFIX)
-DDP_CFLAGS := $(STANDALONE_CFLAGS)
-DDP_OBJS := $(STANDALONE_OBJS) rgbm_ddp.o
-DDP_LIBS := $(STANDALONE_LIBS)
-all: $(DDP)
-$(DDP): $(DDP_OBJS) $(STANDALONE_LIB)
-	$(CC) $(DDP_CFLAGS) $^ -o $@ $(DDP_LIBS)
+DRVDLL_FLAGS := $(STANDALONE_CFLAGS) -shared -fvisibility=default
+ifneq ($(PLATFORM),Cygwin)
+ifneq ($(PLATFORM),Windows)
+DRVDLL_FLAGS := $(DRVDLL_FLAGS) -fPIC
+endif
+endif
 
-rgbm_ddp.o: rgbm_ddp.c rgbm.h
-	$(CC) $(DDP_CFLAGS) -c $< -o $@
+DRVDLL_DDP := $(DLPREFIX)rgbmddp$(DLSUFFIX)
+all: $(DRVDLL_DDP)
+$(DRVDLL_DDP): rgbm_ddp.c rgbm.h Makefile
+	$(CC) -shared $(DRVDLL_FLAGS) $< -lm -o $@
 
 ifneq ("$(wildcard $(RPI_WS281X_DIR)/ws2811.h)","")
-STANDALONE_OBJS += rpi_ws281x_rgb.o
-STANDALONE_CFLAGS += -I$(RPI_WS281X_DIR) '-DMONITOR_NAME="alsa_monitor"'
-STANDALONE_LIBS += -L$(RPI_WS281X_DIR) -lws2811
-else
-STANDALONE_OBJS += rgbm_rgblamp-standalone.o
-STANDALONE_LIBS += $(LIBRGBLAMP)
+DRVDLL_RPI := $(DLPREFIX)rgbmrpi$(DLSUFFIX)
+all: $(DRVDLL_RPI)
+$(DRVDLL_RPI): rpi_ws281x_rgb.c rgbm.h Makefile
+	$(CC) -shared -I$(RPI_WS281X_DIR) $(DRVDLL_FLAGS) $< \
+	-L$(RPI_WS281X_DIR) -lws2811 -lm -o $@
+STANDALONE_CFLAGS += '-DMONITOR_NAME="alsa_monitor"' '-DDEFAULT_DRIVER="rpi"'
 endif
+
+STANDALONE_OBJS += rgbm_multi.o
 
 all: $(STANDALONE)
 
-rgbm_rgblamp-standalone.o: rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h Makefile
-	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
+DRVDLL_RGBLAMP := $(DLPREFIX)rgbmlamp$(DLSUFFIX)
+all: $(DRVDLL_RGBLAMP)
+$(DRVDLL_RGBLAMP): rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h $(LIBRGBLAMP) Makefile
+	$(CC) -shared $(DRVDLL_FLAGS) $< $(LIBRGBLAMP) -lm -o $@
+
+DRVDLL_RGBSTRIP := $(DLPREFIX)rgbmstrip$(DLSUFFIX)
+LIBRGBSTRIP := ../librgbstrip/librgbstrip.a
+all: $(DRVDLL_RGBSTRIP)
+$(DRVDLL_RGBSTRIP): rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h \
+                    $(LIBRGBSTRIP) Makefile
+	$(CC) -shared $(DRVDLL_FLAGS) $< $(LIBRGBSTRIP) -lm -o $@
 
 $(STANDALONE_LIB): $(STANDALONE_LIB_OBJS)
 	ar rcs $@ $^
@@ -84,7 +95,6 @@ $(STANDALONE): $(STANDALONE_OBJS) $(STANDALONE_LIB)
 
 rgbm-standalone.o: rgbm.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h  \
                    greentab_audacious.h freqadj_audacious.h Makefile
-
 	$(CC) $(STANDALONE_CFLAGS) -c $< -o $@
 
 portaudio.o: portaudio.c rgbm.h Makefile
@@ -98,19 +108,14 @@ main.o: main.c rgbm.h Makefile
 
 SDLVIS_PREREQ := sdl2
 ifeq ($(shell $(PKG_CONFIG) --exists $(SDLVIS_PREREQ) || echo no),no)
-$(warning WARNING: Not building SDL standalone visualizer due to lack of prerequisites.)
+$(warning WARNING: Not building SDL visualizer output due to lack of prerequisites.)
 else
-SDLVIS := visrgbsdl$(EXESUFFIX)
-SDLVIS_CFLAGS := $(STANDALONE_CFLAGS) $(shell $(PKG_CONFIG) --cflags $(SDLVIS_PREREQ))
-SDLVIS_LIBS := $(shell $(PKG_CONFIG) --libs $(STANDALONE_PREREQ) $(SDLVIS_PREREQ)) -lm
-SDLVIS_OBJS := sdl_rgb.o main.o
-all: $(SDLVIS)
 
-$(SDLVIS): $(STANDALONE_LIB) $(SDLVIS_OBJS)
-	$(CC) $(SDLVIS_CFLAGS) -Wl,--whole-archive $(STANDALONE_LIB) -Wl,--no-whole-archive $(SDLVIS_OBJS) -o $@ $(SDLVIS_LIBS)
-
-sdl_rgb.o: sdl_rgb.c rgbm.h
-	$(CC) $(SDLVIS_CFLAGS) -c $< -o $@
+DRVDLL_SDL := $(DLPREFIX)rgbmsdl$(DLSUFFIX)
+all: $(DRVDLL_SDL)
+$(DRVDLL_SDL): sdl_rgb.c rgbm.h Makefile
+	$(CC) -shared $(DRVDLL_FLAGS) $< \
+	$(shell $(PKG_CONFIG) --cflags --libs $(SDLVIS_PREREQ)) -lm -o $@
 
 endif
 
@@ -152,10 +157,9 @@ endif
 
 .PHONY : clean veryclean
 clean:
-	rm -f $(OBJS) $(STANDALONE_OBJS) $(STANDALONE_LIB) $(STANDALONE_LIB_OBJS) sdl_rgb.o $(TARGET) visrgb$(EXESUFFIX) visrgbsdl$(EXESUFFIX) *~ *.bak
-
-veryclean: clean
-	rm -f freqadj_audacious.h greentab_audacious.h greentab_winamp.h
+	rm -f $(OBJS) $(STANDALONE_OBJS) $(STANDALONE_LIB) \
+        $(STANDALONE_LIB_OBJS) sdl_rgb.o $(TARGET) visrgb$(EXESUFFIX) \
+        *.so *~ *.bak greentab_audacious.h greentab_winamp.h
 
 aud_rgb.o: aud_rgb.cc rgbm.h Makefile
 

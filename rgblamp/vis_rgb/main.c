@@ -12,6 +12,12 @@
 #include "rgbm.h"
 #include "soundbuf.h"
 
+/* Hack to allow rgbm_multi to receive arguments. TODO: Properly implement it */
+#ifndef DEFAULT_DRIVER
+#define DEFAULT_DRIVER "lamp"
+#endif
+char *light_drivers = DEFAULT_DRIVER;
+
 /* Do clean shutdown of sound and lamp connection on ^C */
 
 static int rgbm_quit = 0;
@@ -31,12 +37,12 @@ int rgbm_pollquit(void)
 int main(int argc, char **argv) {
     char *snddev = NULL;
 
-    if (argc == 2) {
-        snddev = argv[1];
-    } else if (argc != 1) {
-        fprintf(stderr, "Usage: %s [sound device]\n", argv[0]);
+    if (argc > 3) {
+        fprintf(stderr, "Usage: %s [light drivers] [sound device]\n", argv[0]);
         return -1;
     }
+    if (argc >= 2) light_drivers = argv[1];
+    if (argc >= 3) snddev = argv[1];
 
     signal(SIGINT, sig_handler);
 
