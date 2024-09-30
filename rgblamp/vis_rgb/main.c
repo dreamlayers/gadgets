@@ -99,7 +99,7 @@ static void parse_param(const char *s)
                 usage();
             }
             *rgbm_params[i].value = val;
-            printf("Parameter %s changed from %f to %f\n.", rgbm_params[i].name,
+            printf("Parameter %s changed from %f to %f.\n", rgbm_params[i].name,
                    rgbm_params[i].def, val);
             return;
         }

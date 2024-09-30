@@ -1,14 +1,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 
 #define RGBM_FFTW
 
 #include "rgbm.h"
 
 struct rgbdrv {
+#ifdef WIN32
+    HMODULE handle;
+#else
     void *handle;
+#endif
     int (*rgbm_hw_open)(void);
 #ifdef RGBM_AGCUP
     int (*rgbm_hw_srgb)(const double *rgb);
@@ -21,10 +30,20 @@ struct rgbdrv {
 
 static struct rgbdrv *drivers = NULL;
 
-static void *getsym(const char *name, void *handle, const char *symbol)
+static void *getsym(const char *name,
+#ifdef WIN32
+                    HMODULE handle,
+#else
+                    void *handle,
+#endif
+                    const char *symbol)
 {
     void *ptr;
+#ifdef WIN32
+    ptr = GetProcAddress(handle, symbol);
+#else
     ptr = dlsym(handle, symbol);
+#endif
     if (!ptr) fprintf(stderr, "Failed to find symbol %s in %s driver.\n",
                       symbol, name);
     return ptr;
@@ -52,19 +71,34 @@ static struct rgbdrv *load_driver(const char *name)
 
     /* Build DLL file name from driver name */
     namelen = strlen(name);
+#ifdef WIN32
+    filename = verified_malloc(namelen + 9);
+    memcpy(&filename[0], "rgbm", 4);
+    memcpy(&filename[4], name, namelen);
+    memcpy(&filename[4 + namelen], ".dll", 5);
+#else
     filename = verified_malloc(namelen + 13);
     memcpy(&filename[0], "./librgbm", 9);
     memcpy(&filename[9], name, namelen);
     memcpy(&filename[9 + namelen], ".so", 4);
+#endif
 
     /* Try to open driver from current directory first */
+#ifdef WIN32
+    handle = LoadLibrary(filename);
+#else
     handle = dlopen(&filename[0], RTLD_NOW);
     if (!handle) {
         handle = dlopen(&filename[2], RTLD_NOW);
     }
+#endif
     free(filename);
     if (!handle) {
+#ifdef WIN32
+        fprintf(stderr, "Failed to load driver %s\n", name);
+#else
         fprintf(stderr, "Failed to load driver %s: %s\n", name, dlerror());
+#endif
         return NULL;
     }
 
@@ -127,7 +161,11 @@ int rgbm_hw_open(void)
 static void close_driver(struct rgbdrv *driver)
 {
     driver->rgbm_hw_close();
+#ifdef WIN32
+    FreeLibrary(driver->handle);
+#else
     dlclose(driver->handle);
+#endif
     free(driver);
 }
 

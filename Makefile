@@ -5,7 +5,7 @@ SUBDIRS := common \
            signd/client signd/daemon \
            ledsign/lsd ledsign/libledsign ledsign/lsp \
            vfd/libvfd vfd/vfd_plugin vfd/vfdd \
-           rgblamp/librgblamp
+           rgblamp/librgblamp rgblamp/librgbstrip
 
 ifeq ($(PLATFORM),Windows)
 SUBDIRS := $(SUBDIRS) ledsign/gen_led rgblamp/winrgbchoose
@@ -37,7 +37,7 @@ vfd/vfd_plugin: vfd/libvfd
 rgblamp/librgblamp: serio
 rgblamp/aud_rgb: rgblamp/librgblamp
 rgblamp/winrgbchoose: rgblamp/librgblamp
-rgblamp/vis_rgb: rgblamp/librgblamp
+rgblamp/vis_rgb: rgblamp/librgblamp rgblamp/librgbstrip
 rgblamp/coloranim: rgblamp/librgblamp signd/daemon
 
 # Rules

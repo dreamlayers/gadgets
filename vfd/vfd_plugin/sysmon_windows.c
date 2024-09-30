@@ -19,7 +19,7 @@
 #include "sysmon.h"
 
 #ifdef __MINGW32__
-ULONGLONG WINAPI GetTickCount64(void);
+ULONGLONG WINAPI __declspec(dllimport) GetTickCount64(void);
 #endif
 
 /* CPU */
@@ -251,10 +251,6 @@ int sysmon_memorypercent(void) {
 }
 
 /*** Wake time ***/
-
-#ifndef _MSC_VER
-ULONGLONG WINAPI GetTickCount64(void);
-#endif
 
 static unsigned long waketime;
 

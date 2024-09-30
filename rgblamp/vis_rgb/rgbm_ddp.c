@@ -3,9 +3,13 @@
 #include <string.h>
 #include <math.h>
 #include <unistd.h>
+#ifdef __WIN32__
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 #include "rgbm.h"
 
@@ -20,6 +24,12 @@ static int s = -1;
 static struct sockaddr_in server;
 
 int rgbm_hw_open(void) {
+#ifdef __WIN32__
+   WORD versionWanted = MAKEWORD(1, 1);
+   WSADATA wsaData;
+   WSAStartup(versionWanted, &wsaData);
+#endif
+
     memcpy(buf, header, sizeof(header));
 
     if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -84,7 +94,7 @@ int rgbm_hw_pwm(const double *rgb)
     }
 
     /* Send the message in buf to the server */
-    if (sendto(s, buf, sizeof(buf), 0,
+    if (sendto(s, (char *)buf, sizeof(buf), 0,
              (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("sendto()");
         return 0;
@@ -95,7 +105,14 @@ int rgbm_hw_pwm(const double *rgb)
 void rgbm_hw_close(void)
 {
     if (s != -1) {
+#ifdef __WIN32__
+        closesocket(s);
+#else
         close(s);
+#endif
         s = -1;
     }
+#ifdef __WIN32__
+    WSACleanup();
+#endif
 }

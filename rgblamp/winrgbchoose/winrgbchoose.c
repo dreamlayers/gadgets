@@ -8,6 +8,7 @@
 #endif
 #ifdef COLORANIMD_WRGBC
 #include "coloranim.h"
+#include "signd.h"
 #endif
 
 static struct {

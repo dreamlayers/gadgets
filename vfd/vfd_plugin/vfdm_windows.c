@@ -8,7 +8,7 @@
 #include "vfdm.h"
 
 #ifdef __MINGW32__
-ULONGLONG WINAPI GetTickCount64(void);
+ULONGLONG WINAPI __declspec(dllimport) GetTickCount64(void);
 #endif
 
 static ULONGLONG timertime;

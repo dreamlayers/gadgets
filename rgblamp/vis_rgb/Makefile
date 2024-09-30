@@ -57,10 +57,15 @@ DRVDLL_FLAGS := $(DRVDLL_FLAGS) -fPIC
 endif
 endif
 
+ifneq ($(PLATFORM),Windows)
+DRVDLL_DDP_LIBS :=
+else
+DRVDLL_DDP_LIBS := -lws2_32
+endif
 DRVDLL_DDP := $(DLPREFIX)rgbmddp$(DLSUFFIX)
 all: $(DRVDLL_DDP)
 $(DRVDLL_DDP): rgbm_ddp.c rgbm.h Makefile
-	$(CC) -shared $(DRVDLL_FLAGS) $< -lm -o $@
+	$(CC) -shared $(DRVDLL_FLAGS) $< -lm $(DRVDLL_DDP_LIBS) -o $@
 
 ifneq ("$(wildcard $(RPI_WS281X_DIR)/ws2811.h)","")
 DRVDLL_RPI := $(DLPREFIX)rgbmrpi$(DLSUFFIX)
@@ -159,7 +164,7 @@ endif
 clean:
 	rm -f $(OBJS) $(STANDALONE_OBJS) $(STANDALONE_LIB) \
         $(STANDALONE_LIB_OBJS) sdl_rgb.o $(TARGET) visrgb$(EXESUFFIX) \
-        *.so *~ *.bak greentab_audacious.h greentab_winamp.h
+        *.so *.dll *~ *.bak greentab_audacious.h greentab_winamp.h
 
 aud_rgb.o: aud_rgb.cc rgbm.h Makefile
 
