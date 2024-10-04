@@ -208,6 +208,9 @@ static LRESULT WINAPI HookWinampWnd(int nCode, WPARAM wParam, LPARAM lParam) {
 
         case WM_SETTEXT:
             updtrkname((char *)(((CWPRETSTRUCT *)lParam)->lParam));
+            /* When last track ends, Winamp may not send a WM_COMMAND
+               message. Use this to catch that. */
+            vfdm_playstatechanged();
             break;
 
         case WM_COMMAND:
