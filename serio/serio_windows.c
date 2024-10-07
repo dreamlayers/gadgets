@@ -230,7 +230,7 @@ SERIO_RETURN serio_connect(const char *fname, unsigned int baud) {
     }
     dcb.fOutxCtsFlow = FALSE;
     dcb.fOutxDsrFlow = FALSE;
-    dcb.fDtrControl = DTR_CONTROL_ENABLE;
+    dcb.fDtrControl = DTR_CONTROL_DISABLE;
     dcb.fDsrSensitivity = FALSE;
     dcb.fOutX = FALSE;
     dcb.fInX = FALSE;

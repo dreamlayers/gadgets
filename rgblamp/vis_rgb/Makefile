@@ -2,6 +2,7 @@ include ../../build/Makefile.config
 
 LIBRGBLAMP_DIR := ../librgblamp
 LIBRGBLAMP := $(LIBRGBLAMP_DIR)/librgblamp.a
+LIBRGBSTRIP := ../librgbstrip/librgbstrip.a
 CFLAGS := $(CFLAGS) -I$(LIBRGBLAMP_DIR)
 SRCS := rgbm.c
 
@@ -16,8 +17,13 @@ TARGET := vis_rgb.dll
 OBJS := $(SRCS:%.c=%.o)
 
 all: $(TARGET)
-
 $(TARGET): $(OBJS) $(LIBRGBLAMP)
+	$(CC) $(CFLAGS) -mwindows -shared -static-libgcc \
+	-Wl,--no-undefined -Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
+
+VIS_STRIP := vis_rgb-strip.dll
+all: $(VIS_STRIP)
+$(VIS_STRIP): $(OBJS) $(LIBRGBSTRIP)
 	$(CC) $(CFLAGS) -mwindows -shared -static-libgcc \
 	-Wl,--no-undefined -Wl,--exclude-libs,ALL $^ $(LIBS) -o $@
 
@@ -86,7 +92,6 @@ $(DRVDLL_RGBLAMP): rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h $(LIBRGB
 	$(CC) -shared $(DRVDLL_FLAGS) $< $(LIBRGBLAMP) -lm -o $@
 
 DRVDLL_RGBSTRIP := $(DLPREFIX)rgbmstrip$(DLSUFFIX)
-LIBRGBSTRIP := ../librgbstrip/librgbstrip.a
 all: $(DRVDLL_RGBSTRIP)
 $(DRVDLL_RGBSTRIP): rgbm_rgblamp.c rgbm.h $(LIBRGBLAMP_DIR)/librgblamp.h \
                     $(LIBRGBSTRIP) Makefile
