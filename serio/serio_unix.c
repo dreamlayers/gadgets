@@ -321,7 +321,7 @@ SERIO_RETURN serio_connect_com(const char *fname, unsigned int baud) {
     /* Set parameters */
     temptermios.c_iflag = IGNBRK;
     temptermios.c_oflag = 0;
-    temptermios.c_cflag = CREAD | CLOCAL | CS8 | HUPCL;
+    temptermios.c_cflag = CREAD | CLOCAL | CS8;
     temptermios.c_lflag = 0;
     cfsetispeed(&temptermios, speed);
     cfsetospeed(&temptermios, speed);
