@@ -5,6 +5,7 @@ include ../../build/Makefile.config
 SIGND_DIR := ../../signd
 LIBRGBLAMP_DIR := ../librgblamp
 RPI_WS281X_DIR := /home/pi/gitapps/rpi_ws281x
+SERIO_DIR := ../../serio
 
 COLORANIMDCONF = /usr/local/etc/coloranimd.conf
 ifneq ("$(wildcard $(COLORANIMDCONF))","")
@@ -28,6 +29,13 @@ MQTT_NAME ?= Behind PC
 PIXCNT := 1
 EXTRA_DEPS += $(LIBRGBLAMP_DIR)/librgblamp.a
 COMMON_LIBS += $(LIBRGBLAMP_DIR)/librgblamp.a
+else ifeq ($(DRIVER),arduws)
+CFLAGS += -I$(SERIO_DIR)
+MQTT_ID ?= behind_pc
+MQTT_NAME ?= Behind PC
+PIXCNT := 25
+EXTRA_DEPS += $(SERIO_DIR)/libserio.a
+COMMON_LIBS += $(SERIO_DIR)/libserio.a
 else ifeq ($(DRIVER),rpi_ws281x)
 CFLAGS += -I$(RPI_WS281X_DIR) -DPWR_TMOUT=5
 MQTT_ID ?= behind_tv
