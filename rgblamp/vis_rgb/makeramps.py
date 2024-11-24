@@ -16,7 +16,7 @@ pitch = list(map(lambda x: 0 if x <= 0
                            else 69+12*math.log2(x/440), hz))
 midpoint = (pitch[0] + pitch[lastbin])/2
 
-green = list(map(lambda x: 1-abs(midpoint-x)/(midpoint-pitch[0]),
+green = list(map(lambda x: max(0.0, 1-abs(midpoint-x)/(midpoint-pitch[0])),
                  pitch))
 
 print("#define RGBM_PIVOTBIN", green.index(max(green)))
