@@ -86,7 +86,12 @@ static BOOL wingetcolor(void) {
 #ifdef STANDALONE_WRGBC
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      LPSTR lpCmdLine, int nCmdShow) {
-    const char *port = "COM8";
+    const char *port =
+#ifndef RGBPORT
+        "COM8";
+#else
+        RGBPORT;
+#endif
     unsigned char oldrgb[3];
 
     if (lpCmdLine != NULL && lpCmdLine[0] != 0) port = lpCmdLine;
