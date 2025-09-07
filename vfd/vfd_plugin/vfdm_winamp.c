@@ -202,6 +202,9 @@ static LRESULT WINAPI HookWinampWnd(int nCode, WPARAM wParam, LPARAM lParam) {
                 vfdm_pmsuspend();
             } else if (((CWPRETSTRUCT *)lParam)->wParam == 18 /* PBT_APMRESUMEAUTOMATIC */) {
                 vfdm_pmwake();
+                /* Play state change on suspend may not give the
+                   normal notification. */
+                vfdm_playstatechanged();
             }
             break;
         /* End power management */
